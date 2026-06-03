@@ -1,0 +1,17 @@
+# Python
+backend/venv/
+backend/__pycache__/
+*.pyc
+backend/instance/
+backend/logsentry.db
+backend/uploads/
+
+# Node
+frontend/node_modules/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/

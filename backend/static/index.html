@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogSentry - AI SIEM</title>
+    <style>
+        :root {
+          --bg-color: #0f172a;
+          --text-color: #f8fafc;
+          --card-bg: #1e293b;
+          --accent: #3b82f6;
+          --accent-hover: #2563eb;
+        }
+        body {
+          margin: 0;
+          font-family: 'Inter', sans-serif;
+          background-color: var(--bg-color);
+          color: var(--text-color);
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        header { margin-bottom: 2rem; border-bottom: 1px solid #334155; padding-bottom: 1rem; }
+        header h1 { margin: 0; color: var(--accent); }
+        .card { background-color: var(--card-bg); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .stat-card { text-align: center; }
+        .stat-number { font-size: 2.5rem; font-weight: bold; color: var(--accent); }
+        .stat-number.danger { color: #ef4444; }
+        form { display: flex; gap: 1rem; align-items: center; }
+        button { background-color: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: var(--accent-hover); }
+        ul { list-style: none; padding: 0; }
+        li { padding: 0.75rem 0; border-bottom: 1px solid #334155; }
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 0.5rem; }
+        .badge-critical { background-color: #ef4444; color: white; }
+        .badge-high { background-color: #f97316; color: white; }
+        .alert-item { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LogSentry SIEM Dashboard (Fallback UI)</h1>
+        </header>
+        
+        <div class="card">
+            <h2>Upload Log File</h2>
+            <form id="uploadForm">
+                <input type="file" id="fileInput" required>
+                <button type="submit">Upload & Analyze</button>
+            </form>
+            <p id="uploadStatus"></p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="card stat-card">
+                <h3>Total Logs</h3>
+                <div class="stat-number" id="totalLogs">0</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Unique IPs</h3>
+                <div class="stat-number" id="uniqueIPs">0</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Total Threats</h3>
+                <div class="stat-number danger" id="totalAlerts">0</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="card" style="display: flex; flex-direction: column; align-items: center;">
+                <h2>Threat Severity</h2>
+                <div style="position: relative; width: 100%; max-width: 300px;">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </div>
+            <div class="card" style="display: flex; flex-direction: column; align-items: center;">
+                <h2>Attack Types</h2>
+                <div style="position: relative; width: 100%; max-width: 400px;">
+                    <canvas id="attackChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Recent Threat Alerts</h2>
+            <ul id="recentAlerts"></ul>
+        </div>
+
+        <div class="card">
+            <h2>Top Endpoints</h2>
+            <ul id="topEndpoints"></ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let severityChartInstance = null;
+        let attackChartInstance = null;
+
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                document.getElementById('totalLogs').innerText = data.total_logs;
+                document.getElementById('uniqueIPs').innerText = data.unique_ips;
+                document.getElementById('totalAlerts').innerText = data.total_alerts;
+                
+                const ul = document.getElementById('topEndpoints');
+                ul.innerHTML = '';
+                data.top_endpoints.forEach(ep => {
+                    ul.innerHTML += `<li><strong>${ep.endpoint}</strong> - ${ep.count} requests</li>`;
+                });
+
+                const alertUl = document.getElementById('recentAlerts');
+                alertUl.innerHTML = '';
+                if(data.recent_alerts.length === 0) {
+                    alertUl.innerHTML = '<li>No threats detected.</li>';
+                } else {
+                    data.recent_alerts.forEach(alert => {
+                        const badgeClass = alert.severity.toLowerCase() === 'critical' ? 'badge-critical' : 'badge-high';
+                        alertUl.innerHTML += `
+                            <li class="alert-item">
+                                <div>
+                                    <strong>${alert.attack_type}</strong> from <code>${alert.ip_address}</code>
+                                    <span class="badge ${badgeClass}">${alert.severity}</span>
+                                    <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.25rem;">${alert.description}</div>
+                                </div>
+                                <span style="font-size: 0.8rem; color: #64748b;">${new Date(alert.timestamp).toLocaleString()}</span>
+                            </li>
+                        `;
+                    });
+                }
+                
+                // Also fetch chart data when stats update
+                fetchChartData();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchChartData() {
+            try {
+                const res = await fetch('/api/chart-data');
+                const data = await res.json();
+                
+                // Severity Doughnut Chart
+                const sevCtx = document.getElementById('severityChart').getContext('2d');
+                if (severityChartInstance) severityChartInstance.destroy();
+                
+                severityChartInstance = new Chart(sevCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.severity.labels,
+                        datasets: [{
+                            data: data.severity.values,
+                            backgroundColor: ['#ef4444', '#f97316', '#eab308'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { plugins: { legend: { labels: { color: '#f8fafc' } } } }
+                });
+
+                // Attack Types Bar Chart
+                const attackCtx = document.getElementById('attackChart').getContext('2d');
+                if (attackChartInstance) attackChartInstance.destroy();
+
+                attackChartInstance = new Chart(attackCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.attacks.labels,
+                        datasets: [{
+                            label: 'Incidents',
+                            data: data.attacks.values,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("Error fetching chart data:", e);
+            }
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            document.getElementById('uploadStatus').innerText = 'Uploading...';
+
+            try {
+                const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                document.getElementById('uploadStatus').innerText = data.message || 'Upload complete';
+                fetchStats();
+            } catch (e) {
+                document.getElementById('uploadStatus').innerText = 'Upload failed';
+            }
+        });
+
+        fetchStats();
+    </script>
+</body>
+</html>
