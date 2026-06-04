@@ -1,4 +1,5 @@
 import re
+from threat_intel import check_abuseipdb
 
 # Threat Signatures
 SQLI_REGEX = re.compile(r'(?i)(UNION.*?SELECT|OR.*?=.*?|DROP\s+TABLE|--$|WAITFOR\s+DELAY)')
@@ -43,11 +44,15 @@ def detect_brute_force(db, LogEntry, Alert):
         # Check if we already alerted for this IP recently to avoid duplicates
         existing = db.session.query(Alert).filter_by(ip_address=ip, attack_type="Brute Force").first()
         if not existing:
+            score, report = check_abuseipdb(ip)
+            
             alert = Alert(
                 ip_address=ip,
                 attack_type="Brute Force",
                 severity="High",
-                description=f"Detected {count} failed access attempts (401/403) from this IP."
+                description=f"Detected {count} failed access attempts (401/403) from this IP.",
+                threat_intel_score=score,
+                threat_intel_report=report
             )
             db.session.add(alert)
             new_alerts.append(alert)

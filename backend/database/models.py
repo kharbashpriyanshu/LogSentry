@@ -34,6 +34,10 @@ class Alert(db.Model):
     severity = db.Column(db.String(20), nullable=False)
     description = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
+    # Threat Intel Fields
+    threat_intel_score = db.Column(db.Integer, nullable=True)
+    threat_intel_report = db.Column(db.String(255), nullable=True)
 
     def to_dict(self):
         return {
@@ -42,5 +46,7 @@ class Alert(db.Model):
             "attack_type": self.attack_type,
             "severity": self.severity,
             "description": self.description,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
+            "threat_intel_score": self.threat_intel_score,
+            "threat_intel_report": self.threat_intel_report
         }

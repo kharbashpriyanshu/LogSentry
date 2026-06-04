@@ -6,6 +6,10 @@ backend/instance/
 backend/logsentry.db
 backend/uploads/
 
+# Env vars
+.env
+backend/.env
+
 # Node
 frontend/node_modules/
 

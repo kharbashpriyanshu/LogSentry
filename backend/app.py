@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
@@ -6,6 +6,13 @@ import re
 from datetime import datetime
 from database.models import db, LogEntry, Alert
 from detection import analyze_log_entry, detect_brute_force
+from threat_intel import check_abuseipdb
+from reporting import generate_csv_report, generate_pdf_report
+from ai_analyst import analyze_alert_with_ai
+from dotenv import load_dotenv
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'), override=True)
 
 app = Flask(__name__, static_folder='static', static_url_path='/')
 CORS(app) # Allow React frontend to communicate with Flask
@@ -64,6 +71,11 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
+        # For demo purposes: Clear existing database on new upload
+        db.session.query(LogEntry).delete()
+        db.session.query(Alert).delete()
+        db.session.commit()
+        
         # Parse and store logs
         entries = []
         with open(filepath, 'r') as f:
@@ -74,15 +86,18 @@ def upload_file():
                     db.session.add(entry)
                     entries.append(entry)
                     
-                    # Phase 3: Inline Threat Detection
+                    # Phase 3 & 6: Inline Threat Detection & Intel
                     alert_data = analyze_log_entry(entry)
                     if alert_data:
+                        score, report = check_abuseipdb(entry.ip_address)
                         alert = Alert(
                             ip_address=entry.ip_address,
                             attack_type=alert_data['attack_type'],
                             severity=alert_data['severity'],
                             description=alert_data['description'],
-                            timestamp=entry.timestamp
+                            timestamp=entry.timestamp,
+                            threat_intel_score=score,
+                            threat_intel_report=report
                         )
                         db.session.add(alert)
                         
@@ -148,6 +163,36 @@ def get_chart_data():
         "severity": severity_data,
         "attacks": attack_data
     })
+
+@app.route('/api/export/csv', methods=['GET'])
+def export_csv():
+    alerts = db.session.query(Alert).order_by(Alert.timestamp.desc()).all()
+    csv_data = generate_csv_report(alerts)
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=logsentry_report.csv"}
+    )
+
+@app.route('/api/export/pdf', methods=['GET'])
+def export_pdf():
+    alerts = db.session.query(Alert).order_by(Alert.timestamp.desc()).all()
+    pdf_buffer = generate_pdf_report(alerts)
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name='logsentry_report.pdf',
+        mimetype='application/pdf'
+    )
+
+@app.route('/api/analyze/<int:alert_id>', methods=['GET'])
+def analyze_alert(alert_id):
+    alert = db.session.query(Alert).get(alert_id)
+    if not alert:
+        return jsonify({"error": "Alert not found"}), 404
+        
+    ai_response = analyze_alert_with_ai(alert)
+    return jsonify({"analysis": ai_response})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

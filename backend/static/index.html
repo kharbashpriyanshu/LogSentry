@@ -6,90 +6,194 @@
     <title>LogSentry - AI SIEM</title>
     <style>
         :root {
-          --bg-color: #0f172a;
-          --text-color: #f8fafc;
-          --card-bg: #1e293b;
-          --accent: #3b82f6;
-          --accent-hover: #2563eb;
+          --bg-primary: #0b0f19;
+          --bg-secondary: #131b2f;
+          --card-bg: rgba(19, 27, 47, 0.7);
+          --border-color: #2a375a;
+          --text-main: #f1f5f9;
+          --text-muted: #94a3b8;
+          --accent-cyan: #06b6d4;
+          --accent-blue: #3b82f6;
+          --accent-red: #ef4444;
+          --accent-orange: #f97316;
+          --success: #10b981;
         }
+
         body {
           margin: 0;
-          font-family: 'Inter', sans-serif;
-          background-color: var(--bg-color);
-          color: var(--text-color);
+          font-family: 'Inter', -apple-system, sans-serif;
+          background-color: var(--bg-primary);
+          color: var(--text-main);
+          background-image: 
+            radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.08), transparent 25%),
+            radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%);
+          min-height: 100vh;
         }
-        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-        header { margin-bottom: 2rem; border-bottom: 1px solid #334155; padding-bottom: 1rem; }
-        header h1 { margin: 0; color: var(--accent); }
-        .card { background-color: var(--card-bg); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
-        .stat-card { text-align: center; }
-        .stat-number { font-size: 2.5rem; font-weight: bold; color: var(--accent); }
-        .stat-number.danger { color: #ef4444; }
-        form { display: flex; gap: 1rem; align-items: center; }
-        button { background-color: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: var(--accent-hover); }
-        ul { list-style: none; padding: 0; }
-        li { padding: 0.75rem 0; border-bottom: 1px solid #334155; }
-        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 0.5rem; }
-        .badge-critical { background-color: #ef4444; color: white; }
-        .badge-high { background-color: #f97316; color: white; }
-        .alert-item { display: flex; justify-content: space-between; align-items: center; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+        header h1 { margin: 0; font-size: 1.75rem; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; display: flex; align-items: center; gap: 0.75rem;}
+        .header-actions { display: flex; gap: 1rem; }
+        .card { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.4); background: rgba(19, 27, 47, 0.85); }
+        .card h2, .card h3 { margin-top: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .stat-card { text-align: center; padding: 2rem 1rem; border-top: 3px solid var(--accent-cyan); display: flex; flex-direction: column; justify-content: center; transition: all 0.3s ease; }
+        .stat-card:hover { border-top: 3px solid var(--accent-blue); box-shadow: 0 10px 40px rgba(6, 182, 212, 0.25); }
+        .stat-card h3 { font-size: 1rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .stat-number { font-size: 3rem; font-weight: 800; color: var(--text-main); text-shadow: 0 0 20px rgba(6, 182, 212, 0.4); }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .chart-container { height: 300px; position: relative; width: 100%; display: flex; justify-content: center; align-items: center;}
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center; gap: 1rem; }
+        .empty-state svg { width: 48px; height: 48px; opacity: 0.5; color: var(--text-muted); }
+        
+        .upload-form { display: flex; gap: 1rem; align-items: center; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px dashed var(--border-color); }
+        input[type="file"] { color: var(--text-muted); flex-grow: 1; }
+        input[type="file"]::file-selector-button { background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 1rem; }
+        button { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4); opacity: 0.95; }
+        button.btn-secondary { background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); box-shadow: none; }
+        button.btn-secondary:hover { background: rgba(19, 27, 47, 0.9); border-color: var(--accent-cyan); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2); }
+        button.btn-ai { background: linear-gradient(135deg, #8b5cf6, #d946ef); padding: 0.5rem 1rem; font-size: 0.85rem; }
+        button.btn-ai:hover { box-shadow: 0 4px 15px rgba(217, 70, 239, 0.4); }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: rgba(255, 255, 255, 0.05); padding: 1rem; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border-color); }
+        td { padding: 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+        tr:hover { background: rgba(255, 255, 255, 0.02); }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; }
+        .badge-critical { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.3); }
+        .badge-high { background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); border: 1px solid rgba(249,115,22,0.3); }
+        .badge-medium { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+        .badge-low { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.3); }
+        .badge-score { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-score-high { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { margin: 0; display: flex; align-items: center; gap: 0.5rem; color: #e2e8f0; }
+        .modal-close { background: transparent; padding: 0.5rem; box-shadow: none; color: var(--text-muted); cursor: pointer; border: none; }
+        .modal-body { padding: 1.5rem; line-height: 1.6; }
+        .ai-response { background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 8px; color: #e2e8f0; }
+        .ai-loader { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 0; color: #d946ef; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(217, 70, 239, 0.2); border-top-color: #d946ef; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>LogSentry SIEM Dashboard (Fallback UI)</h1>
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                LogSentry SOC
+            </h1>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="window.location.href='/api/export/csv'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export CSV
+                </button>
+                <button class="btn-secondary" onclick="window.location.href='/api/export/pdf'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export PDF
+                </button>
+            </div>
         </header>
-        
+
         <div class="card">
-            <h2>Upload Log File</h2>
-            <form id="uploadForm">
-                <input type="file" id="fileInput" required>
-                <button type="submit">Upload & Analyze</button>
+            <h2>Ingest Logs</h2>
+            <form id="uploadForm" class="upload-form">
+                <input type="file" id="fileInput" accept=".log,.txt" required>
+                <button type="submit" id="uploadBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Analyze Logs
+                </button>
             </form>
-            <p id="uploadStatus"></p>
+            <p id="uploadStatus" style="margin-top: 1rem; color: var(--accent-cyan); display: none;"></p>
         </div>
 
         <div class="stats-grid">
             <div class="card stat-card">
-                <h3>Total Logs</h3>
+                <h3>Total Logs Parsed</h3>
                 <div class="stat-number" id="totalLogs">0</div>
             </div>
             <div class="card stat-card">
-                <h3>Unique IPs</h3>
+                <h3>Unique IP Addresses</h3>
                 <div class="stat-number" id="uniqueIPs">0</div>
             </div>
             <div class="card stat-card">
-                <h3>Total Threats</h3>
-                <div class="stat-number danger" id="totalAlerts">0</div>
+                <h3>Total Threats Detected</h3>
+                <div class="stat-number" id="totalAlerts" style="color: var(--accent-red); text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);">0</div>
             </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="card" style="display: flex; flex-direction: column; align-items: center;">
-                <h2>Threat Severity</h2>
-                <div style="position: relative; width: 100%; max-width: 300px;">
-                    <canvas id="severityChart"></canvas>
+        <div class="charts-grid">
+            <div class="card">
+                <h3>Threat Severity Distribution</h3>
+                <div class="chart-container" id="severityChartContainer">
+                    <div id="severityEmpty" class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <p>No threats detected yet.<br/>Upload a log file to see insights.</p>
+                    </div>
+                    <canvas id="severityChart" style="display: none;"></canvas>
                 </div>
             </div>
-            <div class="card" style="display: flex; flex-direction: column; align-items: center;">
-                <h2>Attack Types</h2>
-                <div style="position: relative; width: 100%; max-width: 400px;">
-                    <canvas id="attackChart"></canvas>
+            <div class="card">
+                <h3>Attack Types</h3>
+                <div class="chart-container" id="attackChartContainer">
+                    <div id="attackEmpty" class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        <p>No attack data available.<br/>Upload a log file to generate charts.</p>
+                    </div>
+                    <canvas id="attackChart" style="display: none;"></canvas>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h2>Recent Threat Alerts</h2>
-            <ul id="recentAlerts"></ul>
+            <h2>Recent Security Alerts</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>IP Address</th>
+                            <th>Attack Type</th>
+                            <th>Severity</th>
+                            <th>Threat Intel</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No recent alerts detected.</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </div>
 
-        <div class="card">
-            <h2>Top Endpoints</h2>
-            <ul id="topEndpoints"></ul>
+    <!-- AI Modal -->
+    <div class="modal-overlay" id="aiModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
+                    AI SOC Analyst
+                </h2>
+                <button class="modal-close" onclick="closeModal(null, true)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="aiTarget" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;"></div>
+                
+                <div class="ai-loader" id="aiLoader">
+                    <div class="spinner"></div>
+                    <p>Generating Threat Analysis & Remediation Steps...</p>
+                </div>
+                
+                <div class="ai-response" id="aiResponse" style="display: none;"></div>
+            </div>
         </div>
     </div>
 
@@ -98,41 +202,49 @@
         let severityChartInstance = null;
         let attackChartInstance = null;
 
+        function getSeverityBadgeClass(severity) {
+            const s = severity ? severity.toLowerCase() : '';
+            if (s === 'critical') return 'badge-critical';
+            if (s === 'high') return 'badge-high';
+            if (s === 'medium') return 'badge-medium';
+            return 'badge-low';
+        }
+
         async function fetchStats() {
             try {
                 const res = await fetch('/api/stats');
                 const data = await res.json();
+                
                 document.getElementById('totalLogs').innerText = data.total_logs;
                 document.getElementById('uniqueIPs').innerText = data.unique_ips;
                 document.getElementById('totalAlerts').innerText = data.total_alerts;
-                
-                const ul = document.getElementById('topEndpoints');
-                ul.innerHTML = '';
-                data.top_endpoints.forEach(ep => {
-                    ul.innerHTML += `<li><strong>${ep.endpoint}</strong> - ${ep.count} requests</li>`;
-                });
 
-                const alertUl = document.getElementById('recentAlerts');
-                alertUl.innerHTML = '';
+                const tbody = document.getElementById('alertsTableBody');
                 if(data.recent_alerts.length === 0) {
-                    alertUl.innerHTML = '<li>No threats detected.</li>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No recent alerts detected.</td></tr>';
                 } else {
-                    data.recent_alerts.forEach(alert => {
-                        const badgeClass = alert.severity.toLowerCase() === 'critical' ? 'badge-critical' : 'badge-high';
-                        alertUl.innerHTML += `
-                            <li class="alert-item">
-                                <div>
-                                    <strong>${alert.attack_type}</strong> from <code>${alert.ip_address}</code>
-                                    <span class="badge ${badgeClass}">${alert.severity}</span>
-                                    <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.25rem;">${alert.description}</div>
-                                </div>
-                                <span style="font-size: 0.8rem; color: #64748b;">${new Date(alert.timestamp).toLocaleString()}</span>
-                            </li>
-                        `;
-                    });
+                    tbody.innerHTML = data.recent_alerts.map(alert => {
+                        const scoreBadge = alert.threat_intel_score !== null 
+                            ? `<span class="badge ${alert.threat_intel_score > 50 ? 'badge-score-high' : 'badge-score'}">Score: ${alert.threat_intel_score}</span>` 
+                            : `<span style="color: #94a3b8">N/A</span>`;
+
+                        return `
+                        <tr>
+                            <td style="white-space: nowrap">${new Date(alert.timestamp).toLocaleString()}</td>
+                            <td style="font-family: monospace">${alert.ip_address}</td>
+                            <td>${alert.attack_type}</td>
+                            <td><span class="badge ${getSeverityBadgeClass(alert.severity)}">${alert.severity}</span></td>
+                            <td>${scoreBadge}</td>
+                            <td>
+                                <button class="btn-ai" onclick="openAIModal(${alert.id}, '${alert.attack_type}', '${alert.ip_address}')">
+                                    <svg style="margin-right:0.25rem" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
+                                    AI Analyst
+                                </button>
+                            </td>
+                        </tr>`;
+                    }).join('');
                 }
                 
-                // Also fetch chart data when stats update
                 fetchChartData();
             } catch (e) {
                 console.error(e);
@@ -144,70 +256,143 @@
                 const res = await fetch('/api/chart-data');
                 const data = await res.json();
                 
-                // Severity Doughnut Chart
-                const sevCtx = document.getElementById('severityChart').getContext('2d');
-                if (severityChartInstance) severityChartInstance.destroy();
+                const sevEmpty = document.getElementById('severityEmpty');
+                const sevCanvas = document.getElementById('severityChart');
                 
-                severityChartInstance = new Chart(sevCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: data.severity.labels,
-                        datasets: [{
-                            data: data.severity.values,
-                            backgroundColor: ['#ef4444', '#f97316', '#eab308'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: { plugins: { legend: { labels: { color: '#f8fafc' } } } }
-                });
-
-                // Attack Types Bar Chart
-                const attackCtx = document.getElementById('attackChart').getContext('2d');
-                if (attackChartInstance) attackChartInstance.destroy();
-
-                attackChartInstance = new Chart(attackCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.attacks.labels,
-                        datasets: [{
-                            label: 'Incidents',
-                            data: data.attacks.values,
-                            backgroundColor: '#3b82f6',
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                if (data.severity && data.severity.labels && data.severity.labels.length > 0) {
+                    sevEmpty.style.display = 'none';
+                    sevCanvas.style.display = 'block';
+                    
+                    const sevCtx = sevCanvas.getContext('2d');
+                    if (severityChartInstance) severityChartInstance.destroy();
+                    severityChartInstance = new Chart(sevCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.severity.labels,
+                            datasets: [{
+                                data: data.severity.values,
+                                backgroundColor: ['#ef4444', '#f97316', '#eab308', '#3b82f6'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { 
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { position: 'right', labels: { color: '#f1f5f9' } } } 
                         }
-                    }
-                });
+                    });
+                } else {
+                    sevEmpty.style.display = 'flex';
+                    sevCanvas.style.display = 'none';
+                }
+
+                const attackEmpty = document.getElementById('attackEmpty');
+                const attackCanvas = document.getElementById('attackChart');
+
+                if (data.attacks && data.attacks.labels && data.attacks.labels.length > 0) {
+                    attackEmpty.style.display = 'none';
+                    attackCanvas.style.display = 'block';
+                    
+                    const attackCtx = attackCanvas.getContext('2d');
+                    if (attackChartInstance) attackChartInstance.destroy();
+                    attackChartInstance = new Chart(attackCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.attacks.labels,
+                            datasets: [{
+                                label: 'Count',
+                                data: data.attacks.values,
+                                backgroundColor: '#06b6d4',
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { ticks: { color: '#94a3b8' }, grid: { color: '#2a375a' } },
+                                x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                            }
+                        }
+                    });
+                } else {
+                    attackEmpty.style.display = 'flex';
+                    attackCanvas.style.display = 'none';
+                }
             } catch (e) {
                 console.error("Error fetching chart data:", e);
             }
         }
 
+        function closeModal(e, force = false) {
+            if (force || e.target === document.getElementById('aiModal')) {
+                document.getElementById('aiModal').style.display = 'none';
+            }
+        }
+
+        async function openAIModal(alertId, attackType, ipAddress) {
+            const modal = document.getElementById('aiModal');
+            const targetDiv = document.getElementById('aiTarget');
+            const loader = document.getElementById('aiLoader');
+            const responseDiv = document.getElementById('aiResponse');
+            
+            targetDiv.innerHTML = `<strong style="color: #06b6d4">Target Incident:</strong> ${attackType} from ${ipAddress}`;
+            modal.style.display = 'flex';
+            loader.style.display = 'flex';
+            responseDiv.style.display = 'none';
+            
+            try {
+                const res = await fetch(`/api/analyze/${alertId}`);
+                const data = await res.json();
+                
+                loader.style.display = 'none';
+                responseDiv.style.display = 'block';
+                
+                if(data.analysis) {
+                    // Simple formatting for markdown
+                    let formatted = data.analysis
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n/g, '<br/>')
+                        .replace(/\* /g, '• ');
+                    responseDiv.innerHTML = formatted;
+                } else {
+                    responseDiv.innerHTML = data.error ? `❌ Error: ${data.error}` : 'Error fetching analysis.';
+                }
+            } catch (e) {
+                loader.style.display = 'none';
+                responseDiv.style.display = 'block';
+                responseDiv.innerHTML = '❌ Connection error.';
+            }
+        }
+
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const file = document.getElementById('fileInput').files[0];
-            if (!file) return;
+            const fileInput = document.getElementById('fileInput');
+            const btn = document.getElementById('uploadBtn');
+            const status = document.getElementById('uploadStatus');
+            
+            if (!fileInput.files[0]) return;
 
             const formData = new FormData();
-            formData.append('file', file);
-            document.getElementById('uploadStatus').innerText = 'Uploading...';
+            formData.append('file', fileInput.files[0]);
+            
+            btn.disabled = true;
+            status.style.display = 'block';
+            status.innerText = 'Processing logs and analyzing threats...';
 
             try {
                 const res = await fetch('/api/upload', { method: 'POST', body: formData });
                 const data = await res.json();
-                document.getElementById('uploadStatus').innerText = data.message || 'Upload complete';
+                status.innerText = data.message || 'Upload complete';
                 fetchStats();
             } catch (e) {
-                document.getElementById('uploadStatus').innerText = 'Upload failed';
+                status.innerText = 'Upload failed';
+            } finally {
+                btn.disabled = false;
+                setTimeout(() => { status.style.display = 'none'; }, 5000);
             }
         });
 
+        // Initial fetch
         fetchStats();
     </script>
 </body>
