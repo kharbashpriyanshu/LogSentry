@@ -5,7 +5,7 @@ from app.schemas.severity import Severity
 
 router = APIRouter()
 
-@router.get("/example", response_model=List[DetectionAlert])
+@router.get("", response_model=List[DetectionAlert])
 def get_example_alerts():
     """Temporary endpoint returning example alerts."""
     return [

@@ -1,0 +1,22 @@
+{
+  "alert_id": "ALT-12345678-9ABC",
+  "timestamp": "2026-07-17T12:00:00Z",
+  "rule_name": "SQL Injection Detection",
+  "rule_version": "1.0",
+  "severity": "high",
+  "confidence": 0.95,
+  "risk_score": 8.5,
+  "title": "Potential SQL Injection Detected",
+  "description": "Potential sqli attempt detected from 10.0.0.1 targeting /products",
+  "source_ip": "10.0.0.1",
+  "endpoint": "/products?id=1' UNION SELECT username, password FROM users--",
+  "attack_type": "sqli",
+  "mitre_technique": "T1190",
+  "mitre_tactic": "Initial Access",
+  "recommendation": "Use parameterized queries and validate input.",
+  "evidence": {
+    "endpoint": "/products?id=1' UNION SELECT username, password FROM users--",
+    "method": "GET"
+  },
+  "raw_log_reference": "10.0.0.1 - - [17/Jul/2026:12:00:00 +0000] \"GET /products?id=1' UNION SELECT username, password FROM users-- HTTP/1.1\" 200 4096 \"-\" \"sqlmap/1.5.8\""
+}

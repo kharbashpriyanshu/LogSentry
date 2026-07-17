@@ -2,12 +2,25 @@
 line-length = 88
 target-version = ['py311']
 include = '\.pyi?$'
+extend-exclude = '''
+/(
+  migrations
+  | frontend
+)/
+'''
 
 [tool.ruff]
-select = ["E", "F", "B", "I"]
-ignore = []
+select = ["E", "F", "B", "I", "S", "UP", "N"]
+ignore = [
+  "S101",   # Allow assert in tests
+  "S603",   # Allow subprocess calls (used in test helpers)
+  "B008",   # FastAPI Depends() in function defaults is intentional
+]
 line-length = 88
 target-version = "py311"
+
+[tool.ruff.per-file-ignores]
+"tests/**/*.py" = ["S", "E501"]  # Security rules relaxed in tests
 
 [tool.mypy]
 python_version = "3.11"
@@ -15,10 +28,34 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+ignore_missing_imports = true
+exclude = ["frontend/", "migrations/"]
 
 [tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "-ra -q --cov=app --cov-report=term-missing"
-testpaths = [
-    "tests",
+minversion = "8.0"
+addopts = "-ra -q --cov=app --cov-report=term-missing --cov-fail-under=65"
+testpaths = ["tests"]
+filterwarnings = [
+  "ignore::DeprecationWarning:starlette",
+  "ignore::DeprecationWarning:httpx",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "frontend", "migrations"]
+skips = ["B101"]  # assert_used — allowed in tests
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+  "app/database/*",
+  "*/migrations/*",
+  "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "@abstractmethod",
 ]

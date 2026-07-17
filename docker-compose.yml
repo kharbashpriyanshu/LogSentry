@@ -1,33 +1,100 @@
-version: '3.8'
+# ============================================================
+# LogSentry SIEM — Production-Ready docker-compose
+# ============================================================
+#
+# Usage:
+#   Development:  docker-compose up
+#   Production:   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+#
+# Environment variables:
+#   Copy .env.example → .env and fill in secrets before starting.
+# ============================================================
 
 services:
+
+  # ----------------------------------------------------------
+  # LogSentry API
+  # ----------------------------------------------------------
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: logsentry:latest
+    container_name: logsentry_api
+    restart: unless-stopped
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - ENVIRONMENT=development
-      - POSTGRES_SERVER=db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=logsentry_db
-      - POSTGRES_PORT=5432
-      - DATABASE_URI=postgresql://postgres:postgres@db:5432/logsentry_db
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      POSTGRES_SERVER: db
+      POSTGRES_PORT: "5432"
+      DATABASE_URI: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-logsentry_db}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
-      - .:/app
+      # Logs volume — persisted outside container
+      - logsentry_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - logsentry_net
+    # Security: read-only root filesystem where possible
+    # Uncomment in production after validating write paths:
+    # read_only: true
+    # tmpfs:
+    #   - /tmp
+    security_opt:
+      - no-new-privileges:true
 
+  # ----------------------------------------------------------
+  # PostgreSQL Database
+  # ----------------------------------------------------------
   db:
     image: postgres:15-alpine
+    container_name: logsentry_db
+    restart: unless-stopped
     ports:
-      - "5432:5432"
+      # Bind to localhost only in development (remove in production)
+      - "127.0.0.1:5432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=logsentry_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-logsentry_db}
+      # Tune for SOC workloads
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-logsentry_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - logsentry_net
+    security_opt:
+      - no-new-privileges:true
 
+# ----------------------------------------------------------
+# Volumes & Networks
+# ----------------------------------------------------------
 volumes:
   postgres_data:
+    driver: local
+  logsentry_logs:
+    driver: local
+
+networks:
+  logsentry_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
