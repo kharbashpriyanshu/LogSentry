@@ -1,58 +1,69 @@
-# LogSentry 🛡️
+# LogSentry SIEM
 
-LogSentry is an AI-powered Security Information and Event Management (SIEM) dashboard designed to ingest server logs, detect malicious activity (like SQL Injections, XSS, Path Traversals, and Brute Force attacks), and automatically enrich alerts with Threat Intelligence and AI-driven remediation steps.
+LogSentry is an enterprise-grade Security Information and Event Management (SIEM) system. It focuses on robust log parsing, intelligent threat detection, AI-powered insights, and scalable architecture. 
 
-## Features ✨
-- **Log Ingestion & Parsing**: Upload raw Apache/Nginx logs, and the system automatically parses and stores them.
-- **Real-Time Threat Detection**: Pattern-based detection for web vulnerabilities and threshold-based detection for Brute Force attempts.
-- **Threat Intelligence**: Integrates with the AbuseIPDB API to score and contextually evaluate malicious IP addresses.
-- **AI SOC Analyst**: Integrates with Google Gemini to act as a virtual SOC Analyst. With the click of a button, it analyzes an alert and provides an explanation of the attack along with actionable remediation steps.
-- **Reporting & Exports**: Generate detailed CSV and PDF incident reports with one click.
-- **Interactive Dashboard**: A premium, dark-mode, glassmorphic UI complete with dynamic charts.
+## Project Overview
+This project provides a comprehensive foundation for ingesting, processing, and analyzing security logs. Built using modern Python frameworks, LogSentry emphasizes high performance, code quality, and maintainability.
 
-## Tech Stack 🛠️
-- **Backend**: Python, Flask, SQLAlchemy (SQLite)
-- **Frontend**: HTML5, Vanilla JS, CSS3, Chart.js (Served natively via Flask static assets)
-- **APIs**: AbuseIPDB (Threat Intel), Google Gemini (Generative AI Analysis)
-- **PDF Generation**: ReportLab
-
-## Quick Start 🚀
-
-### 1. Prerequisites
-- Python 3.8+ installed on your system.
-
-### 2. Setup the Environment
-Navigate to the `backend` directory and install the requirements:
+## API Backend (FastAPI)
+LogSentry provides a fully documented REST API.
+To start the API Server:
 ```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate  # On Windows (use `source venv/bin/activate` on Mac/Linux)
-pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+Once running, navigate to `http://127.0.0.1:8000/docs` to view the interactive Swagger UI.
+
+### Example Request
+```bash
+curl -X 'POST' \
+  'http://127.0.0.1:8000/api/v1/parser/parse-line' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "parser_name": "apache",
+  "log_line": "127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] \"GET / HTTP/1.0\" 200 2326 \"-\" \"-\""
+}'
 ```
 
-### 3. Configure API Keys
-Create a `.env` file in the `backend` directory (you can copy `.env.example`):
+For detailed architecture instructions:
+- [docs/PARSING_ENGINE.md](docs/PARSING_ENGINE.md)
+- [docs/DETECTION_ENGINE.md](docs/DETECTION_ENGINE.md)
+- [docs/API.md](docs/API.md)
+
+## Installation
+### Prerequisites
+- Python 3.11+
+
+### Setup
+1. Clone the repository.
+2. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements-dev.txt
+   pip install fastapi uvicorn pydantic-settings python-multipart
+   ```
+
+## Development Workflow
+We use `pre-commit` to enforce code quality. To set it up:
 ```bash
-# backend/.env
-ABUSEIPDB_API_KEY=your_abuseipdb_key_here
-GEMINI_API_KEY=your_gemini_key_here
+pre-commit install
 ```
 
-### 4. Run the Application
-Start the Flask application from the `backend` directory:
+To run tests:
 ```bash
-python app.py
+pytest
 ```
 
-### 5. View the Dashboard
-Open your web browser and navigate to:
-[http://127.0.0.1:5000/](http://127.0.0.1:5000/)
+## Project Roadmap
+- **Sprint 0**: Project Foundation (Completed)
+- **Sprint 1**: Core Log Parsing Engine (Completed)
+- **Sprint 2**: Detection Engine & Rule Framework (Completed)
+- **Sprint 3**: FastAPI Backend & REST API (Completed)
+- **Sprint 4**: AI Features Integration
+- **Sprint 5**: Dashboard & Reporting
 
-Upload the provided `sample_malicious.log` file from the root directory to see the dashboard populate with data, charts, and alerts!
-
-## Project Structure 📁
-- `/backend`: Contains the Flask server, DB models, AI logic, Threat Intel integrations, and the Static UI.
-  - `/static`: Contains the `index.html` frontend dashboard.
-  - `/database`: Contains SQLAlchemy models.
-- `/frontend`: Contains an experimental React/Vite frontend structure.
-- `sample_malicious.log`: A test log file containing various cyber attacks for testing.
+## License
+MIT License.
