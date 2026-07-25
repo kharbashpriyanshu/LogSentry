@@ -34,6 +34,8 @@ from app.api.v1.routers.alerts import router as alerts_router
 from app.api.v1.routers.ai import router as ai_router
 from app.api.v1.routers.enrichment import router as enrichment_router
 from app.api.v1.routers.reports import router as reports_router
+from app.api.v1.routers.incidents import router as incidents_router
+from app.api.v1.routers.dashboard import router as dashboard_router
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +102,7 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.CORS_ALLOWED_ORIGINS,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization", "X-Correlation-ID"],
         expose_headers=["X-Correlation-ID", "X-Process-Time"],
         max_age=600,
@@ -119,9 +121,11 @@ def create_app() -> FastAPI:
     # ------------------------------------------------------------------
     prefix = settings.API_V1_STR
     app.include_router(health_router, prefix=prefix, tags=["Health"])
+    app.include_router(dashboard_router, prefix=f"{prefix}/dashboard", tags=["Dashboard"])
     app.include_router(parser_router, prefix=f"{prefix}/parser", tags=["Parser"])
     app.include_router(detection_router, prefix=f"{prefix}/detection", tags=["Detection"])
     app.include_router(alerts_router, prefix=f"{prefix}/alerts", tags=["Alerts"])
+    app.include_router(incidents_router, prefix=f"{prefix}/incidents", tags=["Incidents"])
     app.include_router(ai_router, prefix=f"{prefix}/ai", tags=["AI SOC Analyst"])
     app.include_router(enrichment_router, prefix=f"{prefix}/enrichment", tags=["Threat Intelligence"])
     app.include_router(reports_router, prefix=f"{prefix}/reports", tags=["Reporting"])
@@ -168,3 +172,5 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+#
+#

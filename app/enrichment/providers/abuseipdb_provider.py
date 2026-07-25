@@ -26,11 +26,23 @@ class AbuseIPDBProvider(BaseThreatProvider):
         return bool(self.api_key) and settings.ENABLE_ABUSEIPDB
 
     def enrich(self, alert: DetectionAlert) -> Optional[ThreatEnrichment]:
+        if not alert.source_ip:
+            return None
+        return self.enrich_ioc(alert.source_ip)
+        
+    def _is_valid_public_ip(self, ip_str: str) -> bool:
+        import ipaddress
+        try:
+            ip = ipaddress.ip_address(ip_str)
+            return not ip.is_private and not ip.is_loopback and not ip.is_multicast and not ip.is_reserved
+        except ValueError:
+            return False
+
+    def enrich_ioc(self, observable: str) -> Optional[ThreatEnrichment]:
         if not self.health():
             return None
             
-        ip_to_check = alert.source_ip
-        if not ip_to_check:
+        if not self._is_valid_public_ip(observable):
             return None
             
         try:
@@ -38,7 +50,7 @@ class AbuseIPDBProvider(BaseThreatProvider):
                 response = client.get(
                     f"{self.base_url}/check",
                     headers={"Key": self.api_key, "Accept": "application/json"},
-                    params={"ipAddress": ip_to_check, "maxAgeInDays": 90}
+                    params={"ipAddress": observable, "maxAgeInDays": 90}
                 )
                 
             if response.status_code == 429:

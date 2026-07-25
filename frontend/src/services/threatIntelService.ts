@@ -13,5 +13,15 @@ export const threatIntelService = {
   analyzeAlert: async (alert: DetectionAlert): Promise<ThreatEnrichment[]> => {
     const res = await api.post('/enrichment/analyze', alert);
     return res.data;
+  },
+  lookupIoc: async (observable: string, forceRefresh = false) => {
+    const res = await api.get(`/enrichment/ioc/${encodeURIComponent(observable)}`, {
+      params: { force_refresh: forceRefresh }
+    });
+    return res.data;
+  },
+  getHistory: async () => {
+    const res = await api.get('/enrichment/history');
+    return res.data;
   }
 };

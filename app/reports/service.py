@@ -24,7 +24,7 @@ SOLID compliance:
 
 import logging
 from datetime import datetime, timezone
-from typing import List, Union
+from typing import List, Union, Optional
 
 from app.reports.models import (
     ExecutiveReport,
@@ -78,7 +78,7 @@ class ReportingService:
         report_type: str,
         alert: DetectionAlert,
         enrichments: List[ThreatEnrichment],
-        ai: AIAnalysisResponse,
+        ai: Optional[AIAnalysisResponse] = None,
     ) -> Union[ExecutiveReport, TechnicalReport, IncidentReport]:
         """
         Generate a structured report of the requested type.
@@ -134,7 +134,7 @@ class ReportingService:
         self,
         report_type: str,
         alert: DetectionAlert,
-        ai: AIAnalysisResponse,
+        ai: Optional[AIAnalysisResponse],
     ) -> None:
         if not report_type or not report_type.strip():
             raise MissingReportDataError("report_type")
@@ -142,15 +142,13 @@ class ReportingService:
             raise MissingReportDataError("alert.alert_id")
         if not alert.rule_name:
             raise MissingReportDataError("alert.rule_name")
-        if not ai.executive_summary:
-            raise MissingReportDataError("ai.executive_summary")
 
     def _dispatch(
         self,
         report_type: ReportType,
         alert: DetectionAlert,
         enrichments: List[ThreatEnrichment],
-        ai: AIAnalysisResponse,
+        ai: Optional[AIAnalysisResponse],
     ) -> Union[ExecutiveReport, TechnicalReport, IncidentReport]:
         if report_type == ReportType.EXECUTIVE:
             return self._executive.build(alert, enrichments, ai)

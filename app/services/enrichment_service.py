@@ -73,3 +73,82 @@ class EnrichmentService:
                 logger.error(f"Unexpected error in {provider.provider_name} ({latency:.2f}ms): {e}", exc_info=True)
                 
         return enrichments
+
+    def enrich_ioc(self, observable: str) -> "NormalizedThreatIntel":
+        from app.enrichment.models import NormalizedThreatIntel, RiskScore, GeoData, ProviderStatus
+        import ipaddress
+        
+        try:
+            ipaddress.ip_address(observable)
+            obs_type = "ip"
+        except ValueError:
+            obs_type = "domain" if "." in observable else "file"
+            
+        providers_status = []
+        mitre_tags = set()
+        ioc_tags = set()
+        max_confidence = 0.0
+        max_abuse_score = 0
+        pulse_count = 0
+        geo_data = GeoData()
+        
+        for provider in self.providers:
+            if not provider.health():
+                providers_status.append(ProviderStatus(name=provider.provider_name, status="inactive"))
+                continue
+                
+            start_time = time.time()
+            try:
+                result = provider.enrich_ioc(observable)
+                latency = (time.time() - start_time) * 1000
+                if result:
+                    providers_status.append(ProviderStatus(name=provider.provider_name, status="active", score=result.confidence * 100 if result.confidence else None, latency=latency))
+                    
+                    if result.confidence:
+                        max_confidence = max(max_confidence, result.confidence)
+                    if provider.provider_name == "abuseipdb" and result.confidence:
+                        max_abuse_score = max(max_abuse_score, int(result.confidence * 100))
+                    if result.pulse_count:
+                        pulse_count = max(pulse_count, result.pulse_count)
+                    if result.country:
+                        geo_data.countryCode = result.country
+                    if result.isp:
+                        geo_data.isp = result.isp
+                    if result.mitre_technique:
+                        mitre_tags.add(result.mitre_technique)
+                    for tag in result.ioc_tags:
+                        ioc_tags.add(tag)
+                else:
+                    providers_status.append(ProviderStatus(name=provider.provider_name, status="active", latency=latency))
+            except EnrichmentError as e:
+                latency = (time.time() - start_time) * 1000
+                providers_status.append(ProviderStatus(name=provider.provider_name, status="error", latency=latency))
+                logger.error(f"Provider {provider.provider_name} failed on {observable}: {e}")
+            except Exception as e:
+                latency = (time.time() - start_time) * 1000
+                providers_status.append(ProviderStatus(name=provider.provider_name, status="error", latency=latency))
+                logger.error(f"Unexpected error in {provider.provider_name} on {observable}: {e}", exc_info=True)
+
+        # Risk Calculation
+        # AbuseIPDB weight: up to 100
+        # OTX weight: 5 pulses -> ~50 score
+        risk_score = max(max_abuse_score, min(100, pulse_count * 10))
+        
+        level = "low"
+        if risk_score > 70:
+            level = "critical"
+        elif risk_score > 40:
+            level = "high"
+        elif risk_score > 10:
+            level = "medium"
+            
+        return NormalizedThreatIntel(
+            observable=observable,
+            observable_type=obs_type,
+            risk=RiskScore(score=risk_score, level=level),
+            geo=geo_data,
+            providers=providers_status,
+            mitre=list(mitre_tags),
+            ioc_tags=list(ioc_tags)[:20],
+            cached=False
+        )

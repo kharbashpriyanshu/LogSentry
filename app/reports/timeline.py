@@ -40,7 +40,7 @@ class TimelineEngine:
         self,
         alert: DetectionAlert,
         enrichments: List[ThreatEnrichment],
-        ai: AIAnalysisResponse,
+        ai: Optional[AIAnalysisResponse],
         report_generated_at: Optional[datetime] = None,
     ) -> List[TimelineEntry]:
         """
@@ -136,8 +136,16 @@ class TimelineEngine:
         )
 
     def _ai_analysis_completed(
-        self, base: datetime, ai: AIAnalysisResponse
+        self, base: datetime, ai: Optional[AIAnalysisResponse]
     ) -> TimelineEntry:
+        if not ai:
+            return TimelineEntry(
+                sequence=5,
+                event="AI Analysis Bypassed",
+                description="AI Analysis was not performed. Manual SOC analyst review is required.",
+                timestamp=base + timedelta(microseconds=self._STAGE_OFFSETS_US[4]),
+                metadata={"ai_available": False},
+            )
         return TimelineEntry(
             sequence=5,
             event="AI Analysis Completed",

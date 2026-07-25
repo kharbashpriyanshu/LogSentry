@@ -4,18 +4,21 @@ Hardened health check router with liveness, readiness, and version probes.
 Changes from Sprint 7:
   - /health now returns additional subsystem status detail
   - /health/live — raw liveness probe (always 200 if process is alive)
-  - /health/ready — readiness probe (checks parsers + detection rules)
+  - /health/ready — readiness probe (checks parsers + detection rules + DB)
   - Response model extended with environment and version fields
 """
 
 import time
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from typing import Dict
+from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from app.config.settings import settings
 from app.parsers.factory import ParserFactory
 from app.detection.registry import RuleRegistry
+from app.database.session import get_db
 
 router = APIRouter()
 
@@ -62,11 +65,18 @@ def liveness() -> dict:
 
 
 @router.get("/health/ready", include_in_schema=False)
-def readiness() -> dict:
+def readiness(db: Session = Depends(get_db)) -> dict:
     """Kubernetes readiness probe."""
+    try:
+        db.execute(text("SELECT 1"))
+        db_ready = True
+    except Exception:
+        db_ready = False
+
     checks = {
         "parsers": len(ParserFactory.get_all_parsers()) > 0,
         "detection_rules": len(RuleRegistry.get_all_rules()) > 0,
+        "database": db_ready
     }
     ready = all(checks.values())
     return {"status": "ready" if ready else "not_ready", "checks": checks}

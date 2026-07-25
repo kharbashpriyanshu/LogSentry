@@ -26,3 +26,7 @@ class DetectionAlert(BaseModel):
     recommendation: Optional[str] = None
     evidence: Dict[str, Any] = Field(default_factory=dict)
     raw_log_reference: str
+    status: str = "OPEN"
+    assignee: Optional[str] = None
+    resolved_at: Optional[datetime] = None
+    resolution_note: Optional[str] = None

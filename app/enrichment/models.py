@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
 def default_timestamp():
@@ -17,3 +17,30 @@ class ThreatEnrichment(BaseModel):
     ioc_tags: List[str] = Field(default_factory=list, description="Tags associated with the IOC")
     references: List[str] = Field(default_factory=list, description="Links to external reports/references")
     timestamp: datetime = Field(default_factory=default_timestamp, description="Time of enrichment")
+
+class ProviderStatus(BaseModel):
+    name: str
+    status: str
+    score: Optional[float] = None
+    latency: Optional[float] = None
+
+class RiskScore(BaseModel):
+    score: int
+    level: str
+
+class GeoData(BaseModel):
+    country: Optional[str] = None
+    countryCode: Optional[str] = None
+    isp: Optional[str] = None
+
+class NormalizedThreatIntel(BaseModel):
+    observable: str
+    observable_type: str
+    risk: RiskScore
+    reputation: Dict[str, Any] = Field(default_factory=dict)
+    geo: GeoData
+    providers: List[ProviderStatus]
+    mitre: List[str] = Field(default_factory=list)
+    ioc_tags: List[str] = Field(default_factory=list)
+    cached: bool = False
+    enriched_at: datetime = Field(default_factory=default_timestamp)

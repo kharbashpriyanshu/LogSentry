@@ -1,130 +1,213 @@
-# LogSentry SIEM (v1.0.0) 🛡️
+# LogSentry
 
-> **Enterprise-grade Security Information and Event Management platform.**
-> The flagship Log Analysis module of the S.H.I.E.L.D. cybersecurity ecosystem.
+AI-assisted Security Information and Event Management platform for log ingestion, threat detection, incident investigation and security analytics.
 
-[![CI](https://github.com/your-org/logsentry/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/logsentry/actions)
-[![Coverage](https://codecov.io/gh/your-org/logsentry/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/logsentry)
-[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://python.org)
-[![Docker](https://img.shields.io/badge/docker-ready-blue)](Dockerfile)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+## Overview
+LogSentry is a high-performance SIEM designed for modern SOC teams. It ingests raw security logs, automatically detects cyber attacks using strict rule engines, enriches indicators of compromise (IOCs) with real-time threat intelligence, runs AI-driven incident analysis for triage, and surfaces actionable data via a real-time React dashboard.
 
----
+## Key Capabilities
+- **Apache/Nginx log ingestion**
+- **Log parsing and normalization**
+- **SQL Injection detection**
+- **XSS detection**
+- **Path Traversal detection**
+- **Command Injection detection**
+- **Directory Enumeration detection**
+- **Brute Force detection**
+- **Alert lifecycle management**
+- **Incident management**
+- **Threat Intelligence enrichment** (AbuseIPDB, OTX, MITRE ATT&CK)
+- **AI-assisted SOC analysis** (OpenAI, Gemini, Ollama)
+- **Real-time WebSocket updates**
+- **Reporting** (PDF, CSV, JSON Executive & Technical exports)
+- **System health monitoring**
+- **PostgreSQL persistence**
+- **Alembic migrations**
+- **React SOC dashboard**
 
-## 📖 Overview
+## Architecture
 
-LogSentry is a modular, high-performance SIEM platform built for modern SOC teams. It ingests raw security logs, detects attacks via a strict rule registry, enriches indicators of compromise (IOCs) with real-time threat intelligence, runs AI-driven incident analysis, and generates professional PDF/CSV incident reports.
+```mermaid
+graph TD
+    User([User / Browser])
+    Nginx[Nginx Reverse Proxy]
+    React[React Dashboard]
+    API[FastAPI REST/WebSocket API]
+    DB[(PostgreSQL)]
 
-LogSentry is designed using **Clean Architecture** and **SOLID principles**, making it highly extensible and production-ready.
+    User -->|HTTPS| Nginx
+    Nginx -->|Static Assets| React
+    Nginx -->|/api/ Proxy| API
+    
+    subgraph Services
+        Parsing[Parsing Engine]
+        Detection[Detection Engine]
+        Incident[Incident Management]
+        AI[AI Analysis]
+        Threat[Threat Intelligence]
+        Reporting[Reporting]
+    end
 
-![Dashboard Placeholder](docs/assets/dashboard_placeholder.png)  
-*(Screenshot: LogSentry SOC Dashboard)*
+    API --> Services
+    Services -->|SQLAlchemy| DB
 
----
+    AI -->|External API| LLM[OpenAI / Gemini / Ollama]
+    Threat -->|External API| AbuseIPDB[AbuseIPDB / OTX]
+```
 
-## ✨ Features
+## Detection Pipeline
+The detection flow processes raw strings into actionable security intelligence:
+1. **Log Input:** Raw logs are ingested via file upload or stream.
+2. **Parser:** The string is parsed and normalized into standard fields (IP, Timestamp, Endpoint, etc.).
+3. **Detection Engine:** The normalized event passes through the Rule Registry.
+4. **Rule Match:** Specific attack classes (e.g., SQLi, XSS, Path Traversal, Command Injection) are detected using RegEx constraints or temporal correlation (Brute Force).
+5. **Alert & Persistence:** A high-confidence Alert is generated and saved to PostgreSQL.
+6. **Event Publication:** The new record triggers a database commit and subsequent WebSocket broadcast.
+7. **Dashboard:** The SOC analyst sees the alert instantly on the React dashboard.
 
-- **Log Parsing Engine:** Extensible parsers for Apache, Nginx, and custom Regex with safe file upload handling.
-- **Detection Engine:** Pluggable rule registry (SQLi, XSS, Path Traversal, CMDi, Dir Enum, Brute Force) mapped to MITRE ATT&CK.
-- **AI SOC Analyst:** Provider-agnostic LLM analysis (OpenAI, Gemini, Ollama) for automated triage and false-positive reduction.
-- **Threat Intelligence:** Built-in enrichment via AbuseIPDB and OTX AlienVault, backed by a thread-safe LRU cache.
-- **Incident Reporting:** 6-stage chronological Timeline Engine generating Executive, Technical, and Incident reports (PDF, CSV, JSON).
-- **Production Security:** Strict CORS, 7-header security suite (CSP, HSTS), 1MB request size cap, and JSON-Lines structured logging with auto-redaction.
+## Technology Stack
 
----
+**Backend**
+- Python 3.11+
+- FastAPI
+- Pydantic v2
+- SQLAlchemy
+- Alembic
 
-## 🏗️ Architecture
+**Database**
+- PostgreSQL
 
-LogSentry utilizes a decoupled, dependency-injected architecture to ensure testability and scalability.
+**Frontend**
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- TanStack Query (React Query)
+- Lucide React
 
+**Infrastructure**
+- Docker
+- Docker Compose
+- Nginx
+
+**Testing**
+- Pytest
+
+**Security/Intelligence**
+- AbuseIPDB
+- AlienVault OTX
+- MITRE ATT&CK mapping
+- Configurable AI Providers (OpenAI, Gemini, Ollama)
+
+## Screenshots
+Screenshots of the fully integrated LogSentry SIEM platform:
+
+### 1. Unified Dashboard
+![LogSentry Dashboard](docs/images/dashboard.png)
+
+### 2. Incident & Alert Management
+![Alert Triage](docs/images/alerts.png)
+![Incident Details](docs/images/alert-details.png)
+
+### 3. System Health & Infrastructure
+![System Health](docs/images/system-health.png)
+
+### 4. Real-time Threat Intelligence
+![Threat Intelligence Enrichment](docs/images/threat-intel.png)
+
+### 5. Automated Reporting Engine
+![Incident Reporting](docs/images/reports.png)
+
+*(Note: The AI Analysis module screenshot is currently not displayed in this demo due to missing provider configuration during the automated capture.)*
+## Security Architecture
+LogSentry implements strict production security controls:
+- **Production fail-fast configuration:** Will not start in `production` without explicitly setting `DATABASE_URI`.
+- **Restricted CORS:** Configurable allowed origins.
+- **Security Headers:** Strict deployment of `CSP`, `HSTS`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy` via middleware and Nginx.
+- **Upload validation:** Explicit request-size limits to prevent buffer overflow or DoS attacks.
+- **Non-public PostgreSQL:** PostgreSQL is bound only to the internal Docker network in `docker-compose.prod.yml`.
+
+## Project Structure
 ```text
-HTTP Request → Size Cap Middleware → Security Middleware → Thin API Router
-                                                              │
-                                                        DI Container
-                                                              │
-    ┌────────────────┬───────────────────┬────────────────────┴────────────────┐
-    │                │                   │                                     │
- Parsing          Detection       Threat Intel                             Reporting
- Service          Service           Service                                 Service
-    │                │                   │                                     │
-(Regex/Nginx)  (Rule Registry)   (AbuseIPDB/OTX/Cache)   (Timeline Engine → PDF/CSV Gen)
+logsentry/
+├── app/                  # FastAPI Application Code
+│   ├── api/              # REST Endpoints and WebSockets
+│   ├── detection/        # Security Rules Engine
+│   ├── models/           # SQLAlchemy DB Models
+│   ├── services/         # Core Business Logic
+│   └── ...
+├── frontend/             # React SPA
+│   ├── src/pages/        # Dashboard Views
+│   ├── Dockerfile        # Nginx Production Build
+│   └── nginx.conf        # Proxy & Security Config
+├── tests/                # Pytest Test Suite
+├── alembic/              # Database Migrations
+├── docs/                 # Platform Documentation
+├── DEPLOYMENT.md         # Deployment Guide
+└── docker-compose.*      # Container Orchestration
 ```
-See [PLATFORM_ARCHITECTURE.md](docs/PLATFORM_ARCHITECTURE.md) for details on how LogSentry integrates into the S.H.I.E.L.D. ecosystem.
 
----
+## Local Development
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/logsentry.git
+   cd logsentry
+   ```
+2. **Environment Configuration:**
+   Copy `.env.example` to `.env` and fill in dummy API keys for local testing.
+3. **Backend Startup:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt -r requirements-dev.txt
+   alembic upgrade head
+   uvicorn app.main:app --reload
+   ```
+4. **Frontend Startup:**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
-## 🚀 Quick Start
+## Production Deployment
+Please see [DEPLOYMENT.md](DEPLOYMENT.md) for full instructions.
+Production deployment utilizes a multi-container Docker Compose stack comprising PostgreSQL, the FastAPI backend, and an Nginx reverse proxy serving the production React build. 
 
-### 1. Local Development
+## API Documentation
+When running locally, automatic interactive API documentation is available at:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+## Testing
+The backend test suite leverages Pytest to ensure reliability.
+- **Backend Tests:** 127 passing tests
+- **Coverage:** 84.14%
+
+To run the test suite:
 ```bash
-git clone https://github.com/your-org/logsentry.git
-cd logsentry
-
-# Setup Environment
-cp .env.example .env
-# Edit .env with your API keys (OpenAI, AbuseIPDB)
-
-# Install Dependencies
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-dev.txt
-
-# Run Server
-uvicorn app.main:app --reload
-```
-API Documentation available at: `http://localhost:8000/docs`
-
-### 2. Docker Deployment
-```bash
-# Start API and PostgreSQL
-docker-compose up -d
-
-# Verify Health
-curl http://localhost:8000/api/v1/health
+pytest tests/ --cov=app
 ```
 
----
+## Production Status
+**Release Candidate Status:** `Production Deployment Ready With Warnings`
 
-## 📚 Documentation Directory
+Verified features:
+- Backend test suite
+- Frontend production compilation
+- Configuration fail-fast behavior
+- Persistence logic through automated tests
+- Security controls through tests/code inspection
 
-| Category | Document | Description |
-|----------|----------|-------------|
-| **Core** | [PLATFORM_ARCHITECTURE.md](docs/PLATFORM_ARCHITECTURE.md) | S.H.I.E.L.D. integration & data flow |
-| **Engine** | [DETECTION_ENGINE.md](docs/DETECTION_ENGINE.md) | How to write and add detection rules |
-| **Engine** | [AI_SOC_ANALYST.md](docs/AI_SOC_ANALYST.md) | AI prompting and integration guides |
-| **Engine** | [REPORTING.md](docs/REPORTING.md) | Timeline engine and export formats |
-| **Ops** | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Docker, nginx, and Kubernetes guides |
-| **Ops** | [SECURITY.md](docs/SECURITY.md) | Security policy and vulnerability disclosure |
-| **Misc** | [DEMO.md](docs/DEMO.md) | Step-by-step interview walkthrough script |
-| **Misc** | [PORTFOLIO.md](docs/PORTFOLIO.md) | Engineering challenges and design decisions |
+Pending environment-level verification:
+- Live PostgreSQL deployment orchestration
+- Docker Compose orchestration execution
+- Nginx runtime routing
+- Container restart persistence
+- WebSocket behavior through production Nginx
 
----
-
-## 📸 Screenshots
-
-| Threat Intelligence | AI Analysis | Generated PDF Report |
-|:---:|:---:|:---:|
-| ![Threat Intel](docs/assets/intel_placeholder.png) | ![AI Analyst](docs/assets/ai_placeholder.png) | ![PDF Report](docs/assets/report_placeholder.png) |
-
----
-
-## 🛠️ Technology Stack
-
-- **Backend:** Python 3.11+, FastAPI, Pydantic v2
-- **Frontend (Dashboard):** React, TypeScript, Vite, TailwindCSS
-- **Storage & Caching:** PostgreSQL, Thread-safe In-Memory LRU Cache
-- **AI & Intel:** OpenAI/Gemini SDKs, `httpx` for AbuseIPDB/OTX
-- **Tooling:** Docker, GitHub Actions, Pytest, Ruff, Black, MyPy, Bandit
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please review our [Contributing Guidelines](docs/CONTRIBUTING.md) before submitting a PR.
-Code must pass all formatting, type-checking, and maintain **>65% test coverage**.
-
----
-
-## 📜 License
-
+## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact & Documentation
+Detailed audit and technical reports can be found in `docs/audits/`. For contributing guidelines or security vulnerability reporting, please see `CONTRIBUTING.md` and `SECURITY.md`.

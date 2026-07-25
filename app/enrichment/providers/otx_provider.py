@@ -26,17 +26,46 @@ class OTXProvider(BaseThreatProvider):
         return bool(self.api_key) and settings.ENABLE_OTX
 
     def enrich(self, alert: DetectionAlert) -> Optional[ThreatEnrichment]:
+        if not alert.source_ip:
+            return None
+        return self.enrich_ioc(alert.source_ip)
+        
+    def _is_valid_observable(self, obs: str) -> bool:
+        # Check if it's an IP
+        import ipaddress
+        try:
+            ip = ipaddress.ip_address(obs)
+            return not ip.is_private and not ip.is_loopback and not ip.is_multicast and not ip.is_reserved
+        except ValueError:
+            # Maybe domain or hash, we will allow basic domains for OTX
+            import re
+            domain_regex = re.compile(
+                r'^(?:[a-zA-Z0-9]'
+                r'(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+'
+                r'[a-zA-Z]{2,6}$'
+            )
+            hash_regex = re.compile(r'^[a-fA-F0-9]{32,64}$')
+            return bool(domain_regex.match(obs) or hash_regex.match(obs))
+
+    def enrich_ioc(self, observable: str) -> Optional[ThreatEnrichment]:
         if not self.health():
             return None
             
-        ip_to_check = alert.source_ip
-        if not ip_to_check:
+        if not self._is_valid_observable(observable):
             return None
+            
+        # Determine indicator type for OTX url (IPv4, domain, file)
+        import ipaddress
+        try:
+            ipaddress.ip_address(observable)
+            ind_type = "IPv4"
+        except ValueError:
+            ind_type = "domain" if "." in observable else "file"
             
         try:
             with httpx.Client(timeout=self.timeout) as client:
                 response = client.get(
-                    f"{self.base_url}/indicators/IPv4/{ip_to_check}/general",
+                    f"{self.base_url}/indicators/{ind_type}/{observable}/general",
                     headers={"X-OTX-API-KEY": self.api_key}
                 )
                 

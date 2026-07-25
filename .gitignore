@@ -1,21 +1,54 @@
 # Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 backend/venv/
 backend/__pycache__/
-*.pyc
 backend/instance/
 backend/logsentry.db
 backend/uploads/
 
-# Env vars
-.env
-backend/.env
-
 # Node
 frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.eslintcache
+
+# Env vars / Secrets
+.env
+.env.*
+!.env.example
+backend/.env
+*.pem
+*.key
+*.cert
+*.rsa
+*.pub
+
+# Databases
+logsentry.db
+*.sqlite3
+*.db
 
 # Logs
 *.log
+logs/
+
+# Temporary / OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+pytest_traceback.txt
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo

@@ -5,4 +5,8 @@ export const healthService = {
     const res = await api.get('/health');
     return res.data;
   },
+  getMetrics: async () => {
+    const res = await api.get('/metrics');
+    return res.data;
+  },
 };

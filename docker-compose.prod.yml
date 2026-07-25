@@ -1,0 +1,35 @@
+# ============================================================
+# LogSentry SIEM — Production Docker Compose overrides
+# ============================================================
+# Run with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  api:
+    ports: [] # Remove public exposure of the backend API
+    environment:
+      ENVIRONMENT: production
+    # Mount read-only root filesystem for better security in production
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  db:
+    ports: [] # Remove public exposure of PostgreSQL
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: logsentry_frontend:latest
+    container_name: logsentry_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - logsentry_net

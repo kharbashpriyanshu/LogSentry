@@ -26,39 +26,55 @@ class MockAIProvider(BaseAIProvider):
             likely_attack_goal="Mock goal",
             potential_impact="Mock impact",
             recommended_actions="Mock actions",
+            containment_strategy=[{"priority": "High", "action": "Block", "reason": "Stop attack"}],
+            attack_chain=[{"stage": "Initial Access", "evidence": "SQLi", "confidence": 0.95}],
+            cve_references=["CVE-2023-1234"],
             mitre_technique="T1234",
             confidence_score=0.99,
             false_positive_likelihood="Low",
             analyst_notes="Mock notes"
         )
 
+from app.api.dependencies import get_alert_repository, get_ai_repository
+from app.repositories.alert_repository import AlertRepository
+from app.repositories.ai_repository import AIRepository
+from app.models.alert import AlertModel
+from app.models.ai_analysis import AIAnalysisModel
+from unittest.mock import MagicMock
+
 def get_mock_ai_service():
     return AIService(MockAIProvider())
 
-# Dependency override
-app.dependency_overrides[get_ai_service] = get_mock_ai_service
+def get_mock_alert_repo():
+    repo = MagicMock(spec=AlertRepository)
+    # mock get_alert_by_id
+    mock_model = MagicMock(spec=AlertModel)
+    repo.get_alert_by_id.return_value = mock_model
+    mock_schema = MagicMock()
+    repo._to_schema.return_value = mock_schema
+    return repo
+
+def get_mock_ai_repo():
+    repo = MagicMock(spec=AIRepository)
+    repo.save_analysis.return_value = None
+    repo.get_analyses_for_alert.return_value = []
+    return repo
+
+@pytest.fixture(autouse=True)
+def override_dependencies():
+    app.dependency_overrides[get_ai_service] = get_mock_ai_service
+    app.dependency_overrides[get_alert_repository] = get_mock_alert_repo
+    app.dependency_overrides[get_ai_repository] = get_mock_ai_repo
+    yield
+    app.dependency_overrides.pop(get_ai_service, None)
+    app.dependency_overrides.pop(get_alert_repository, None)
+    app.dependency_overrides.pop(get_ai_repository, None)
 
 client = TestClient(app)
 
-def create_mock_alert():
+def create_mock_request():
     return {
-        "alert_id": "12345678-1234-5678-1234-567812345678",
-        "timestamp": datetime.now().isoformat(),
-        "rule_name": "sqli",
-        "rule_version": "1.0",
-        "severity": "HIGH",
-        "confidence": 0.9,
-        "risk_score": 85.0,
-        "title": "SQL Injection",
-        "description": "Test alert",
-        "source_ip": "1.1.1.1",
-        "endpoint": "/login",
-        "attack_type": "SQL Injection",
-        "mitre_technique": "T1190",
-        "mitre_tactic": "Initial Access",
-        "recommendation": "Block",
-        "evidence": {},
-        "raw_log_reference": "raw"
+        "alert_id": "12345678-1234-5678-1234-567812345678"
     }
 
 def test_ai_health():
@@ -73,7 +89,7 @@ def test_ai_providers():
     assert "mock_provider" in res.json()["active_provider"]
 
 def test_ai_analyze_success():
-    res = client.post("/api/v1/ai/analyze", json=create_mock_alert())
+    res = client.post("/api/v1/ai/analyze", json=create_mock_request())
     assert res.status_code == 200
     assert res.json()["executive_summary"] == "Mock summary"
 
@@ -86,8 +102,8 @@ def test_ai_analyze_unavailable():
         return AIService(FailingProvider())
         
     app.dependency_overrides[get_ai_service] = get_failing_service
-    res = client.post("/api/v1/ai/analyze", json=create_mock_alert())
-    assert res.status_code == 503
+    res = client.post("/api/v1/ai/analyze", json=create_mock_request())
+    assert res.status_code == 502
     
     app.dependency_overrides[get_ai_service] = get_mock_ai_service
 
@@ -100,7 +116,7 @@ def test_ai_analyze_timeout():
         return AIService(TimeoutProvider())
         
     app.dependency_overrides[get_ai_service] = get_timeout_service
-    res = client.post("/api/v1/ai/analyze", json=create_mock_alert())
-    assert res.status_code == 504
+    res = client.post("/api/v1/ai/analyze", json=create_mock_request())
+    assert res.status_code == 502
     
     app.dependency_overrides[get_ai_service] = get_mock_ai_service

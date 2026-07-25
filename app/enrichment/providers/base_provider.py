@@ -22,3 +22,10 @@ class BaseThreatProvider(ABC):
         Returns a ThreatEnrichment object, or None if no enrichment was possible or applicable.
         """
         pass
+
+    def enrich_ioc(self, observable: str) -> Optional[ThreatEnrichment]:
+        """
+        Enriches a specific IOC (like IP or domain).
+        Default implementation returns None.
+        """
+        return None

@@ -49,13 +49,14 @@ router = APIRouter()
 # Request / Response Schemas
 # ---------------------------------------------------------------------------
 
+from typing import List, Optional
 from pydantic import BaseModel
 
 class GenerateReportRequest(BaseModel):
     report_type: str
     alert: DetectionAlert
     enrichments: List[ThreatEnrichment] = []
-    ai_analysis: AIAnalysisResponse
+    ai_analysis: Optional[AIAnalysisResponse] = None
 
 
 # ---------------------------------------------------------------------------

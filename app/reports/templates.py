@@ -50,16 +50,17 @@ def _derive_business_impact(severity: str, attack_type: str) -> str:
     return f"{base} Attack vector identified: {attack_type}."
 
 
-def _derive_recommendations(alert: DetectionAlert, ai: AIAnalysisResponse) -> List[str]:
+def _derive_recommendations(alert: DetectionAlert, ai: Optional[AIAnalysisResponse]) -> List[str]:
     """Combine alert recommendation with AI recommended actions into a clean list."""
     recommendations: List[str] = []
     if alert.recommendation:
         recommendations.append(alert.recommendation)
-    # Split AI actions on newlines or semicolons for a clean list
-    for item in ai.recommended_actions.replace(";", "\n").splitlines():
-        cleaned = item.strip().lstrip("-").strip()
-        if cleaned:
-            recommendations.append(cleaned)
+    if ai and ai.recommended_actions:
+        # Split AI actions on newlines or semicolons for a clean list
+        for item in ai.recommended_actions.replace(";", "\n").splitlines():
+            cleaned = item.strip().lstrip("-").strip()
+            if cleaned:
+                recommendations.append(cleaned)
     return recommendations
 
 
@@ -106,12 +107,12 @@ class ExecutiveReportTemplate:
         self,
         alert: DetectionAlert,
         enrichments: List[ThreatEnrichment],
-        ai: AIAnalysisResponse,
+        ai: Optional[AIAnalysisResponse],
         export_format: str = "json",
     ) -> ExecutiveReport:
         return ExecutiveReport(
             title=f"Executive Security Report – {alert.title}",
-            executive_summary=ai.executive_summary,
+            executive_summary=ai.executive_summary if ai else "AI Analysis not available.",
             severity=alert.severity.value,
             business_impact=_derive_business_impact(alert.severity.value, alert.attack_type),
             high_level_recommendations=_derive_recommendations(alert, ai),
@@ -137,7 +138,7 @@ class TechnicalReportTemplate:
         self,
         alert: DetectionAlert,
         enrichments: List[ThreatEnrichment],
-        ai: AIAnalysisResponse,
+        ai: Optional[AIAnalysisResponse],
         export_format: str = "json",
     ) -> TechnicalReport:
         return TechnicalReport(
@@ -147,12 +148,12 @@ class TechnicalReportTemplate:
             rule_version=alert.rule_version,
             evidence=alert.evidence,
             threat_intelligence=_enrichments_to_dicts(enrichments),
-            mitre_technique=alert.mitre_technique or ai.mitre_technique,
+            mitre_technique=alert.mitre_technique or (ai.mitre_technique if ai else None),
             mitre_tactic=alert.mitre_tactic,
-            ai_technical_analysis=ai.technical_explanation,
-            recommended_actions=ai.recommended_actions,
-            confidence_score=ai.confidence_score,
-            false_positive_likelihood=ai.false_positive_likelihood,
+            ai_technical_analysis=ai.technical_explanation if ai else "AI Analysis not available.",
+            recommended_actions=ai.recommended_actions if ai else "Consult incident response playbooks.",
+            confidence_score=ai.confidence_score if ai else alert.confidence,
+            false_positive_likelihood=ai.false_positive_likelihood if ai else "Unknown",
             metadata=_export_metadata(ReportType.TECHNICAL, export_format),
         )
 
@@ -171,30 +172,30 @@ class IncidentReportTemplate:
         self,
         alert: DetectionAlert,
         enrichments: List[ThreatEnrichment],
-        ai: AIAnalysisResponse,
+        ai: Optional[AIAnalysisResponse],
         timeline: List[TimelineEntry],
         export_format: str = "json",
     ) -> IncidentReport:
         mitre_mapping = {
-            "technique": alert.mitre_technique or ai.mitre_technique,
+            "technique": alert.mitre_technique or (ai.mitre_technique if ai else None),
             "tactic": alert.mitre_tactic,
         }
         return IncidentReport(
             title=f"Security Incident Report – {alert.title}",
-            executive_summary=ai.executive_summary,
+            executive_summary=ai.executive_summary if ai else "AI Analysis not available.",
             severity=alert.severity.value,
             business_impact=_derive_business_impact(alert.severity.value, alert.attack_type),
             incident_status=ReportStatus.OPEN,
-            technical_details=ai.technical_explanation,
+            technical_details=ai.technical_explanation if ai else "AI Analysis not available.",
             original_log=alert.raw_log_reference,
             detection_rule=alert.rule_name,
             evidence=alert.evidence,
             threat_intelligence=_enrichments_to_dicts(enrichments),
-            ai_findings=ai.likely_attack_goal,
-            analyst_notes=ai.analyst_notes,
-            false_positive_likelihood=ai.false_positive_likelihood,
-            confidence_score=ai.confidence_score,
-            mitre_technique=alert.mitre_technique or ai.mitre_technique,
+            ai_findings=ai.likely_attack_goal if ai else "AI Analysis not available.",
+            analyst_notes=ai.analyst_notes if ai else "Generated without AI assistance.",
+            false_positive_likelihood=ai.false_positive_likelihood if ai else "Unknown",
+            confidence_score=ai.confidence_score if ai else alert.confidence,
+            mitre_technique=alert.mitre_technique or (ai.mitre_technique if ai else None),
             mitre_tactic=alert.mitre_tactic,
             mitre_mapping=mitre_mapping,
             timeline=timeline,

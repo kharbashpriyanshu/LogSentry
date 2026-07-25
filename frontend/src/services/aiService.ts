@@ -1,17 +1,23 @@
 import api from './api';
-import type { AIAnalysisResponse, DetectionAlert } from '../types';
 
 export const aiService = {
-  getHealth: async () => {
-    const res = await api.get('/ai/health');
-    return res.data;
-  },
   getProviders: async () => {
-    const res = await api.get('/ai/providers');
-    return res.data;
+    const response = await api.get('/ai/providers');
+    return response.data;
   },
-  analyzeAlert: async (alert: DetectionAlert): Promise<AIAnalysisResponse> => {
-    const res = await api.post('/ai/analyze', alert);
-    return res.data;
+  
+  checkHealth: async () => {
+    const response = await api.get('/ai/health');
+    return response.data;
   },
+
+  analyzeAlert: async (alertId: string) => {
+    const response = await api.post('/ai/analyze', { alert_id: alertId });
+    return response.data;
+  },
+  
+  getAnalysesForAlert: async (alertId: string) => {
+    const response = await api.get(`/ai/alerts/${alertId}/ai-analyses`);
+    return response.data;
+  }
 };

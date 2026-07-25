@@ -85,6 +85,9 @@ _SECURITY_HEADERS = {
     # Tight CSP for a JSON API — no scripts, no embeds
     "Content-Security-Policy": (
         "default-src 'none'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "img-src 'self' data: https://fastapi.tiangolo.com; "
         "frame-ancestors 'none'; "
         "form-action 'none';"
     ),

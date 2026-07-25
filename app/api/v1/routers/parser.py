@@ -104,7 +104,7 @@ async def parse_file(
     logger.info(
         "File upload received",
         extra={
-            "filename": safe_name,
+            "upload_filename": safe_name,
             "size_bytes": len(content),
             "parser": parser_name,
         },
@@ -123,12 +123,13 @@ async def parse_file(
             parser_name, tmp_path
         )
         logger.info(
-            "File parsed successfully",
+            "File parsing complete",
             extra={
-                "filename": safe_name,
-                "total": total,
-                "success": success,
-                "failed": failed,
+                "parser": parser_name,
+                "upload_filename": file.filename,
+                "total_lines": total,
+                "success_lines": success,
+                "failed_lines": failed,
             },
         )
         return ParseFileResponse(
