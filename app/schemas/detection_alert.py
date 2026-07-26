@@ -28,5 +28,9 @@ class DetectionAlert(BaseModel):
     raw_log_reference: str
     status: str = "OPEN"
     assignee: Optional[str] = None
+    assignment_notes: Optional[str] = None
     resolved_at: Optional[datetime] = None
+    resolution_type: Optional[str] = None
     resolution_note: Optional[str] = None
+    false_positive_reason: Optional[str] = None
+    hostname: Optional[str] = None

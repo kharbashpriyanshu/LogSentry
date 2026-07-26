@@ -36,6 +36,34 @@ def get_top_sources(
 ):
     return repo.get_top_sources()
 
+@router.get("/activity")
+def get_recent_activity(
+    limit: int = Query(50, ge=1, le=200),
+    repo: DashboardRepository = Depends(get_dashboard_repository)
+):
+    return repo.get_recent_activity(limit=limit)
+
+@router.get("/top-attack-types")
+def get_top_attack_types(
+    limit: int = Query(5, ge=1, le=20),
+    repo: DashboardRepository = Depends(get_dashboard_repository)
+):
+    return repo.get_top_attack_types(limit=limit)
+
+@router.get("/top-mitre")
+def get_top_mitre_techniques(
+    limit: int = Query(5, ge=1, le=20),
+    repo: DashboardRepository = Depends(get_dashboard_repository)
+):
+    return repo.get_top_mitre_techniques(limit=limit)
+
+@router.get("/recent-incidents")
+def get_recent_incidents(
+    limit: int = Query(5, ge=1, le=20),
+    repo: DashboardRepository = Depends(get_dashboard_repository)
+):
+    return repo.get_recent_incidents(limit=limit)
+
 @router.websocket("/ws/events")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)

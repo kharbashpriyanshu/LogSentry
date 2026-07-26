@@ -4,6 +4,8 @@ from app.models.alert import AlertModel
 from app.models.incident import IncidentModel
 from app.models.log_event import LogEventModel
 from datetime import datetime, timedelta, timezone
+from app.models.timeline import TimelineEventModel
+from typing import Optional
 
 class DashboardRepository:
     def __init__(self, db: Session):
@@ -18,6 +20,7 @@ class DashboardRepository:
         open_alerts = self.db.query(AlertModel).filter(func.upper(AlertModel.status) == "OPEN").count()
         investigating_alerts = self.db.query(AlertModel).filter(func.upper(AlertModel.status) == "INVESTIGATING").count()
         resolved_alerts = self.db.query(AlertModel).filter(func.upper(AlertModel.status) == "RESOLVED").count()
+        fp_alerts = self.db.query(AlertModel).filter(func.upper(AlertModel.status) == "FALSE_POSITIVE").count()
         critical_alerts = self.db.query(AlertModel).filter(func.upper(AlertModel.severity) == "CRITICAL").count()
         high_alerts = self.db.query(AlertModel).filter(func.upper(AlertModel.severity) == "HIGH").count()
         
@@ -33,6 +36,7 @@ class DashboardRepository:
             "open_alerts": open_alerts,
             "investigating_alerts": investigating_alerts,
             "resolved_alerts": resolved_alerts,
+            "false_positive_alerts": fp_alerts,
             "critical_alerts": critical_alerts,
             "high_alerts": high_alerts,
             "total_incidents": total_incidents,
@@ -60,3 +64,53 @@ class DashboardRepository:
     def get_top_sources(self):
         result = self.db.query(AlertModel.source_ip, func.count(AlertModel.id)).filter(AlertModel.source_ip != None).group_by(AlertModel.source_ip).order_by(func.count(AlertModel.id).desc()).limit(5).all()
         return [{"source_ip": k, "count": v} for k, v in result]
+
+    def get_top_attack_types(self, limit: int = 5):
+        result = self.db.query(AlertModel.attack_type, func.count(AlertModel.id)).filter(AlertModel.attack_type != None).group_by(AlertModel.attack_type).order_by(func.count(AlertModel.id).desc()).limit(limit).all()
+        return [{"attack_type": k, "count": v} for k, v in result]
+
+    def get_top_mitre_techniques(self, limit: int = 5):
+        result = self.db.query(AlertModel.mitre_technique, func.count(AlertModel.id)).filter(AlertModel.mitre_technique != None).group_by(AlertModel.mitre_technique).order_by(func.count(AlertModel.id).desc()).limit(limit).all()
+        return [{"technique": k, "count": v} for k, v in result]
+
+    def get_recent_incidents(self, limit: int = 5):
+        incidents = self.db.query(IncidentModel).order_by(IncidentModel.created_at.desc()).limit(limit).all()
+        return [
+            {
+                "id": inc.id,
+                "title": inc.title,
+                "severity": inc.severity,
+                "status": inc.status,
+                "priority": inc.priority,
+                "assignee": inc.assignee,
+                "created_at": inc.created_at,
+            }
+            for inc in incidents
+        ]
+
+    def get_recent_activity(self, limit: int = 50):
+        events = self.db.query(TimelineEventModel).order_by(TimelineEventModel.created_at.desc()).limit(limit).all()
+        results = []
+        for ev in events:
+            actor = None
+            if ev.metadata_json:
+                actor = ev.metadata_json.get("user") or ev.metadata_json.get("actor")
+            if not actor and ev.actor:
+                actor = ev.actor
+
+            # Build a short, human-readable entity label (e.g. "ALT-0001" or "INC-0001")
+            short_id = ev.entity_id[:8] if ev.entity_id else "?"
+
+            results.append({
+                "id": ev.id,
+                "entity_type": ev.entity_type,
+                "entity_id": ev.entity_id,
+                "short_id": short_id,
+                "action": ev.action,
+                "actor": actor or "System",
+                "metadata": ev.metadata_json,
+                "created_at": ev.created_at,
+                "old_value": ev.old_value,
+                "new_value": ev.new_value
+            })
+        return results

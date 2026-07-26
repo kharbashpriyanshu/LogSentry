@@ -8,6 +8,8 @@ class IncidentBase(BaseModel):
     description: Optional[str] = None
     severity: str
     priority: Optional[str] = None
+    category: Optional[str] = None
+    tags: Optional[str] = None
 
 class IncidentCreate(IncidentBase):
     alert_ids: List[str] = Field(default_factory=list)
@@ -17,6 +19,8 @@ class IncidentUpdate(BaseModel):
     description: Optional[str] = None
     severity: Optional[str] = None
     priority: Optional[str] = None
+    category: Optional[str] = None
+    tags: Optional[str] = None
     status: Optional[str] = None
     assignee: Optional[str] = None
     add_alert_ids: Optional[List[str]] = None

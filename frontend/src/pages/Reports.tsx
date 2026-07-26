@@ -26,17 +26,23 @@ export default function Reports() {
     const savedAlert = localStorage.getItem('last_alert');
     const savedAi = localStorage.getItem('last_ai_analysis');
     const savedEnrich = localStorage.getItem('last_enrichment');
-    const fetchAlerts = async () => {
-      if (!savedAlert) {
+    
+    if (savedAi) setAiAnalysis(JSON.parse(savedAi));
+    if (savedEnrich) setEnrichments(JSON.parse(savedEnrich));
+
+    if (savedAlert) {
+      setAlert(JSON.parse(savedAlert));
+    } else {
+      const fetchAlerts = async () => {
         try {
           const alerts = await alertService.getAlerts();
           if (alerts && alerts.length > 0) setAlert(alerts[0]);
         } catch (e) {
           console.error("Failed to load alerts for reports", e);
         }
-      }
-    };
-    fetchAlerts();
+      };
+      fetchAlerts();
+    }
   }, []);
 
   const handleGenerate = async () => {
@@ -310,8 +316,8 @@ export default function Reports() {
                   <Download className="w-3 h-3 text-white" />
                 </div>
               </div>
-              <p className="text-lg font-bold text-slate-200">No Report Generated</p>
-              <p className="text-sm text-slate-500 mt-2 max-w-sm leading-relaxed">Configure report settings on the left and click "Generate Report" to build a professional, print-ready document.</p>
+              <p className="text-lg font-bold text-slate-200">Generate a report from an Alert or Incident</p>
+              <p className="text-sm text-slate-500 mt-2 max-w-sm leading-relaxed">Select an alert and configure report settings on the left. Click "Generate Report" to build a professional, print-ready document.</p>
             </div>
           )}
         </div>

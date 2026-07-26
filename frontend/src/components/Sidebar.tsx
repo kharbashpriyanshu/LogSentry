@@ -3,25 +3,41 @@ import {
   LayoutDashboard, AlertTriangle, ShieldAlert, BrainCircuit,
   Activity, Settings, FileText, Shield, ChevronRight,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { dashboardService } from '../services/dashboardService';
 
-const navItems = [
-  { to: '/dashboard',   label: 'Dashboard',     icon: LayoutDashboard, badge: null },
-  { to: '/alerts',      label: 'Alerts',        icon: AlertTriangle,   badge: '12' },
-  { to: '/incidents',   label: 'Incidents',     icon: Shield,          badge: null },
-  { to: '/threat-intel',label: 'Threat Intel',  icon: ShieldAlert,     badge: null },
-  { to: '/ai-analysis', label: 'AI Analysis',   icon: BrainCircuit,    badge: null },
-  { to: '/reports',     label: 'Reports',       icon: FileText,        badge: null },
-  { to: '/health',      label: 'System Health', icon: Activity,        badge: null },
-  { to: '/settings',    label: 'Settings',      icon: Settings,        badge: null },
+// Nav items without hardcoded badges — badges are injected at render time from live data
+const NAV_ITEMS = [
+  { to: '/dashboard',    label: 'Dashboard',      icon: LayoutDashboard, badgeKey: null          },
+  { to: '/alerts',       label: 'Alerts',         icon: AlertTriangle,   badgeKey: 'open_alerts'  },
+  { to: '/incidents',    label: 'Incidents',       icon: Shield,          badgeKey: 'open_incidents'},
+  { to: '/threat-intel', label: 'Threat Intel',   icon: ShieldAlert,     badgeKey: null           },
+  { to: '/ai-analysis',  label: 'AI Analysis',    icon: BrainCircuit,    badgeKey: null           },
+  { to: '/reports',      label: 'Reports',         icon: FileText,        badgeKey: null           },
+  { to: '/health',       label: 'System Health',  icon: Activity,        badgeKey: null           },
+  { to: '/settings',     label: 'Settings',        icon: Settings,        badgeKey: null           },
 ];
 
 export default function Sidebar() {
+  // Poll the same summary query the dashboard uses — no extra request, cache-shared
+  const { data: summary } = useQuery({
+    queryKey: ['dashboard_summary'],
+    queryFn: dashboardService.getSummary,
+    refetchInterval: 10000, // refresh every 10s
+    staleTime: 5000,
+  });
+
+  const badges: Record<string, number> = {
+    open_alerts:    summary?.open_alerts    ?? 0,
+    open_incidents: summary?.open_incidents ?? 0,
+  };
+
   return (
     <aside className="w-60 flex flex-col border-r border-slate-800 bg-[#0d1424]" style={{ background: 'linear-gradient(180deg, #0d1424 0%, #0a0f1e 100%)' }}>
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-slate-800 shrink-0">
-        <div className="p-1.5 bg-blue-600/20 rounded-lg border border-blue-500/20 mr-3">
-          <Shield className="w-5 h-5 text-blue-400" />
+        <div className="p-1 bg-blue-600/20 rounded-lg border border-blue-500/20 mr-3 flex items-center justify-center w-8 h-8">
+          <img src="/branding/logo.svg" alt="LogSentry Logo" className="w-5 h-5" />
         </div>
         <div>
           <span className="text-base font-bold text-slate-100 tracking-tight">LogSentry</span>
@@ -36,8 +52,11 @@ export default function Sidebar() {
 
       {/* Nav items */}
       <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
-        {navItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
+          const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+          const showBadge = item.badgeKey !== null && badgeCount > 0;
+
           return (
             <NavLink
               key={item.to}
@@ -56,9 +75,9 @@ export default function Sidebar() {
                     <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
                     {item.label}
                   </span>
-                  {item.badge ? (
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 rounded-full">
-                      {item.badge}
+                  {showBadge ? (
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 rounded-full min-w-[20px] text-center tabular-nums transition-all duration-300">
+                      {badgeCount > 99 ? '99+' : badgeCount}
                     </span>
                   ) : (
                     <ChevronRight className={`w-3 h-3 shrink-0 transition-opacity ${isActive ? 'opacity-60' : 'opacity-0 group-hover:opacity-30'}`} />
@@ -72,11 +91,24 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-4 py-4 border-t border-slate-800 shrink-0">
-        <div className="flex items-center gap-2.5 mb-3">
+        <div className="flex items-center gap-2.5 mb-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
           <span className="text-[11px] text-slate-400">All systems operational</span>
         </div>
-        <p className="text-[10px] text-slate-600">LogSentry v1.1.0 • Enterprise</p>
+        <div className="text-[11px] text-slate-500 space-y-0.5">
+          <p className="font-medium text-slate-400">LogSentry v1.0.0</p>
+          <p>
+            Built by Martial &middot;{' '}
+            <a
+              href="https://github.com/kharbashpriyanshu/LogSentry"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400 hover:text-blue-400 focus:text-blue-400 focus:outline-none transition-colors inline-flex items-center gap-0.5"
+            >
+              GitHub &#8599;
+            </a>
+          </p>
+        </div>
       </div>
     </aside>
   );

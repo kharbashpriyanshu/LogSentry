@@ -15,6 +15,8 @@ class IncidentModel(Base):
     status = Column(String, nullable=False, default="open", index=True)
     assignee = Column(String, nullable=True, index=True)
     priority = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    tags = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     resolved_at = Column(DateTime(timezone=True), nullable=True)

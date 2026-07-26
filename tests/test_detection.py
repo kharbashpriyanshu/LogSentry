@@ -39,9 +39,96 @@ def test_cmd_injection_rule():
 
 def test_dir_enum_rule():
     rule = RuleRegistry.get_rule("dir_enum")
-    assert rule.match(create_event(endpoint="/admin/settings"))
-    assert rule.match(create_event(endpoint="/.git/config"))
-    assert not rule.match(create_event(endpoint="/public/style.css"))
+    rule.threshold = 3
+    rule.window_seconds = 60
+    rule._state.clear()
+    
+    ip = "192.168.1.50"
+    # Event 1: Single administrative request should NOT trigger alert
+    assert not rule.match(create_event(endpoint="/admin/settings", source_ip=ip))
+    # Event 2: Second unique path should NOT trigger alert
+    assert not rule.match(create_event(endpoint="/.git/config", source_ip=ip))
+    # Event 3: Third unique path triggers alert
+    assert rule.match(create_event(endpoint="/backup", source_ip=ip))
+    
+    # Generate alert and verify evidence
+    alert = rule.generate_alert(create_event(endpoint="/backup", source_ip=ip))
+    assert alert.attack_type == "Directory Enumeration"
+    assert alert.evidence["unique_paths_probed"] == 3
+    assert "/admin/settings" in alert.evidence["sample_paths"]
+    assert "/.git/config" in alert.evidence["sample_paths"]
+    assert "/backup" in alert.evidence["sample_paths"]
+    assert not rule.match(create_event(endpoint="/public/style.css", source_ip=ip))
+
+def test_dir_enum_normal_traffic():
+    rule = RuleRegistry.get_rule("dir_enum")
+    rule.threshold = 3
+    rule.window_seconds = 60
+    rule._state.clear()
+
+    ip = "10.0.0.5"
+    normal_endpoints = [
+        "/",
+        "/index.html",
+        "/robots.txt",
+        "/favicon.ico",
+        "/css/app.css",
+        "/js/app.js",
+        "/images/logo.png",
+        "/about",
+        "/contact"
+    ]
+    for ep in normal_endpoints:
+        assert not rule.match(create_event(endpoint=ep, source_ip=ip))
+
+def test_dir_enum_robots_txt_handling():
+    rule = RuleRegistry.get_rule("dir_enum")
+    rule.threshold = 3
+    rule.window_seconds = 60
+    rule._state.clear()
+
+    ip = "10.10.10.10"
+    # robots.txt alone MUST NOT produce Directory Enumeration
+    for _ in range(5):
+        assert not rule.match(create_event(endpoint="/robots.txt", source_ip=ip))
+
+    # However, in a reconnaissance sequence, it contributes to overall detection
+    rule._state.clear()
+    assert not rule.match(create_event(endpoint="/robots.txt", source_ip=ip))
+    assert not rule.match(create_event(endpoint="/admin", source_ip=ip))
+    assert rule.match(create_event(endpoint="/backup", source_ip=ip))
+    alert = rule.generate_alert(create_event(endpoint="/backup", source_ip=ip))
+    assert "/robots.txt" in alert.evidence["sample_paths"]
+
+def test_dir_enum_false_positive_protection():
+    rule = RuleRegistry.get_rule("dir_enum")
+    rule.threshold = 3
+    rule.window_seconds = 60
+    rule._state.clear()
+
+    # Single /admin request from IP 1
+    assert not rule.match(create_event(endpoint="/admin", source_ip="1.1.1.1"))
+    # Single /robots.txt request from IP 2
+    assert not rule.match(create_event(endpoint="/robots.txt", source_ip="2.2.2.2"))
+    # Single 404 request from IP 3
+    assert not rule.match(create_event(endpoint="/nonexistent", status_code=404, source_ip="3.3.3.3"))
+
+def test_dir_enum_mixed_traffic():
+    dir_rule = RuleRegistry.get_rule("dir_enum")
+    xss_rule = RuleRegistry.get_rule("xss")
+    sqli_rule = RuleRegistry.get_rule("sqli")
+    dir_rule._state.clear()
+
+    ip = "172.16.0.50"
+    xss_event = create_event(endpoint="/search?q=<script>alert(1)</script>", source_ip=ip)
+    sqli_event = create_event(endpoint="/products?id=1' UNION SELECT", source_ip=ip)
+
+    # Specific attack rules fire
+    assert xss_rule.match(xss_event)
+    assert sqli_rule.match(sqli_event)
+    # Ordinary endpoint base paths should not count towards dir_enum
+    assert not dir_rule.match(xss_event)
+    assert not dir_rule.match(sqli_event)
 
 def test_brute_force_rule():
     rule = RuleRegistry.get_rule("brute_force")

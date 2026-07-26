@@ -105,6 +105,8 @@ export interface Incident {
   description?: string;
   severity: string;
   priority?: string;
+  category?: string;
+  tags?: string;
   status: string;
   assignee?: string;
   created_at: string;
@@ -118,6 +120,8 @@ export interface IncidentCreate {
   description?: string;
   severity: string;
   priority?: string;
+  category?: string;
+  tags?: string;
   alert_ids?: string[];
 }
 
@@ -126,6 +130,8 @@ export interface IncidentUpdate {
   description?: string;
   severity?: string;
   priority?: string;
+  category?: string;
+  tags?: string;
   status?: string;
   assignee?: string;
   add_alert_ids?: string[];

@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     # ---------------------------------------------------------------------------
     DETECTION_BRUTE_FORCE_THRESHOLD: int = 5
     DETECTION_BRUTE_FORCE_WINDOW_SECONDS: int = 60
+    DETECTION_DIR_ENUM_THRESHOLD: int = 3
+    DETECTION_DIR_ENUM_WINDOW_SECONDS: int = 60
     DETECTION_ENABLED_RULES: List[str] = [
         "sqli", "xss", "path_traversal", "cmd_injection", "dir_enum", "brute_force"
     ]

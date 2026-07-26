@@ -25,6 +25,27 @@ router = APIRouter()
 START_TIME = time.time()
 
 
+class IntegrationsStatus(BaseModel):
+    gemini: bool
+    openai: bool
+    abuseipdb: bool
+    otx: bool
+
+
+@router.get("/health/integrations", response_model=IntegrationsStatus, summary="Integrations status check")
+def integrations_check() -> IntegrationsStatus:
+    """
+    Checks if API keys for external services are configured in settings.
+    Returns booleans to indicate configuration status without exposing the keys.
+    """
+    return IntegrationsStatus(
+        gemini=bool(settings.GEMINI_API_KEY),
+        openai=bool(settings.OPENAI_API_KEY),
+        abuseipdb=bool(settings.ABUSEIPDB_API_KEY),
+        otx=bool(settings.OTX_API_KEY),
+    )
+
+
 class HealthResponse(BaseModel):
     status: str
     version: str

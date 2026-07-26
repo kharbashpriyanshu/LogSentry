@@ -29,6 +29,8 @@ class IncidentRepository:
             description=data.description,
             severity=data.severity,
             priority=data.priority,
+            category=data.category,
+            tags=data.tags,
             status="open"
         )
         
@@ -83,6 +85,8 @@ class IncidentRepository:
             description=model.description,
             severity=model.severity,
             priority=model.priority,
+            category=model.category,
+            tags=model.tags,
             status=model.status,
             assignee=model.assignee,
             created_at=model.created_at,

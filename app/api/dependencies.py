@@ -20,13 +20,23 @@ from app.config.settings import settings
 _detection_engine = DetectionEngine()
 
 # Initialize AI Provider
+import logging as _dep_logging
+_dep_logger = _dep_logging.getLogger(__name__)
+
 def _init_ai_provider():
     provider = settings.AI_PROVIDER.lower()
+    _dep_logger.info(f"[AI] Initialising provider: '{provider}'")
     if provider == "gemini":
-        return GeminiProvider()
+        p = GeminiProvider()
+        _dep_logger.info(f"[AI] GeminiProvider ready — key configured: {bool(settings.GEMINI_API_KEY)}")
+        return p
     elif provider == "ollama":
-        return OllamaProvider()
-    return OpenAIProvider()
+        p = OllamaProvider()
+        _dep_logger.info(f"[AI] OllamaProvider ready — url: {settings.OLLAMA_URL}")
+        return p
+    p = OpenAIProvider()
+    _dep_logger.info(f"[AI] OpenAIProvider ready — key configured: {bool(settings.OPENAI_API_KEY)}")
+    return p
 
 _ai_provider = _init_ai_provider()
 

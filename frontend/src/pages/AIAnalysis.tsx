@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { aiService } from '../services/aiService';
 import { alertService } from '../services/alertService';
-import { SeverityBadge, ProgressRing, Timeline, Toast, AnimatedCounter, SkeletonRow } from '../components/ui';
+import { SeverityBadge, ProgressRing, Timeline, Toast, AnimatedCounter, SkeletonRow, EmptyState } from '../components/ui';
 import {
   BrainCircuit, Loader2, Sparkles, Clock,
   Network, Shield, AlertOctagon, BookOpen, Link as LinkIcon,
@@ -103,12 +103,32 @@ export default function AIAnalysis() {
           <p className="text-xs text-slate-500 mt-0.5">
             Provider: <span className="text-blue-400 font-medium">{aiProviders?.active_provider || 'Loading...'}</span>
             {' · '}
-            <span className={aiHealth?.healthy ? 'text-green-400' : 'text-yellow-400'}>
-              {aiHealth?.healthy ? 'Online' : 'Offline'}
+            <span className={aiHealth?.healthy ? 'text-green-400' : 'text-red-400 font-semibold'}>
+              {aiHealth?.healthy ? '● Online' : '● Offline'}
             </span>
           </p>
         </div>
       </div>
+
+      {/* Offline banner — shown when health check returns false */}
+      {aiHealth && !aiHealth.healthy && (
+        <div className="mb-4 shrink-0 flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/8">
+          <AlertOctagon className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-300">AI Provider Offline</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {aiProviders?.active_provider === 'openai'
+                ? 'Configure OPENAI_API_KEY in .env to enable AI Analysis.'
+                : aiProviders?.active_provider === 'gemini'
+                ? 'Configure GEMINI_API_KEY in .env to enable AI Analysis.'
+                : 'The configured AI provider is unreachable. Check your .env configuration.'}
+            </p>
+            <p className="text-[10px] text-slate-500 mt-1 font-mono">
+              Set AI_PROVIDER and the corresponding API key in .env, then restart the backend server.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-1 gap-5 overflow-hidden min-h-0 relative">
         {/* Left panel – incident selector */}
@@ -155,11 +175,18 @@ export default function AIAnalysis() {
                   <p className="text-xs text-slate-400 mt-1.5">{selectedAlert.source_ip || '?'} → {selectedAlert.endpoint || '?'} · {selectedAlert.hostname || 'Unknown Host'}</p>
                 </div>
                 <div className="flex flex-col gap-2 shrink-0 ml-4">
-                  <button onClick={handleAnalyze} disabled={analyzeMutation.isPending}
-                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                    {analyzeMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                    {analyzeMutation.isPending ? 'Analyzing…' : currentAnalysis ? 'Reanalyze Alert' : 'Start Assessment'}
-                  </button>
+                  {aiHealth && !aiHealth.healthy ? (
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg cursor-not-allowed" title="AI provider is offline">
+                      <Lock className="w-3.5 h-3.5 text-slate-500" />
+                      <span className="text-xs font-semibold text-slate-500">AI Offline</span>
+                    </div>
+                  ) : (
+                    <button onClick={handleAnalyze} disabled={analyzeMutation.isPending}
+                      className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                      {analyzeMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                      {analyzeMutation.isPending ? 'Analyzing…' : currentAnalysis ? 'Reanalyze Alert' : 'Start Assessment'}
+                    </button>
+                  )}
                   {analysesHistory.length > 0 && (
                     <button onClick={() => setHistoryOpen(!historyOpen)} className="flex items-center justify-center gap-2 px-5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-xs font-semibold rounded-lg transition-colors">
                       <History className="w-3.5 h-3.5" /> View History ({analysesHistory.length})
@@ -171,7 +198,9 @@ export default function AIAnalysis() {
           )}
 
           {!selectedAlert && (
-             <div className="h-full flex items-center justify-center text-slate-500 text-sm">Select an alert to begin AI analysis.</div>
+             <div className="bg-[#1e293b] border border-slate-700/80 rounded-xl h-full flex flex-col justify-center min-h-[400px]">
+               <EmptyState icon={<BrainCircuit className="w-10 h-10" />} title="Select an alert to begin AI analysis" desc="Choose an alert from the sidebar to automatically synthesize threat data, correlate logs, and generate mitigation strategies." />
+             </div>
           )}
 
           {analyzeMutation.isPending && (

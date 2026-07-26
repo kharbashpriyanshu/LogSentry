@@ -13,6 +13,7 @@ function IncidentDetails({ incident, onClose, setToast }: { incident: Incident; 
   const queryClient = useQueryClient();
   const [isAssigning, setIsAssigning] = useState(false);
   const [assigneeInput, setAssigneeInput] = useState('');
+  const [commentText, setCommentText] = useState('');
   
   const { data: timelineData = [], isLoading: timelineLoading } = useQuery({
     queryKey: ['incident-timeline', incident.id],
@@ -47,6 +48,19 @@ function IncidentDetails({ incident, onClose, setToast }: { incident: Incident; 
     });
   };
 
+  const commentMutation = useMutation({
+    mutationFn: (payload: any) => incidentService.addComment(incident.id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incident-timeline', incident.id] });
+      setCommentText('');
+    }
+  });
+
+  const handleAddComment = () => {
+    if (!commentText.trim()) return;
+    commentMutation.mutate({ content: commentText, author: 'Demo User' });
+  };
+
   const getTimelineType = (action: string) => {
     if (action === 'created') return 'info';
     if (action === 'status_changed') return 'warning';
@@ -54,14 +68,20 @@ function IncidentDetails({ incident, onClose, setToast }: { incident: Incident; 
     return 'info';
   };
 
-  const timelineItems = timelineData.map((ev: TimelineEvent) => ({
-    event: ev.action.toUpperCase(),
-    detail: ev.action === 'status_changed' ? `Status changed from ${ev.old_value} to ${ev.new_value}` : 
-            ev.action === 'assigned' ? `Assigned to ${ev.new_value}` : 
-            ev.action === 'created' ? `Incident created: ${ev.metadata_json?.title}` : ev.action,
-    time: format(new Date(ev.created_at), 'HH:mm:ss'),
-    type: getTimelineType(ev.action) as any
-  }));
+  const timelineItems = timelineData.map((ev: TimelineEvent) => {
+    let detail = ev.action;
+    if (ev.action === 'status_changed') detail = `Status changed from ${ev.old_value} to ${ev.new_value}`;
+    if (ev.action === 'assigned') detail = `Assigned to ${ev.new_value}`;
+    if (ev.action === 'created') detail = `Incident created: ${ev.metadata_json?.title}`;
+    if (ev.action === 'commented') detail = `Comment: ${ev.new_value}`;
+    
+    return {
+      event: ev.metadata_json?.user ? `${ev.action.toUpperCase()} by ${ev.metadata_json.user}` : ev.action.toUpperCase(),
+      detail,
+      time: format(new Date(ev.created_at), 'HH:mm:ss'),
+      type: getTimelineType(ev.action) as any
+    };
+  });
 
   return (
     <>
@@ -124,6 +144,44 @@ function IncidentDetails({ incident, onClose, setToast }: { incident: Incident; 
         )}
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/40">
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-3">Incident Metadata</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">Status</p>
+                <p className="text-xs text-slate-200 mt-0.5">{incident.status?.toUpperCase()}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">Priority</p>
+                <p className="text-xs text-slate-200 mt-0.5">{incident.priority || 'UNASSIGNED'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">Assigned Analyst</p>
+                <p className="text-xs text-slate-200 mt-0.5">{incident.assignee || 'Unassigned'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">Category</p>
+                <p className="text-xs text-slate-200 mt-0.5">{incident.category || 'General'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">Tags</p>
+                <p className="text-xs text-slate-200 mt-0.5">{incident.tags || 'None'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">Created</p>
+                <p className="text-xs text-slate-200 mt-0.5">{format(new Date(incident.created_at), 'dd MMM yyyy, HH:mm')}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">Updated</p>
+                <p className="text-xs text-slate-200 mt-0.5">{format(new Date(incident.updated_at), 'dd MMM yyyy, HH:mm')}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">Resolved</p>
+                <p className="text-xs text-slate-200 mt-0.5">{incident.resolved_at ? format(new Date(incident.resolved_at), 'dd MMM yyyy, HH:mm') : '—'}</p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/40">
               <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-2">Description</p>
@@ -141,7 +199,7 @@ function IncidentDetails({ incident, onClose, setToast }: { incident: Incident; 
           
           <div>
             <h3 className="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-blue-400" /> Incident Timeline</h3>
-            <div className="bg-[#1e293b] p-4 rounded-xl border border-slate-700/80">
+            <div className="bg-[#1e293b] p-4 rounded-xl border border-slate-700/80 space-y-6">
               {timelineLoading ? (
                 <div className="flex justify-center p-4"><Loader2 className="w-5 h-5 animate-spin text-slate-500" /></div>
               ) : timelineItems.length > 0 ? (
@@ -149,6 +207,16 @@ function IncidentDetails({ incident, onClose, setToast }: { incident: Incident; 
               ) : (
                 <p className="text-xs text-slate-500">No timeline events available.</p>
               )}
+              
+              <div className="pt-4 border-t border-slate-800">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Analyst Comments</p>
+                <div className="flex gap-2">
+                  <textarea value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Add a comment to the timeline..."
+                    className="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 resize-none h-16" />
+                  <button onClick={handleAddComment} disabled={commentMutation.isPending || !commentText.trim()}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition-colors disabled:opacity-50">Post</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -227,7 +295,9 @@ export default function Incidents() {
             {isLoading && Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} cols={8} />)}
             {!isLoading && filtered.length === 0 && (
               <tr><td colSpan={8}>
-                <EmptyState icon={<Cpu className="w-8 h-8" />} title="No incidents match filters" desc="Escalate alerts to create an incident." />
+                <div className="py-12">
+                  <EmptyState icon={<ShieldAlert className="w-10 h-10" />} title="No active incidents" desc="There are currently no incidents matching your criteria. Escalate an alert to create a new incident." />
+                </div>
               </td></tr>
             )}
             {!isLoading && filtered.map((i) => (

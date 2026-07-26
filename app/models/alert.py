@@ -35,8 +35,11 @@ class AlertModel(Base):
     hostname = Column(String, nullable=True)
     rule_version = Column(String, nullable=True)
     assigned_analyst = Column(String, nullable=True)
+    assignment_notes = Column(String, nullable=True)
     resolved_at = Column(DateTime(timezone=True), nullable=True)
+    resolution_type = Column(String, nullable=True)
     resolution_note = Column(String, nullable=True)
+    false_positive_reason = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

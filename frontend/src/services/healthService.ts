@@ -9,4 +9,8 @@ export const healthService = {
     const res = await api.get('/metrics');
     return res.data;
   },
+  getIntegrations: async () => {
+    const res = await api.get('/health/integrations');
+    return res.data;
+  },
 };

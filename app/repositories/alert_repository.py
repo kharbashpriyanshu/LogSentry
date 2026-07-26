@@ -88,6 +88,10 @@ class AlertRepository:
             raw_log_reference=model.raw_log_reference or "",
             status=model.status,
             assignee=model.assigned_analyst,
+            assignment_notes=model.assignment_notes,
             resolved_at=model.resolved_at,
-            resolution_note=model.resolution_note
+            resolution_type=model.resolution_type,
+            resolution_note=model.resolution_note,
+            false_positive_reason=model.false_positive_reason,
+            hostname=model.hostname
         )

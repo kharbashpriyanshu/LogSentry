@@ -72,3 +72,19 @@ def get_incident_timeline(
     timeline: TimelineRepository = Depends(get_timeline_repository)
 ):
     return timeline.get_events("incident", incident_id)
+
+from app.schemas.alert_workflow import AlertComment
+
+@router.post("/{incident_id}/comments")
+def add_incident_comment(
+    incident_id: str,
+    payload: AlertComment,
+    repo: IncidentRepository = Depends(get_incident_repository),
+    timeline: TimelineRepository = Depends(get_timeline_repository)
+):
+    incident = repo.get_incident(incident_id)
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+        
+    timeline.add_event("incident", incident_id, "commented", new_value=payload.content, metadata_json={"user": payload.author})
+    return {"status": "success"}

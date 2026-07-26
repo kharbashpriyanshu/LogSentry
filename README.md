@@ -1,4 +1,12 @@
-# LogSentry
+<p align="center">
+  <img src="frontend/public/favicon.svg" width="90" alt="LogSentry Logo" />
+</p>
+
+<h1 align="center">LogSentry</h1>
+<p align="center"><strong>Enterprise SIEM — AI-assisted Security Monitoring & Incident Response</strong></p>
+<p align="center">
+  Built by <a href="https://github.com/kharbashpriyanshu/LogSentry">Martial</a> · MIT License · v1.0.0
+</p>
 
 AI-assisted Security Information and Event Management platform for log ingestion, threat detection, incident investigation and security analytics.
 
@@ -14,14 +22,14 @@ LogSentry is a high-performance SIEM designed for modern SOC teams. It ingests r
 - **Command Injection detection**
 - **Directory Enumeration detection**
 - **Brute Force detection**
-- **Alert lifecycle management**
-- **Incident management**
+- **Alert lifecycle management** (Assign, Comment, Resolve, False Positive)
+- **Incident management** (linked alerts, comments, timeline)
 - **Threat Intelligence enrichment** (AbuseIPDB, OTX, MITRE ATT&CK)
-- **AI-assisted SOC analysis** (OpenAI, Gemini, Ollama)
+- **AI-assisted SOC analysis** (Gemini, OpenAI)
 - **Real-time WebSocket updates**
-- **Reporting** (PDF, CSV, JSON Executive & Technical exports)
+- **Reporting** (PDF, JSON Executive & Technical exports)
 - **System health monitoring**
-- **PostgreSQL persistence**
+- **SQLite (local) / PostgreSQL (production) persistence**
 - **Alembic migrations**
 - **React SOC dashboard**
 
@@ -75,7 +83,8 @@ The detection flow processes raw strings into actionable security intelligence:
 - Alembic
 
 **Database**
-- PostgreSQL
+- SQLite (local development)
+- PostgreSQL (production / Docker Compose)
 
 **Frontend**
 - React
@@ -150,8 +159,8 @@ logsentry/
 ## Local Development
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/logsentry.git
-   cd logsentry
+   git clone https://github.com/kharbashpriyanshu/LogSentry.git
+   cd LogSentry
    ```
 2. **Environment Configuration:**
    Copy `.env.example` to `.env` and fill in dummy API keys for local testing.
@@ -190,14 +199,17 @@ pytest tests/ --cov=app
 ```
 
 ## Production Status
-**Release Candidate Status:** `Production Deployment Ready With Warnings`
+**v1.0.0 — Release Ready**
 
 Verified features:
-- Backend test suite
-- Frontend production compilation
+- Backend test suite (127 tests passing)
+- Frontend production build (0 TypeScript errors)
 - Configuration fail-fast behavior
 - Persistence logic through automated tests
 - Security controls through tests/code inspection
+- AI Analysis via Gemini API
+- Threat Intelligence via AbuseIPDB and OTX
+- Full SOC workflow (Assign → Comment → Investigate → Resolve)
 
 Pending environment-level verification:
 - Live PostgreSQL deployment orchestration
@@ -208,6 +220,9 @@ Pending environment-level verification:
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Creator
+Built by **Martial** — [GitHub Repository](https://github.com/kharbashpriyanshu/LogSentry)
 
 ## Contact & Documentation
 Detailed audit and technical reports can be found in `docs/audits/`. For contributing guidelines or security vulnerability reporting, please see `CONTRIBUTING.md` and `SECURITY.md`.

@@ -21,5 +21,8 @@ export const incidentService = {
   getIncidentTimeline: async (id: string): Promise<TimelineEvent[]> => {
     const response = await api.get(`/incidents/${id}/timeline`);
     return response.data;
+  },
+  addComment: async (id: string, payload: { content: string, author: string }): Promise<void> => {
+    await api.post(`/incidents/${id}/comments`, payload);
   }
 };

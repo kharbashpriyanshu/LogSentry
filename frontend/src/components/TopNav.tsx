@@ -1,8 +1,16 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Bell, Search, User, ChevronDown, Settings, LogOut, Key, BookOpen, X, AlertOctagon, ShieldAlert, CheckCircle2, Cpu } from 'lucide-react';
+import { Bell, Search, User, ChevronDown, Settings, LogOut, Key, BookOpen, X, AlertOctagon, ShieldAlert, CheckCircle2, Cpu, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { alertService } from '../services/alertService';
+import { incidentService } from '../services/incidentService';
 import { useQuery } from '@tanstack/react-query';
+import {
+  ProfileModal,
+  IntegrationsModal,
+  DocumentationModal,
+  PreferencesModal,
+  AboutModal
+} from './UserModals';
 
 interface Notification {
   id: string;
@@ -35,19 +43,24 @@ interface SearchResult {
   href: string;
 }
 
-function buildSearchResults(q: string, alerts: any[]): SearchResult[] {
+function buildSearchResults(q: string, alerts: any[], incidents: any[]): SearchResult[] {
   if (!q.trim()) return [];
   const lower = q.toLowerCase();
   const results: SearchResult[] = [];
   alerts.slice(0, 5).forEach(a => {
-    if (a.alert_id.toLowerCase().includes(lower) || a.attack_type.toLowerCase().includes(lower) || a.source_ip.includes(lower) || a.title.toLowerCase().includes(lower)) {
+    if (a.alert_id.toLowerCase().includes(lower) || a.attack_type.toLowerCase().includes(lower) || a.source_ip.includes(lower) || a.title.toLowerCase().includes(lower) || (a.mitre_technique || '').toLowerCase().includes(lower)) {
       results.push({ type: 'Alert', label: a.alert_id, sub: `${a.attack_type} · ${a.severity}`, href: '/alerts' });
+    }
+  });
+  incidents.slice(0, 5).forEach(i => {
+    if (i.id.toLowerCase().includes(lower) || i.title.toLowerCase().includes(lower) || (i.category || '').toLowerCase().includes(lower)) {
+      results.push({ type: 'Incident', label: i.id, sub: i.title, href: '/incidents' });
     }
   });
   if ('dashboard'.includes(lower)) results.push({ type: 'Page', label: 'Dashboard', sub: 'SOC Overview', href: '/dashboard' });
   if ('threat'.includes(lower) || 'intel'.includes(lower)) results.push({ type: 'Page', label: 'Threat Intelligence', sub: 'IP Reputation & IOCs', href: '/threat-intel' });
   if ('report'.includes(lower)) results.push({ type: 'Page', label: 'Reports', sub: 'Generate Incident Reports', href: '/reports' });
-  return results.slice(0, 6);
+  return results.slice(0, 8);
 }
 
 export default function TopNav() {
@@ -56,13 +69,15 @@ export default function TopNav() {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showUser, setShowUser] = useState(false);
+  const [activeModal, setActiveModal] = useState<'profile' | 'integrations' | 'docs' | 'prefs' | 'about' | null>(null);
   const [notifications, setNotifications] = useState(NOTIFICATIONS);
   const searchRef = useRef<HTMLDivElement>(null);
   const { data: alerts } = useQuery({ queryKey: ['alerts'], queryFn: alertService.getAlerts });
+  const { data: incidents } = useQuery({ queryKey: ['incidents'], queryFn: incidentService.getIncidents });
 
   const unread = notifications.filter(n => !n.read).length;
 
-  const searchResults = useMemo(() => buildSearchResults(searchValue, alerts || []), [searchValue, alerts]);
+  const searchResults = useMemo(() => buildSearchResults(searchValue, alerts || [], incidents || []), [searchValue, alerts, incidents]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -118,7 +133,9 @@ export default function TopNav() {
         {/* System time */}
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-900/60 border border-slate-800 rounded-lg">
           <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-[11px] font-mono text-slate-400">{new Date().toLocaleTimeString('en-US', { hour12: false })}</span>
+          <span className="text-[11px] font-mono text-slate-400">
+            {new Date().toLocaleTimeString('en-US', { hour12: false })}
+          </span>
         </div>
 
         {/* Notifications */}
@@ -165,42 +182,74 @@ export default function TopNav() {
 
         {/* User menu */}
         <div className="relative">
-          <button
-            onClick={() => { setShowUser(v => !v); setShowNotif(false); }}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800/60 transition-colors"
+          <button 
+            className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-800/60 transition-colors"
+            onClick={() => setShowUser(!showUser)}
+            onBlur={() => setTimeout(() => setShowUser(false), 200)}
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">AC</div>
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">DU</div>
             <div className="hidden md:block text-left">
-              <p className="text-xs font-semibold text-slate-200 leading-tight">alice.chen</p>
+              <p className="text-xs font-semibold text-slate-200 leading-tight">Demo User</p>
               <p className="text-[10px] text-slate-500 leading-tight">SOC Analyst</p>
             </div>
             <ChevronDown className="w-3 h-3 text-slate-500 hidden md:block" />
           </button>
           {showUser && (
-            <div className="absolute right-0 top-full mt-2 w-52 bg-[#111827] border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in">
-              <div className="px-4 py-3 border-b border-slate-800">
-                <p className="text-sm font-semibold text-slate-200">alice.chen</p>
-                <p className="text-xs text-slate-500 mt-0.5">alice@logsentry.io</p>
+            <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl py-2 z-50 overflow-hidden animate-fade-in">
+              <div className="px-4 py-2 border-b border-slate-800 mb-2">
+                <p className="text-sm font-bold text-slate-200">Demo User</p>
+                <p className="text-xs text-slate-500 mt-0.5">demo@logsentry.local</p>
               </div>
-              {[
-                { icon: <User className="w-4 h-4" />, label: 'Profile' },
-                { icon: <Key className="w-4 h-4" />, label: 'API Keys' },
-                { icon: <BookOpen className="w-4 h-4" />, label: 'Documentation' },
-                { icon: <Settings className="w-4 h-4" />, label: 'Preferences' },
-              ].map(item => (
-                <button key={item.label} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors">
-                  {item.icon}{item.label}
+              <div className="py-1">
+                <button
+                  onClick={() => { setActiveModal('profile'); setShowUser(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors text-left"
+                >
+                  <User className="w-4 h-4 text-blue-400" />
+                  <span>Profile</span>
                 </button>
-              ))}
-              <div className="border-t border-slate-800">
-                <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors">
-                  <LogOut className="w-4 h-4" /> Sign Out
+                <button
+                  onClick={() => { setActiveModal('integrations'); setShowUser(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors text-left"
+                >
+                  <Key className="w-4 h-4 text-purple-400" />
+                  <span>API &amp; Integrations</span>
+                </button>
+                <button
+                  onClick={() => { setActiveModal('docs'); setShowUser(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors text-left"
+                >
+                  <BookOpen className="w-4 h-4 text-amber-400" />
+                  <span>Documentation</span>
+                </button>
+                <button
+                  onClick={() => { setActiveModal('prefs'); setShowUser(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors text-left"
+                >
+                  <Settings className="w-4 h-4 text-slate-400" />
+                  <span>Preferences</span>
+                </button>
+              </div>
+              <div className="border-t border-slate-800 pt-1">
+                <button
+                  onClick={() => { setActiveModal('about'); setShowUser(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors text-left"
+                >
+                  <Info className="w-4 h-4 text-blue-400" />
+                  <span>About LogSentry</span>
                 </button>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Modals */}
+      <ProfileModal isOpen={activeModal === 'profile'} onClose={() => setActiveModal(null)} />
+      <IntegrationsModal isOpen={activeModal === 'integrations'} onClose={() => setActiveModal(null)} />
+      <DocumentationModal isOpen={activeModal === 'docs'} onClose={() => setActiveModal(null)} />
+      <PreferencesModal isOpen={activeModal === 'prefs'} onClose={() => setActiveModal(null)} />
+      <AboutModal isOpen={activeModal === 'about'} onClose={() => setActiveModal(null)} />
     </header>
   );
 }

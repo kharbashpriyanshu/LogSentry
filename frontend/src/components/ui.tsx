@@ -31,11 +31,12 @@ interface StatusBadgeProps { status: string }
 export function StatusBadge({ status }: StatusBadgeProps) {
   const map: Record<string, { cls: string; label: string }> = {
     open:           { cls: 'bg-red-500/15 text-red-400 border-red-500/30',     label: 'Open' },
-    investigating:  { cls: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30', label: 'Investigating' },
+    investigating:  { cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30', label: 'Investigating' },
+    assigned:       { cls: 'bg-blue-500/15 text-blue-400 border-blue-500/30', label: 'Assigned' },
     resolved:       { cls: 'bg-green-500/15 text-green-400 border-green-500/30', label: 'Resolved' },
-    false_positive: { cls: 'bg-slate-600/40 text-slate-400 border-slate-600',   label: 'False Positive' },
+    false_positive: { cls: 'bg-slate-500/15 text-slate-400 border-slate-500/30',   label: 'False Positive' },
   };
-  const cfg = map[status] || map.open;
+  const cfg = map[status?.toLowerCase()] || map.open;
   return (
     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cfg.cls}`}>
       {cfg.label}
@@ -102,7 +103,7 @@ interface HealthCardProps {
   status: 'healthy' | 'degraded' | 'down' | 'unknown';
   metric?: string;
   detail?: string;
-  uptime?: number; // 0–100
+  uptime?: number | null; // 0–100, or null when genuinely unavailable
 }
 export function HealthCard({ name, status, metric, detail, uptime }: HealthCardProps) {
   const cfg = {
@@ -149,6 +150,18 @@ interface MetricBarProps {
   color?: string;
 }
 export function MetricBar({ label, value, max = 100, unit = '%', color = 'bg-blue-500' }: MetricBarProps) {
+  if (value === null) {
+    return (
+      <div>
+        <div className="flex justify-between text-xs mb-1.5">
+          <span className="text-slate-400">{label}</span>
+          <span className="font-semibold text-slate-500">Unavailable</span>
+        </div>
+        <div className="h-2 bg-slate-800 rounded-full overflow-hidden" />
+      </div>
+    );
+  }
+
   const pct = Math.min((value / max) * 100, 100);
   const danger = pct > 80;
   const warn   = pct > 60;
