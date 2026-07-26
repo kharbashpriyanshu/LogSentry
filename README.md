@@ -33,6 +33,11 @@ LogSentry is a high-performance SIEM designed for modern SOC teams. It ingests r
 - **Alembic migrations**
 - **React SOC dashboard**
 
+## Security Operations & Playbook Documentation
+LogSentry includes comprehensive, enterprise-grade Security Operations Center (SOC) standard operating procedures and reproducible evaluation guides:
+- **[Enterprise SOC Incident Response Playbooks (NIST SP 800-61r2)](docs/SOC_INCIDENT_RESPONSE_PLAYBOOKS.md):** Complete operational playbooks for SQL Injection, XSS, Path Traversal, Command Injection, Directory Enumeration, and Brute Force authentication attacks, detailing automated SIEM processing, AI containment strategies, and manual analyst remediation steps.
+- **[End-to-End Demonstration & Evaluation Guide](docs/DEMO_GUIDE.md):** Step-by-step reproducible walkthrough for evaluating LogSentry's real-time ingestion, enrichment, AI triage, and incident lifecycle workflows.
+
 ## Architecture
 
 ```mermaid
@@ -109,25 +114,24 @@ The detection flow processes raw strings into actionable security intelligence:
 - Configurable AI Providers (OpenAI, Gemini, Ollama)
 
 ## Screenshots
-Screenshots of the fully integrated LogSentry SIEM platform:
+Screenshots of the fully integrated LogSentry SIEM platform and SOC workflows:
 
 ### 1. Unified Dashboard
 ![LogSentry Dashboard](docs/images/dashboard.png)
 
-### 2. Incident & Alert Management
+### 2. Alert Triage & AI Containment Strategy
 ![Alert Triage](docs/images/alerts.png)
-![Incident Details](docs/images/alert-details.png)
+![AI Containment Strategy](docs/images/ai-containment.png)
 
-### 3. System Health & Infrastructure
-![System Health](docs/images/system-health.png)
+### 3. Incident Investigation & Forensic Timeline
+![Incident Management](docs/images/incidents.png)
+![Incident Timeline Audit Log](docs/images/incident-timeline.png)
 
-### 4. Real-time Threat Intelligence
+### 4. Threat Intelligence & Automated SOC Reporting
 ![Threat Intelligence Enrichment](docs/images/threat-intel.png)
-
-### 5. Automated Reporting Engine
 ![Incident Reporting](docs/images/reports.png)
 
-*(Note: The AI Analysis module screenshot is currently not displayed in this demo due to missing provider configuration during the automated capture.)*
+*(Note: Additional alert evidence and enrichment screenshots such as `docs/images/alert-details.png` are available in `docs/images/` and detailed in the [End-to-End Demonstration & Evaluation Guide](docs/DEMO_GUIDE.md).)*
 ## Security Architecture
 LogSentry implements strict production security controls:
 - **Production fail-fast configuration:** Will not start in `production` without explicitly setting `DATABASE_URI`.
@@ -190,8 +194,8 @@ When running locally, automatic interactive API documentation is available at:
 
 ## Testing
 The backend test suite leverages Pytest to ensure reliability.
-- **Backend Tests:** 127 passing tests
-- **Coverage:** 84.14%
+- **Backend Tests:** 131 passing tests
+- **Coverage:** 81.42%
 
 To run the test suite:
 ```bash
@@ -202,7 +206,7 @@ pytest tests/ --cov=app
 **v1.0.0 — Release Ready**
 
 Verified features:
-- Backend test suite (127 tests passing)
+- Backend test suite (131 tests passing)
 - Frontend production build (0 TypeScript errors)
 - Configuration fail-fast behavior
 - Persistence logic through automated tests
