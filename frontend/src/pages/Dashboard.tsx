@@ -10,46 +10,43 @@ import {
   AlertOctagon, ShieldAlert, AlertTriangle, Info, ArrowUpRight,
   Shield, Clock, Target, Activity, RefreshCw, Cpu, Eye, Globe,
   ActivitySquare, CheckCircle2, Search, User, Network, FileText,
+  Sparkles
 } from 'lucide-react';
 import { dashboardService } from '../services/dashboardService';
 import { alertService } from '../services/alertService';
 import { healthService } from '../services/healthService';
 import { wsService } from '../services/websocketService';
 import { StatCard, ChartCard, Tooltip, SeverityBadge, StatusBadge } from '../components/ui';
+import { useTheme } from '../context/ThemeContext';
 import { format } from 'date-fns';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, CJTooltip, Legend, Filler);
 
-const CHART_DEFAULTS = {
-  plugins: {
-    legend: { display: false },
-    tooltip: { backgroundColor: '#0f172a', titleColor: '#e2e8f0', bodyColor: '#94a3b8', borderColor: '#334155', borderWidth: 1, padding: 10 },
-  },
-  scales: {
-    x: { grid: { color: '#1e293b' }, ticks: { color: '#475569', font: { size: 10 } } },
-    y: { grid: { color: '#1e293b' }, ticks: { color: '#475569', font: { size: 10 }, stepSize: 1 } },
-  },
-};
-
 // ── Ranked list widget ────────────────────────────────────────────────────────
 function RankedList({ items, labelKey, countKey, color }: { items: any[]; labelKey: string; countKey: string; color: string }) {
   const max = items[0]?.[countKey] || 1;
-  if (!items.length) return <p className="text-xs text-slate-500 text-center py-4">No data</p>;
+  if (!items.length) return <p className="text-xs text-[var(--text-muted)] text-center py-6">No telemetry recorded</p>;
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {items.map((item, i) => (
         <div key={item[labelKey] || i} className="flex items-center gap-3">
-          <span className="text-[10px] text-slate-600 w-4 font-mono shrink-0">{i + 1}</span>
+          <span className="text-[11px] text-[var(--text-muted)] w-5 font-mono font-semibold shrink-0">
+            #{i + 1}
+          </span>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-slate-300 font-medium truncate">{item[labelKey] || '—'}</p>
-            <div className="mt-1 h-1 bg-slate-700/60 rounded-full overflow-hidden">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-[var(--text-primary)] font-semibold truncate">{item[labelKey] || '—'}</p>
+              <span className="text-xs font-mono font-bold shrink-0 ml-2" style={{ color }}>
+                {item[countKey].toLocaleString()}
+              </span>
+            </div>
+            <div className="h-1.5 bg-[var(--bg-card-subtle)] rounded-full overflow-hidden border border-[var(--border-subtle)]">
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${(item[countKey] / max) * 100}%`, background: color }}
+                style={{ width: `${Math.max((item[countKey] / max) * 100, 6)}%`, background: color }}
               />
             </div>
           </div>
-          <span className={`text-[11px] font-bold w-6 text-right shrink-0`} style={{ color }}>{item[countKey]}</span>
         </div>
       ))}
     </div>
@@ -64,27 +61,28 @@ function formatActivityMessage(ev: any): { text: string; icon: React.ReactNode }
 
   switch (ev.action) {
     case 'assigned':
-      return { text: `${actor} assigned ${entityLabel} → ${ev.new_value || '?'}`, icon: <User className="w-3.5 h-3.5 text-blue-400" /> };
+      return { text: `${actor} assigned ${entityLabel} → ${ev.new_value || '?'}`, icon: <User className="w-4 h-4 text-blue-600 dark:text-blue-400" /> };
     case 'resolved':
-      return { text: `${actor} resolved ${entityLabel}`, icon: <CheckCircle2 className="w-3.5 h-3.5 text-green-400" /> };
+      return { text: `${actor} resolved ${entityLabel}`, icon: <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> };
     case 'marked_false_positive':
-      return { text: `${actor} marked ${entityLabel} as False Positive`, icon: <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" /> };
+      return { text: `${actor} marked ${entityLabel} as False Positive`, icon: <CheckCircle2 className="w-4 h-4 text-[var(--text-muted)]" /> };
     case 'status_changed':
-      return { text: `${entityLabel} status → ${ev.new_value || '?'}`, icon: <Activity className="w-3.5 h-3.5 text-yellow-400" /> };
+      return { text: `${entityLabel} status → ${ev.new_value || '?'}`, icon: <Activity className="w-4 h-4 text-amber-600 dark:text-amber-400" /> };
     case 'investigation_started':
-      return { text: `${actor} started investigation on ${entityLabel}`, icon: <Search className="w-3.5 h-3.5 text-purple-400" /> };
+      return { text: `${actor} started investigation on ${entityLabel}`, icon: <Search className="w-4 h-4 text-purple-600 dark:text-purple-400" /> };
     case 'created':
-      return { text: `${entityLabel} created`, icon: <ShieldAlert className="w-3.5 h-3.5 text-red-400" /> };
+      return { text: `${entityLabel} generated by SIEM rule`, icon: <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400" /> };
     case 'commented':
-      return { text: `${actor} added comment on ${entityLabel}`, icon: <FileText className="w-3.5 h-3.5 text-cyan-400" /> };
+      return { text: `${actor} added forensic note on ${entityLabel}`, icon: <FileText className="w-4 h-4 text-cyan-600 dark:text-cyan-400" /> };
     default:
-      return { text: `${entityLabel}: ${ev.action}`, icon: <Info className="w-3.5 h-3.5 text-blue-400" /> };
+      return { text: `${entityLabel}: ${ev.action}`, icon: <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" /> };
   }
 }
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { theme } = useTheme();
 
   useEffect(() => {
     wsService.connect();
@@ -98,39 +96,42 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['dashboard_incidents'] });
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
     };
-    wsService.addListener(handleWsEvent);
-    return () => { wsService.removeListener(handleWsEvent); wsService.disconnect(); };
+
+    return () => {
+      // ws cleanup if needed
+    };
   }, [queryClient]);
 
-  const { data: summary, isLoading: loadingSummary, refetch: refetchSummary } = useQuery({
-    queryKey: ['dashboard_summary'], queryFn: dashboardService.getSummary, refetchInterval: 15000,
+  // Queries
+  const { data: summary = {} as any, isLoading: loadingSummary, refetch: refetchSummary } = useQuery<any>({
+    queryKey: ['dashboard_summary'], queryFn: () => dashboardService.getSummary(), refetchInterval: 10000,
   });
-  const { data: severityDataRaw, isLoading: loadingSeverity } = useQuery({
-    queryKey: ['dashboard_severity'], queryFn: dashboardService.getSeverityDistribution,
+  const { data: severityDataRaw, isLoading: loadingSeverity } = useQuery<any>({
+    queryKey: ['dashboard_severity'], queryFn: () => dashboardService.getSeverityDistribution(), refetchInterval: 10000,
   });
-  const { data: trendDataRaw, isLoading: loadingTrend } = useQuery({
-    queryKey: ['dashboard_trend'], queryFn: dashboardService.getAlertTrend,
+  const { data: trendDataRaw, isLoading: loadingTrend } = useQuery<any>({
+    queryKey: ['dashboard_trend'], queryFn: () => dashboardService.getAlertTrend(7), refetchInterval: 10000,
   });
-  const { data: topSourcesRaw = [] } = useQuery({
-    queryKey: ['dashboard_sources'], queryFn: dashboardService.getTopSources,
+  const { data: topSourcesRaw } = useQuery<any>({
+    queryKey: ['dashboard_sources'], queryFn: () => dashboardService.getTopSources(), refetchInterval: 15000,
   });
-  const { data: recentActivity = [] } = useQuery({
-    queryKey: ['dashboard_activity'], queryFn: dashboardService.getActivity, refetchInterval: 8000,
+  const { data: recentActivity = [] } = useQuery<any>({
+    queryKey: ['dashboard_activity'], queryFn: () => dashboardService.getRecentActivity(20), refetchInterval: 8000,
   });
-  const { data: topAttackTypes = [] } = useQuery({
-    queryKey: ['dashboard_attack_types'], queryFn: dashboardService.getTopAttackTypes,
+  const { data: topAttackTypes = [] } = useQuery<any>({
+    queryKey: ['dashboard_attack_types'], queryFn: () => dashboardService.getTopAttackTypes(),
   });
-  const { data: topMitre = [] } = useQuery({
-    queryKey: ['dashboard_mitre'], queryFn: dashboardService.getTopMitre,
+  const { data: topMitre = [] } = useQuery<any>({
+    queryKey: ['dashboard_mitre'], queryFn: () => dashboardService.getTopMitre(),
   });
-  const { data: recentIncidents = [] } = useQuery({
-    queryKey: ['dashboard_incidents'], queryFn: dashboardService.getRecentIncidents,
+  const { data: recentIncidents = [] } = useQuery<any>({
+    queryKey: ['dashboard_incidents'], queryFn: () => dashboardService.getRecentIncidents(),
   });
-  const { data: recentAlerts = [] } = useQuery({
-    queryKey: ['alerts'], queryFn: alertService.getAlerts,
+  const { data: recentAlerts = [] } = useQuery<any>({
+    queryKey: ['alerts'], queryFn: () => alertService.getAlerts(),
   });
-  const { data: health } = useQuery({
-    queryKey: ['health'], queryFn: healthService.getBackendHealth, refetchInterval: 30000,
+  const { data: health } = useQuery<any>({
+    queryKey: ['health'], queryFn: () => healthService.getBackendHealth(), refetchInterval: 30000,
   });
 
   const refetchAll = () => {
@@ -143,6 +144,12 @@ export default function Dashboard() {
 
   const isLoading = loadingSummary || loadingSeverity || loadingTrend;
 
+  // Chart styling based on active theme
+  const chartGridColor = theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(44,38,27,0.07)';
+  const chartTickColor = theme === 'dark' ? '#94A3B8' : '#78716C';
+  const chartTooltipBg = theme === 'dark' ? '#0F172A' : '#1C1917';
+  const chartTooltipText = theme === 'dark' ? '#F8FAFC' : '#FAF7F2';
+
   // Build severity doughnut
   const severityData = useMemo(() => {
     if (!severityDataRaw) return { labels: [], datasets: [] };
@@ -150,11 +157,17 @@ export default function Dashboard() {
     severityDataRaw.forEach((item: any) => { if (item.severity) m[item.severity.toUpperCase()] = item.count; });
     return {
       labels: ['Critical', 'High', 'Medium', 'Low'],
-      datasets: [{ data: [m.CRITICAL, m.HIGH, m.MEDIUM, m.LOW], backgroundColor: ['#ef4444','#f97316','#eab308','#3b82f6'], borderWidth: 0, hoverOffset: 8 }],
+      datasets: [{
+        data: [m.CRITICAL, m.HIGH, m.MEDIUM, m.LOW],
+        backgroundColor: ['#E11D48', '#EA580C', '#D97706', '#4F46E5'],
+        borderWidth: theme === 'dark' ? 0 : 2,
+        borderColor: theme === 'dark' ? 'transparent' : '#FFFFFF',
+        hoverOffset: 6,
+      }],
     };
-  }, [severityDataRaw]);
+  }, [severityDataRaw, theme]);
 
-  // Build 7-day trend line (fill missing dates with 0)
+  // Build 7-day trend line
   const alertsOverTime = useMemo(() => {
     const days = 7;
     const dates: string[] = [];
@@ -174,247 +187,392 @@ export default function Dashboard() {
         datasets: [{
           label: 'Alerts',
           data: counts,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,0.08)',
-          borderWidth: 2,
-          pointBackgroundColor: dates.map((_, i) => i === days - 1 ? '#60a5fa' : '#3b82f6'),
-          pointRadius: dates.map((_, i) => i === days - 1 ? 6 : 3),
+          borderColor: '#4F46E5',
+          backgroundColor: theme === 'dark' ? 'rgba(99,102,241,0.12)' : 'rgba(79,70,229,0.06)',
+          borderWidth: 2.5,
+          pointBackgroundColor: dates.map((_, i) => i === days - 1 ? '#4338CA' : '#4F46E5'),
+          pointRadius: dates.map((_, i) => i === days - 1 ? 5 : 3),
           pointHoverRadius: 7,
-          tension: 0.4,
+          tension: 0.35,
           fill: true,
         }],
       },
     };
-  }, [trendDataRaw]);
+  }, [trendDataRaw, theme]);
 
   const topIPs: any[] = Array.isArray(topSourcesRaw) ? topSourcesRaw : [];
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Activity className="w-6 h-6 text-blue-400 animate-spin mr-3" />
-        <span className="text-slate-400">Loading Dashboard Metrics…</span>
-      </div>
-    );
-  }
-
-  if (summary && summary.total_alerts === 0 && summary.events_processed === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center px-4 animate-fade-in">
-        <div className="p-5 bg-slate-800/60 rounded-2xl border border-slate-700 text-slate-500 mb-4">
-          <ActivitySquare className="w-10 h-10 text-slate-400" />
-        </div>
-        <h3 className="text-xl font-semibold text-slate-200">No Security Telemetry Detected</h3>
-        <p className="text-sm text-slate-500 mt-2 max-w-md leading-relaxed">
-          The LogSentry database is currently empty. Ingest logs via the API or upload a log file in the Alerts view to begin populating the dashboard.
-        </p>
-        <button onClick={() => navigate('/alerts')} className="mt-6 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg">
-          Go to Alerts
-        </button>
+      <div className="flex flex-col items-center justify-center h-80 space-y-3">
+        <Activity className="w-8 h-8 text-amber-600 animate-spin" />
+        <span className="text-sm font-medium text-[var(--text-muted)]">Synchronizing SOC Telemetry…</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-fade-in pb-16">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-blue-400" /> SOC Command Dashboard
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">Real-time telemetry · All values from database</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-lg text-xs text-green-400 font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            {health?.status === 'healthy' ? 'System Operational' : 'System Connecting...'}
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
+              SOC Command Dashboard
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100/90 text-amber-900 border border-amber-300/80 shadow-2xs dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Live Monitor
+            </span>
           </div>
-          <button onClick={refetchAll} className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-700 transition-colors" title="Refresh all">
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            Real-time security telemetry &bull; Ingestion pipeline active &bull; Enterprise SIEM
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl text-xs font-semibold shadow-2xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[var(--text-primary)]">
+              {health?.status === 'healthy' ? 'System Operational' : 'Telemetry Syncing...'}
+            </span>
+          </div>
+          <button
+            onClick={refetchAll}
+            className="p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-sidebar-hover)] shadow-2xs transition-all active:scale-95"
+            title="Refresh Telemetry"
+          >
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* KPI Row 1 — Severity */}
+      {/* KPI Row 1 — Urgency & Severity */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Tooltip text="Requires immediate triage (< 15 min SLA)">
-          <StatCard title="Critical" value={summary?.critical_alerts || 0} subtitle="Critical severity" colorClass="bg-red-500/15 text-red-400" icon={<AlertOctagon className="w-5 h-5" />} onClick={() => navigate('/alerts')} />
+          <StatCard
+            title="Critical Threats"
+            value={summary?.critical_alerts || 0}
+            subtitle="Tier 1 high-priority containment"
+            colorClass="bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60"
+            icon={<AlertOctagon className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+            onClick={() => navigate('/alerts')}
+          />
         </Tooltip>
         <Tooltip text="Priority investigation (< 4h SLA)">
-          <StatCard title="High" value={summary?.high_alerts || 0} subtitle="High severity" colorClass="bg-orange-500/15 text-orange-400" icon={<ShieldAlert className="w-5 h-5" />} onClick={() => navigate('/alerts')} />
+          <StatCard
+            title="High Severity"
+            value={summary?.high_alerts || 0}
+            subtitle="Exploits &amp; active intrusions"
+            colorClass="bg-orange-50 text-orange-700 border border-orange-200/80 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800/60"
+            icon={<ShieldAlert className="w-5 h-5 text-orange-600 dark:text-orange-400" />}
+            onClick={() => navigate('/alerts')}
+          />
         </Tooltip>
         <Tooltip text="Currently under active investigation">
-          <StatCard title="Investigating" value={summary?.investigating_alerts || 0} subtitle="Alerts under review" colorClass="bg-amber-500/15 text-amber-400" icon={<AlertTriangle className="w-5 h-5" />} onClick={() => navigate('/alerts')} />
+          <StatCard
+            title="Investigating"
+            value={summary?.investigating_alerts || 0}
+            subtitle="Analyst triage in progress"
+            colorClass="bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60"
+            icon={<AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
+            onClick={() => navigate('/alerts')}
+          />
         </Tooltip>
-        <Tooltip text="Open escalated incidents">
-          <StatCard title="Open Incidents" value={summary?.open_incidents || 0} subtitle="Escalated cases" colorClass="bg-red-500/15 text-red-400" icon={<Shield className="w-5 h-5" />} onClick={() => navigate('/incidents')} />
+        <Tooltip text="Escalated security incidents">
+          <StatCard
+            title="Open Incidents"
+            value={summary?.open_incidents || 0}
+            subtitle="Multi-alert forensic cases"
+            colorClass="bg-violet-50 text-violet-700 border border-violet-200/80 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800/60"
+            icon={<Shield className="w-5 h-5 text-violet-600 dark:text-violet-400" />}
+            onClick={() => navigate('/incidents')}
+          />
         </Tooltip>
       </div>
 
-      {/* KPI Row 2 — Status counts */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-        <StatCard title="Total Alerts" value={summary?.total_alerts || 0} subtitle="All time" colorClass="bg-slate-700 text-slate-300" icon={<Shield className="w-5 h-5" />} />
-        <StatCard title="Open" value={summary?.open_alerts || 0} subtitle="Needs triage" colorClass="bg-red-500/15 text-red-400" icon={<Clock className="w-5 h-5" />} onClick={() => navigate('/alerts')} />
-        <StatCard title="Resolved" value={summary?.resolved_alerts || 0} subtitle="Remediated" colorClass="bg-green-500/15 text-green-400" icon={<CheckCircle2 className="w-5 h-5" />} />
-        <StatCard title="False Positives" value={summary?.false_positive_alerts || 0} subtitle="Marked FP" colorClass="bg-slate-500/15 text-slate-400" icon={<Info className="w-5 h-5" />} />
-        <StatCard title="Total Incidents" value={summary?.total_incidents || 0} subtitle="Historical" colorClass="bg-purple-500/15 text-purple-400" icon={<Eye className="w-5 h-5" />} onClick={() => navigate('/incidents')} />
-        <StatCard title="Events Ingested" value={summary?.events_processed || 0} subtitle="Log events" colorClass="bg-cyan-500/15 text-cyan-400" icon={<Target className="w-5 h-5" />} />
+      {/* KPI Row 2 — Status & Pipeline Totals */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        <StatCard
+          title="Total Alerts"
+          value={summary?.total_alerts || 0}
+          subtitle="All lifetime detections"
+          colorClass="bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/60"
+          icon={<Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+          onClick={() => navigate('/alerts')}
+        />
+        <StatCard
+          title="Open Queue"
+          value={summary?.open_alerts || 0}
+          subtitle="Awaiting analyst assignment"
+          colorClass="bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60"
+          icon={<Clock className="w-4 h-4 text-rose-600 dark:text-rose-400" />}
+          onClick={() => navigate('/alerts')}
+        />
+        <StatCard
+          title="Remediated"
+          value={summary?.resolved_alerts || 0}
+          subtitle="Resolved &amp; verified"
+          colorClass="bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
+          icon={<CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+        />
+        <StatCard
+          title="False Positives"
+          value={summary?.false_positive_alerts || 0}
+          subtitle="Rule tuning verified"
+          colorClass="bg-stone-100 text-stone-700 border border-stone-200/80 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-700/60"
+          icon={<Info className="w-4 h-4 text-stone-600 dark:text-stone-400" />}
+        />
+        <StatCard
+          title="Incidents"
+          value={summary?.total_incidents || 0}
+          subtitle="Total case files"
+          colorClass="bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/60"
+          icon={<Eye className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+          onClick={() => navigate('/incidents')}
+        />
+        <StatCard
+          title="Ingested Logs"
+          value={summary?.events_processed || 0}
+          subtitle="Normalized telemetry"
+          colorClass="bg-cyan-50 text-cyan-700 border border-cyan-200/80 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-800/60"
+          icon={<Target className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />}
+        />
       </div>
 
-      {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3">
+      {/* Visual Analytics Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2">
           <ChartCard
-            title="Alerts Over Time"
-            subtitle={`Last 7 days · Today: ${alertsOverTime.todayCount} alert${alertsOverTime.todayCount !== 1 ? 's' : ''}`}
+            title="Detections Velocity"
+            subtitle={`Rolling 7 days telemetry · Today: ${alertsOverTime.todayCount} alert${alertsOverTime.todayCount !== 1 ? 's' : ''}`}
           >
-            <Line
-              data={alertsOverTime.chart}
-              options={{
-                ...CHART_DEFAULTS,
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-              } as any}
-              height={180}
-            />
+            <div className="h-64">
+              <Line
+                data={alertsOverTime.chart}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  interaction: { mode: 'index', intersect: false },
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      backgroundColor: chartTooltipBg,
+                      titleColor: chartTooltipText,
+                      bodyColor: chartTooltipText,
+                      borderColor: 'rgba(255,255,255,0.1)',
+                      borderWidth: 1,
+                      padding: 10,
+                      cornerRadius: 8,
+                    },
+                  },
+                  scales: {
+                    x: {
+                      grid: { color: chartGridColor },
+                      ticks: { color: chartTickColor, font: { size: 10 } },
+                    },
+                    y: {
+                      grid: { color: chartGridColor },
+                      ticks: { color: chartTickColor, font: { size: 10 }, stepSize: 1 },
+                    },
+                  },
+                } as any}
+              />
+            </div>
           </ChartCard>
         </div>
-        <ChartCard title="Severity Distribution">
-          <div className="flex items-center justify-center">
-            <Doughnut
-              data={severityData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '72%',
-                plugins: {
-                  legend: { display: true, position: 'bottom', labels: { color: '#64748b', font: { size: 10 }, padding: 10, boxWidth: 10 } },
-                  tooltip: CHART_DEFAULTS.plugins.tooltip,
-                },
-              } as any}
-              height={200}
+
+        <div>
+          <ChartCard
+            title="Severity Distribution"
+            subtitle="Active threats categorized by threat rating"
+          >
+            <div className="h-64 flex items-center justify-center">
+              <Doughnut
+                data={severityData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  cutout: '72%',
+                  plugins: {
+                    legend: {
+                      display: true,
+                      position: 'bottom',
+                      labels: {
+                        color: chartTickColor,
+                        font: { size: 11, weight: 'bold' },
+                        padding: 14,
+                        boxWidth: 10,
+                        usePointStyle: true,
+                      },
+                    },
+                    tooltip: {
+                      backgroundColor: chartTooltipBg,
+                      titleColor: chartTooltipText,
+                      bodyColor: chartTooltipText,
+                      borderColor: 'rgba(255,255,255,0.1)',
+                      borderWidth: 1,
+                      padding: 10,
+                      cornerRadius: 8,
+                    },
+                  },
+                } as any}
+              />
+            </div>
+          </ChartCard>
+        </div>
+      </div>
+
+      {/* Intelligence & Analytics Triplet */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Top Attack Vectors */}
+        <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-default)] shadow-xs overflow-hidden">
+          <div className="px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-card-subtle)]/40 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">Top Attack Vectors</h3>
+          </div>
+          <div className="p-5">
+            <RankedList
+              items={Array.isArray(topAttackTypes) ? topAttackTypes : []}
+              labelKey="attack_type"
+              countKey="count"
+              color="#D97706"
             />
           </div>
-        </ChartCard>
-      </div>
+        </div>
 
-      {/* Intelligence widgets row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Top Attack Types */}
-        <div className="bg-[#1e293b] rounded-xl border border-slate-700/80 overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-700/60 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-orange-400" />
-            <h3 className="text-sm font-semibold text-slate-200">Top Attack Types</h3>
+        {/* MITRE ATT&CK Mapping */}
+        <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-default)] shadow-xs overflow-hidden">
+          <div className="px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-card-subtle)]/40 flex items-center gap-2">
+            <Network className="w-4 h-4 text-purple-600" />
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">MITRE ATT&amp;CK Techniques</h3>
           </div>
-          <div className="p-4">
-            <RankedList items={Array.isArray(topAttackTypes) ? topAttackTypes : []} labelKey="attack_type" countKey="count" color="#f97316" />
+          <div className="p-5">
+            <RankedList
+              items={Array.isArray(topMitre) ? topMitre : []}
+              labelKey="technique"
+              countKey="count"
+              color="#9333EA"
+            />
           </div>
         </div>
 
-        {/* Top MITRE Techniques */}
-        <div className="bg-[#1e293b] rounded-xl border border-slate-700/80 overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-700/60 flex items-center gap-2">
-            <Network className="w-4 h-4 text-purple-400" />
-            <h3 className="text-sm font-semibold text-slate-200">Top MITRE ATT&CK</h3>
+        {/* Suspicious Source IPs */}
+        <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-default)] shadow-xs overflow-hidden">
+          <div className="px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-card-subtle)]/40 flex items-center gap-2">
+            <Globe className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">Hostile Source IPs</h3>
           </div>
-          <div className="p-4">
-            <RankedList items={Array.isArray(topMitre) ? topMitre : []} labelKey="technique" countKey="count" color="#a855f7" />
-          </div>
-        </div>
-
-        {/* Top Source IPs */}
-        <div className="bg-[#1e293b] rounded-xl border border-slate-700/80 overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-700/60 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-blue-400" />
-            <h3 className="text-sm font-semibold text-slate-200">Top Source IPs</h3>
-          </div>
-          <div className="p-4">
-            <RankedList items={topIPs} labelKey="source_ip" countKey="count" color="#3b82f6" />
+          <div className="p-5">
+            <RankedList
+              items={topIPs}
+              labelKey="source_ip"
+              countKey="count"
+              color="#2563EB"
+            />
           </div>
         </div>
       </div>
 
-      {/* Recent Alerts + Recent Incidents */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Recent Alerts */}
-        <div className="bg-[#1e293b] rounded-xl border border-slate-700/80 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/60">
-            <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-red-400" /> Latest Alerts
+      {/* Recent Alerts + Incidents Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Latest Alerts */}
+        <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-default)] shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-card-subtle)]/40">
+            <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-red-600" /> Latest Security Alerts
             </h3>
-            <Link to="/alerts" className="text-[11px] text-blue-400 hover:underline flex items-center gap-0.5 font-semibold">
-              View All <ArrowUpRight className="w-3 h-3" />
+            <Link to="/alerts" className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-bold">
+              Full Queue <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="divide-y divide-slate-800/40">
+          <div className="divide-y divide-[var(--border-subtle)]">
             {Array.isArray(recentAlerts) && recentAlerts.slice(0, 5).map((a: any) => (
-              <div key={a.alert_id} onClick={() => navigate('/alerts')} className="flex items-center px-5 py-2.5 hover:bg-slate-800/30 transition-colors cursor-pointer gap-3">
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${
-                  a.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-400' :
-                  a.severity === 'HIGH'     ? 'bg-orange-500/20 text-orange-400' :
-                  a.severity === 'MEDIUM'   ? 'bg-yellow-500/20 text-yellow-400' :
-                                              'bg-blue-500/20 text-blue-400'
-                }`}>{a.severity}</span>
-                <p className="text-xs text-slate-300 font-medium truncate flex-1">{a.title}</p>
-                <span className="text-[11px] text-slate-500 font-mono shrink-0">{format(new Date(a.timestamp), 'MM-dd HH:mm')}</span>
+              <div
+                key={a.alert_id}
+                onClick={() => navigate('/alerts')}
+                className="flex items-center px-5 py-3 hover:bg-[var(--bg-sidebar-hover)] transition-colors cursor-pointer gap-3"
+              >
+                <SeverityBadge severity={a.severity} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-[var(--text-primary)] font-semibold truncate">{a.title}</p>
+                  <p className="text-[11px] text-[var(--text-muted)] font-mono truncate">{a.source_ip} &bull; {a.attack_type}</p>
+                </div>
+                <span className="text-[11px] text-[var(--text-muted)] font-mono shrink-0">
+                  {format(new Date(a.timestamp), 'MM-dd HH:mm')}
+                </span>
               </div>
             ))}
             {(!Array.isArray(recentAlerts) || recentAlerts.length === 0) && (
-              <p className="text-xs text-slate-500 text-center py-6">No alerts found</p>
+              <p className="text-xs text-[var(--text-muted)] text-center py-8">No security alerts found</p>
             )}
           </div>
         </div>
 
-        {/* Recent Incidents */}
-        <div className="bg-[#1e293b] rounded-xl border border-slate-700/80 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/60">
-            <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-              <Eye className="w-4 h-4 text-purple-400" /> Recent Incidents
+        {/* Recent Cases / Incidents */}
+        <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-default)] shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-card-subtle)]/40">
+            <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+              <Eye className="w-4 h-4 text-purple-600" /> Active Incidents &amp; Cases
             </h3>
-            <Link to="/incidents" className="text-[11px] text-blue-400 hover:underline flex items-center gap-0.5 font-semibold">
-              View All <ArrowUpRight className="w-3 h-3" />
+            <Link to="/incidents" className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-bold">
+              All Incidents <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="divide-y divide-slate-800/40">
+          <div className="divide-y divide-[var(--border-subtle)]">
             {Array.isArray(recentIncidents) && recentIncidents.slice(0, 5).map((inc: any) => (
-              <div key={inc.id} onClick={() => navigate('/incidents')} className="flex items-center px-5 py-2.5 hover:bg-slate-800/30 transition-colors cursor-pointer gap-3">
+              <div
+                key={inc.id}
+                onClick={() => navigate('/incidents')}
+                className="flex items-center px-5 py-3 hover:bg-[var(--bg-sidebar-hover)] transition-colors cursor-pointer gap-3"
+              >
                 <SeverityBadge severity={inc.severity} size="sm" />
-                <p className="text-xs text-slate-300 font-medium truncate flex-1">{inc.title}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-[var(--text-primary)] font-semibold truncate">{inc.title}</p>
+                  <p className="text-[11px] text-[var(--text-muted)] truncate">{inc.id} &bull; {inc.category || 'General'}</p>
+                </div>
                 <StatusBadge status={inc.status} />
               </div>
             ))}
             {(!Array.isArray(recentIncidents) || recentIncidents.length === 0) && (
-              <p className="text-xs text-slate-500 text-center py-6">No incidents yet</p>
+              <p className="text-xs text-[var(--text-muted)] text-center py-8">No active incident cases</p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Activity Feed */}
-      <div className="bg-[#1e293b] rounded-xl border border-slate-700/80 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-700/60 bg-slate-800/20 flex items-center gap-2">
-          <ActivitySquare className="w-4 h-4 text-green-400" />
-          <div>
-            <h3 className="text-sm font-semibold text-slate-200">Recent Analyst Activity</h3>
-            <p className="text-[10px] text-slate-500 mt-0.5">Live from database timeline · auto-refreshes every 8s</p>
+      {/* Analyst Activity Feed */}
+      <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-default)] shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-card-subtle)]/40 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ActivitySquare className="w-4 h-4 text-emerald-600" />
+            <div>
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">Analyst Audit &amp; Event Stream</h3>
+              <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Real-time incident response log &bull; Updates every 8s</p>
+            </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-800/40 max-h-64 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[var(--border-subtle)] max-h-72 overflow-y-auto">
           {!Array.isArray(recentActivity) || recentActivity.length === 0 ? (
             <div className="col-span-3 text-center py-8">
-              <p className="text-xs text-slate-500">No analyst activity recorded yet.</p>
+              <p className="text-xs text-[var(--text-muted)]">No analyst activity recorded in timeline.</p>
             </div>
           ) : (
-            recentActivity.slice(0, 12).map((ev: any) => {
+            recentActivity.slice(0, 9).map((ev: any) => {
               const { text, icon } = formatActivityMessage(ev);
               return (
-                <div key={ev.id} className="flex gap-3 p-4 bg-[#1e293b] hover:bg-slate-800/30 transition-colors">
-                  <div className="mt-0.5 p-1.5 bg-slate-800 rounded-lg border border-slate-700/60 shrink-0">{icon}</div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-slate-300 leading-snug">{text}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{format(new Date(ev.created_at), 'MM-dd HH:mm:ss')}</p>
+                <div key={ev.id} className="flex gap-3 p-4 hover:bg-[var(--bg-sidebar-hover)] transition-colors">
+                  <div className="mt-0.5 p-2 bg-[var(--bg-card-subtle)] rounded-xl border border-[var(--border-subtle)] shrink-0 shadow-2xs">
+                    {icon}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-[var(--text-primary)] leading-snug">{text}</p>
+                    <p className="text-[10px] text-[var(--text-muted)] mt-1 font-mono">
+                      {format(new Date(ev.created_at), 'MMM dd, HH:mm:ss')}
+                    </p>
                   </div>
                 </div>
               );

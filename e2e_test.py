@@ -16,7 +16,7 @@ def run_test():
     # 2. Parsing
     print(f"\n[2] Uploading sample attack log...")
     with open("sample_data/attack_samples.log", "rb") as f:
-        r = httpx.post(f"{BASE_URL}/api/v1/parser/parse-file", data={"parser_name": "regex"}, files={"file": f})
+        r = httpx.post(f"{BASE_URL}/api/v1/parser/parse-file", data={"parser_name": "apache"}, files={"file": f})
     
     print(f"    Parse Response: {r.status_code}")
     assert r.status_code == 200, "Parsing failed"

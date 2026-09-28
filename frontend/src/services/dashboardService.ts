@@ -1,12 +1,12 @@
 import api from './api';
 
 export const dashboardService = {
-  getSummary: async () => {
-    const response = await api.get('/dashboard/summary');
+  getSummary: async (time_range_hours?: number) => {
+    const response = await api.get('/dashboard/summary', { params: time_range_hours ? { time_range_hours } : {} });
     return response.data;
   },
-  getAlertTrend: async () => {
-    const response = await api.get('/dashboard/alert-trend');
+  getAlertTrend: async (days?: number) => {
+    const response = await api.get('/dashboard/alert-trend', { params: days ? { days } : {} });
     return response.data;
   },
   getSeverityDistribution: async () => {
@@ -17,20 +17,24 @@ export const dashboardService = {
     const response = await api.get('/dashboard/top-sources');
     return response.data;
   },
-  getActivity: async () => {
-    const response = await api.get('/dashboard/activity');
+  getActivity: async (limit?: number) => {
+    const response = await api.get('/dashboard/activity', { params: limit ? { limit } : {} });
     return response.data;
   },
-  getTopAttackTypes: async () => {
-    const response = await api.get('/dashboard/top-attack-types');
+  getRecentActivity: async (limit?: number) => {
+    const response = await api.get('/dashboard/activity', { params: limit ? { limit } : {} });
     return response.data;
   },
-  getTopMitre: async () => {
-    const response = await api.get('/dashboard/top-mitre');
+  getTopAttackTypes: async (limit?: number) => {
+    const response = await api.get('/dashboard/top-attack-types', { params: limit ? { limit } : {} });
     return response.data;
   },
-  getRecentIncidents: async () => {
-    const response = await api.get('/dashboard/recent-incidents');
+  getTopMitre: async (limit?: number) => {
+    const response = await api.get('/dashboard/top-mitre', { params: limit ? { limit } : {} });
+    return response.data;
+  },
+  getRecentIncidents: async (limit?: number) => {
+    const response = await api.get('/dashboard/recent-incidents', { params: limit ? { limit } : {} });
     return response.data;
   },
 };

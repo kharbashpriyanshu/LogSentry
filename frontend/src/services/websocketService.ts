@@ -13,7 +13,7 @@ class WebSocketService {
     // Determine WS URL based on API URL (assuming it's relative or we can build it)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // Use localhost:8000 for local dev if not specified
-    const host = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
+    const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? `${window.location.hostname}:8000` : window.location.host;
     const wsUrl = `${protocol}//${host}/api/v1/dashboard/ws/events`;
     
     this.ws = new WebSocket(wsUrl);

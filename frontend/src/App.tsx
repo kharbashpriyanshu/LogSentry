@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Activity } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Lazy loaded pages for performance
 const Dashboard   = lazy(() => import('./pages/Dashboard'));
@@ -25,22 +26,24 @@ function PageLoader() {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
-          <Route path="alerts" element={<Suspense fallback={<PageLoader />}><Alerts /></Suspense>} />
-          <Route path="incidents" element={<Suspense fallback={<PageLoader />}><Incidents /></Suspense>} />
-          <Route path="threat-intel" element={<Suspense fallback={<PageLoader />}><ThreatIntel /></Suspense>} />
-          <Route path="ai-analysis" element={<Suspense fallback={<PageLoader />}><AIAnalysis /></Suspense>} />
-          <Route path="reports" element={<Suspense fallback={<PageLoader />}><Reports /></Suspense>} />
-          <Route path="health" element={<Suspense fallback={<PageLoader />}><SystemHealth /></Suspense>} />
-          <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
-          <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
-        </Route>
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
+            <Route path="alerts" element={<Suspense fallback={<PageLoader />}><Alerts /></Suspense>} />
+            <Route path="incidents" element={<Suspense fallback={<PageLoader />}><Incidents /></Suspense>} />
+            <Route path="threat-intel" element={<Suspense fallback={<PageLoader />}><ThreatIntel /></Suspense>} />
+            <Route path="ai-analysis" element={<Suspense fallback={<PageLoader />}><AIAnalysis /></Suspense>} />
+            <Route path="reports" element={<Suspense fallback={<PageLoader />}><Reports /></Suspense>} />
+            <Route path="health" element={<Suspense fallback={<PageLoader />}><SystemHealth /></Suspense>} />
+            <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
+            <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
+          </Route>
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

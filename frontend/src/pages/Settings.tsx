@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Settings as SettingsIcon, Save, AlertTriangle, ShieldCheck, BrainCircuit, Bell, Palette, Lock, Cpu } from 'lucide-react';
 import { Toast } from '../components/ui';
 
+import { useTheme } from '../context/ThemeContext';
+
 type Tab = 'general' | 'detection' | 'ai' | 'threat' | 'security' | 'notifications' | 'appearance';
 
 interface SettingsState {
@@ -34,7 +36,7 @@ interface SettingsState {
   notifyOnHigh: boolean;
   notifyEmail: string;
   // Appearance
-  theme: 'dark' | 'darker' | 'light';
+  theme: 'dark' | 'light';
   accentColor: string;
   dateFormat: string;
   // Data Management
@@ -44,11 +46,11 @@ interface SettingsState {
 const DEFAULTS: SettingsState = {
   orgName: 'SOC Operations Center', timezone: 'UTC',
   bruteForceThreshold: '5', bruteForceWindow: '60', sqliThreshold: '1', enableXSS: true, enablePathTraversal: true, enableCmdInjection: true,
-  aiProvider: 'openai', openaiKey: '', geminiKey: '', ollamaUrl: 'http://localhost:11434', maxTokens: '2048',
+  aiProvider: 'gemini', openaiKey: '', geminiKey: '', ollamaUrl: 'http://localhost:11434', maxTokens: '2048',
   abuseipdbKey: '', otxKey: '', enableAutoEnrich: true,
   sessionTimeout: '3600', maxUploadMb: '10', enableCors: true,
   notifyOnCritical: true, notifyOnHigh: false, notifyEmail: '',
-  theme: 'dark', accentColor: '#3b82f6', dateFormat: 'yyyy-MM-dd',
+  theme: 'light', accentColor: '#2563eb', dateFormat: 'yyyy-MM-dd',
   dataRetention: '90',
 };
 
@@ -92,6 +94,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 }
 
 export default function Settings() {
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [settings, setSettings] = useState<SettingsState>(DEFAULTS);
   const [hasChanges, setHasChanges] = useState(false);
@@ -322,11 +325,17 @@ export default function Settings() {
                 <h2 className="text-sm font-bold text-slate-300 mb-1">Appearance</h2>
                 <p className="text-xs text-slate-500 mb-5">Visual preferences for the dashboard.</p>
                 <Field label="Theme" desc="Interface color scheme">
-                  <select value={settings.theme} onChange={e => set('theme', e.target.value as any)}
-                    className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500/60">
-                    <option value="dark">Dark (Slate)</option>
-                    <option value="darker">Darker (Midnight)</option>
-                    <option value="light">Light Mode</option>
+                  <select
+                    value={theme}
+                    onChange={e => {
+                      const newT = e.target.value as 'light' | 'dark';
+                      setTheme(newT);
+                      set('theme', newT);
+                    }}
+                    className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl px-3.5 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-600 shadow-2xs font-semibold"
+                  >
+                    <option value="light">Creamy Luxury Light (Recommended)</option>
+                    <option value="dark">Modern Dark Mode</option>
                   </select>
                 </Field>
                 <Field label="Accent Color" desc="Primary UI highlight color">
