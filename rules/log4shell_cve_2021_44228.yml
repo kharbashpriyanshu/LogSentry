@@ -1,0 +1,14 @@
+title: Log4Shell JNDI Remote Code Execution Attempt (CVE-2021-44228)
+name: log4shell_exploit
+version: 1.0.0
+description: Detects Apache Log4j JNDI injection attempts in URLs and request parameters.
+level: critical
+attack_type: Remote Code Execution
+mitre_technique: T1190
+mitre_tactic: Initial Access
+recommendation: Upgrade log4j dependencies to safe versions or set log4j2.formatMsgNoLookups=true. Immediately isolate and inspect host.
+risk_score: 95.0
+detection:
+  selection:
+    endpoint|re: '(?i)(\$\{jndi:(?:ldap|rmi|dns|nis|iiop|corba|nds):)'
+  condition: selection

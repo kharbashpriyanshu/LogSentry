@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 import re
+import urllib.parse
 from app.schemas.log_event import LogEvent
 from app.schemas.detection_alert import DetectionAlert
 from app.schemas.severity import Severity
@@ -22,6 +23,30 @@ class BaseRule(ABC):
     @property
     @abstractmethod
     def severity(self) -> Severity: pass
+
+    @property
+    def title(self) -> str:
+        return self.rule_name.replace("_", " ").title()
+
+    @property
+    def attack_type(self) -> str:
+        return "Web Attack"
+
+    @property
+    def mitre_technique(self) -> str:
+        return "T1190"
+
+    @property
+    def mitre_tactic(self) -> str:
+        return "Initial Access"
+
+    @property
+    def recommendation(self) -> str:
+        return "Inspect logs and apply security patches or firewall rules."
+
+    @property
+    def risk_score(self) -> float:
+        return 70.0
 
     @abstractmethod
     def match(self, event: LogEvent) -> bool:
@@ -67,7 +92,15 @@ class RegexDetectionRule(BaseRule):
     def match(self, event: LogEvent) -> bool:
         if not event.endpoint:
             return False
-        return bool(self.pattern.search(event.endpoint))
+        if self.pattern.search(event.endpoint):
+            return True
+        if "%" in event.endpoint or "+" in event.endpoint:
+            try:
+                unquoted = urllib.parse.unquote_plus(event.endpoint)
+                return bool(self.pattern.search(unquoted))
+            except Exception:
+                pass
+        return False
         
     def generate_alert(self, event: LogEvent) -> DetectionAlert:
         return DetectionAlert(

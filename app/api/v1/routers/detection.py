@@ -8,7 +8,41 @@ from app.api.dependencies import get_detection_service, get_parsing_service, get
 from app.repositories.alert_repository import AlertRepository
 from app.repositories.log_event_repository import LogEventRepository
 
+from typing import List, Dict, Any
+from app.detection.registry import RuleRegistry
+from app.detection.yaml_rule import YamlDetectionRule, YamlRuleLoader
+
 router = APIRouter()
+
+@router.get("/rules", response_model=List[Dict[str, Any]])
+def list_detection_rules():
+    """List all registered detection rules, including native and dynamic Sigma/YAML rules."""
+    rules = RuleRegistry.get_all_rules()
+    results = []
+    for r in rules:
+        results.append({
+            "name": r.rule_name,
+            "title": r.title,
+            "version": r.rule_version,
+            "description": r.description,
+            "severity": r.severity.value,
+            "attack_type": r.attack_type,
+            "mitre_technique": r.mitre_technique,
+            "mitre_tactic": r.mitre_tactic,
+            "risk_score": r.risk_score,
+            "format": "sigma/yaml" if isinstance(r, YamlDetectionRule) else "python"
+        })
+    return results
+
+@router.post("/rules/reload")
+def reload_dynamic_rules():
+    """Reload all dynamic YAML / Sigma rules from the rules/ directory."""
+    loaded = YamlRuleLoader.load_directory("rules")
+    return {
+        "status": "success",
+        "message": f"Successfully reloaded {len(loaded)} dynamic YAML/Sigma rules.",
+        "rules": [r.rule_name for r in loaded]
+    }
 
 @router.post("/analyze", response_model=DetectionResponse)
 def analyze_event(

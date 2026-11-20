@@ -1,0 +1,20 @@
+title: Sensitive Configuration Exposure Attempt
+name: config_exposure
+version: 1.0.0
+description: Detects attempts to access sensitive configuration files like .env, web.config, or database configs.
+level: high
+attack_type: Information Disclosure
+mitre_technique: T1552
+mitre_tactic: Credential Access
+recommendation: Block public access to sensitive dotfiles and application configuration files at the web server level.
+risk_score: 80.0
+detection:
+  selection:
+    endpoint|contains:
+      - ".env"
+      - "wp-config.php"
+      - "web.config"
+      - "config.php.bak"
+      - "database.yml"
+      - "settings.py"
+  condition: selection

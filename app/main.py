@@ -36,6 +36,8 @@ from app.api.v1.routers.enrichment import router as enrichment_router
 from app.api.v1.routers.reports import router as reports_router
 from app.api.v1.routers.incidents import router as incidents_router
 from app.api.v1.routers.dashboard import router as dashboard_router
+from app.api.v1.routers.soar import router as soar_router
+from app.api.v1.routers.syslog import router as syslog_router
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +131,8 @@ def create_app() -> FastAPI:
     app.include_router(ai_router, prefix=f"{prefix}/ai", tags=["AI SOC Analyst"])
     app.include_router(enrichment_router, prefix=f"{prefix}/enrichment", tags=["Threat Intelligence"])
     app.include_router(reports_router, prefix=f"{prefix}/reports", tags=["Reporting"])
+    app.include_router(soar_router, prefix=f"{prefix}/soar", tags=["SOAR & Active Defense"])
+    app.include_router(syslog_router, prefix=f"{prefix}/syslog", tags=["Syslog Ingestion"])
 
     # ------------------------------------------------------------------
     # Observability endpoints (mounted directly on app, not versioned)

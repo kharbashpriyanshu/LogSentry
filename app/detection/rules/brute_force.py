@@ -28,6 +28,16 @@ class BruteForceRule(BaseRule):
     def description(self) -> str: return "Detects brute force authentication attempts."
     @property
     def severity(self) -> Severity: return Severity.HIGH
+    @property
+    def title(self) -> str: return "Brute Force Authentication Detected"
+    @property
+    def attack_type(self) -> str: return "Brute Force"
+    @property
+    def mitre_technique(self) -> str: return "T1110"
+    @property
+    def mitre_tactic(self) -> str: return "Credential Access"
+    @property
+    def risk_score(self) -> float: return 80.0
 
     def _is_failed_auth(self, event: LogEvent) -> bool:
         if not event.endpoint or not event.status_code:

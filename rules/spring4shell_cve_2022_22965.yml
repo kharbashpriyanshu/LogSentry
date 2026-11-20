@@ -1,0 +1,17 @@
+title: Spring4Shell Remote Code Execution Attempt (CVE-2022-22965)
+name: spring4shell_exploit
+version: 1.0.0
+description: Detects Spring Framework ClassLoader exploitation attempts targeting Tomcat access logs.
+level: critical
+attack_type: Remote Code Execution
+mitre_technique: T1190
+mitre_tactic: Initial Access
+recommendation: Patch Spring Framework to 5.3.18+ or 5.2.20+. Validate DataBinder allowedFields configurations.
+risk_score: 95.0
+detection:
+  selection:
+    endpoint|contains:
+      - "class.module.classLoader"
+      - "classLoader.resources"
+      - "class.classLoader"
+  condition: selection

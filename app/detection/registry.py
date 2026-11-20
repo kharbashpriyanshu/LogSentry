@@ -16,6 +16,13 @@ class RuleRegistry:
         name = rule_instance.rule_name.lower()
         cls._registry[name] = rule_instance
         logger.info(f"Registered detection rule: {name} v{rule_instance.rule_version}")
+
+    @classmethod
+    def register_rule_instance(cls, rule_instance: BaseRule) -> None:
+        """Register an instantiated detection rule directly (e.g. dynamic YAML/Sigma rules)."""
+        name = rule_instance.rule_name.lower()
+        cls._registry[name] = rule_instance
+        logger.info(f"Registered detection rule instance: {name} v{rule_instance.rule_version}")
         
     @classmethod
     def get_rule(cls, name: str) -> BaseRule:
