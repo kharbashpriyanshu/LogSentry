@@ -2,12 +2,15 @@
 
 Correlates individual low-level security alerts across sliding time windows
 into unified, high-confidence attack campaigns (e.g. Port Scan -> Web Exploit -> Command Execution).
+Guarantees strict multi-tenant isolation and deterministic campaign IDs.
 """
 
+import hashlib
 import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any
 
 from app.schemas.detection_alert import DetectionAlert
@@ -18,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CorrelatedCampaign:
     campaign_id: str
+    tenant_id: str
     source_ip: str
     title: str
     severity: str
@@ -31,30 +35,48 @@ class CorrelatedCampaign:
 
 
 class CorrelationEngine:
-    """Stateful multi-event attack chain correlation engine."""
+    """Stateful multi-event attack chain correlation engine with strict tenant isolation."""
 
     def __init__(self, window_seconds: int = 300):
         self.window_seconds = window_seconds
-        # Mapping: source_ip -> list of recent alerts
+        # Mapping: tenant_id:entity_key -> list of recent alerts
         self._ip_alerts: dict[str, list[dict[str, Any]]] = defaultdict(list)
         # Active campaigns: campaign_id -> CorrelatedCampaign
         self._active_campaigns: dict[str, CorrelatedCampaign] = {}
 
+    def _generate_campaign_id(self, tenant_id: str, entity_key: str) -> str:
+        """Generates deterministic, collision-resistant campaign identifier."""
+        raw = f"{tenant_id}:{entity_key}".encode()
+        h = hashlib.sha256(raw).hexdigest()[:8]
+        return f"camp-{h}"
+
     def correlate_alert(self, alert: DetectionAlert) -> CorrelatedCampaign | None:
         """
-        Evaluates an incoming alert against historical window for the same entity (source IP/host).
+        Evaluates an incoming alert against historical window for the same entity and tenant.
         Returns a CorrelatedCampaign if a multi-stage attack pattern is identified.
         """
+        tenant_id = alert.tenant_id or "default"
         source_ip = alert.source_ip or "unknown"
+
         if source_ip in ("127.0.0.1", "localhost", "unknown"):
             # If internal/loopback, group by hostname or rule if available
-            entity_key = f"{alert.hostname or 'host'}:{alert.attack_type}"
+            entity = f"{alert.hostname or 'host'}:{alert.attack_type}"
         else:
-            entity_key = source_ip
+            entity = source_ip
 
-        now = time.time()
+        # Prefix entity key with tenant_id to guarantee absolute cross-tenant isolation
+        entity_key = f"{tenant_id}:{entity}"
+
+        # Resolve event timestamp
+        event_time = time.time()
+        if hasattr(alert, "timestamp") and alert.timestamp:
+            if isinstance(alert.timestamp, datetime):
+                event_time = alert.timestamp.timestamp()
+            elif isinstance(alert.timestamp, (int, float)):
+                event_time = float(alert.timestamp)
+
         # Clean expired alerts from entity window
-        cutoff = now - self.window_seconds
+        cutoff = event_time - self.window_seconds
         self._ip_alerts[entity_key] = [
             a for a in self._ip_alerts[entity_key] if a["timestamp"] >= cutoff
         ]
@@ -70,13 +92,14 @@ class CorrelationEngine:
                 else str(alert.severity)
             ),
             "mitre_technique": alert.mitre_technique or "",
-            "timestamp": now,
+            "timestamp": event_time,
         }
         self._ip_alerts[entity_key].append(entry)
 
         recent = self._ip_alerts[entity_key]
         distinct_attack_types = {a["attack_type"] for a in recent}
         alert_ids = [a["alert_id"] for a in recent]
+        campaign_id = self._generate_campaign_id(tenant_id, entity)
 
         # Multi-stage detection scenarios
         has_sqli = any(
@@ -104,7 +127,8 @@ class CorrelationEngine:
         ):
             tactics = ["Initial Access (T1190)", "Execution (T1059)"]
             campaign = CorrelatedCampaign(
-                campaign_id=f"camp-{abs(hash(entity_key)) % 100000:05d}",
+                campaign_id=campaign_id,
+                tenant_id=tenant_id,
                 source_ip=source_ip,
                 title=f"Multi-Stage Web Intrusion Campaign from {source_ip}",
                 severity="CRITICAL",
@@ -112,9 +136,11 @@ class CorrelationEngine:
                 tactics=tactics,
                 alert_ids=alert_ids,
                 attack_types=list(distinct_attack_types),
+                first_seen=min(a["timestamp"] for a in recent),
+                last_seen=max(a["timestamp"] for a in recent),
                 summary=(
                     f"Correlated {len(recent)} security events across {len(distinct_attack_types)} vectors "
-                    f"({', '.join(distinct_attack_types)}) within {self.window_seconds}s. "
+                    f"({', '.join(distinct_attack_types)}) within {self.window_seconds}s for tenant '{tenant_id}'. "
                     "Attacker progressed from reconnaissance/injection to remote execution."
                 ),
             )
@@ -125,7 +151,8 @@ class CorrelationEngine:
         if has_brute and (has_sqli or has_rce or len(recent) >= 4):
             tactics = ["Credential Access (T1110)", "Execution (T1059)"]
             campaign = CorrelatedCampaign(
-                campaign_id=f"camp-{abs(hash(entity_key)) % 100000:05d}",
+                campaign_id=campaign_id,
+                tenant_id=tenant_id,
                 source_ip=source_ip,
                 title=f"Coordinated Brute Force & Breach Attempt from {source_ip}",
                 severity="HIGH",
@@ -133,9 +160,11 @@ class CorrelationEngine:
                 tactics=tactics,
                 alert_ids=alert_ids,
                 attack_types=list(distinct_attack_types),
+                first_seen=min(a["timestamp"] for a in recent),
+                last_seen=max(a["timestamp"] for a in recent),
                 summary=(
                     f"Detected repeated authentication attacks followed by high-severity exploit probes "
-                    f"from {source_ip} targeting corporate assets."
+                    f"from {source_ip} targeting corporate assets in tenant '{tenant_id}'."
                 ),
             )
             self._active_campaigns[campaign.campaign_id] = campaign
@@ -144,7 +173,8 @@ class CorrelationEngine:
         # 3. High-Velocity Multi-Vector Attack (3+ distinct vectors within 5 min)
         if len(distinct_attack_types) >= 3:
             campaign = CorrelatedCampaign(
-                campaign_id=f"camp-{abs(hash(entity_key)) % 100000:05d}",
+                campaign_id=campaign_id,
+                tenant_id=tenant_id,
                 source_ip=source_ip,
                 title=f"High-Velocity Multi-Vector Attack Cluster ({source_ip})",
                 severity="HIGH",
@@ -152,9 +182,11 @@ class CorrelationEngine:
                 tactics=["Initial Access", "Discovery"],
                 alert_ids=alert_ids,
                 attack_types=list(distinct_attack_types),
+                first_seen=min(a["timestamp"] for a in recent),
+                last_seen=max(a["timestamp"] for a in recent),
                 summary=(
                     f"Correlated cluster of {len(recent)} alerts representing 3 distinct attack methodologies "
-                    f"simultaneously probing infrastructure."
+                    f"simultaneously probing infrastructure in tenant '{tenant_id}'."
                 ),
             )
             self._active_campaigns[campaign.campaign_id] = campaign

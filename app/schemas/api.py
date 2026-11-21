@@ -57,8 +57,10 @@ class BatchDetectionResponse(BaseModel):
     received_count: int
     processed_count: int
     duplicate_count: int
+    rejected_count: int = 0
     alerts_generated: int
     ack_ids: list[str]
+    rejected_errors: list[dict[str, str]] = Field(default_factory=list)
     correlated_campaigns: list[dict[str, Any]] = Field(default_factory=list)
 
 

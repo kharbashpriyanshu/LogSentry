@@ -71,7 +71,10 @@ class SOARService:
 
     @classmethod
     def validate_target_safety(cls, ip: str, force: bool = False) -> None:
-        """Protects internal loopback and RFC 1918 private subnets from accidental containment blocks."""
+        """
+        Protects internal loopback, RFC 1918, Carrier-Grade NAT, IPv6 ULA, link-local,
+        and multicast subnets from accidental containment blocks.
+        """
         if not ip:
             raise ValueError("IP address is required for containment.")
 
@@ -80,9 +83,25 @@ class SOARService:
             is_internal = (
                 addr.is_loopback
                 or addr.is_link_local
-                or addr in ipaddress.ip_network("10.0.0.0/8")
-                or addr in ipaddress.ip_network("172.16.0.0/12")
-                or addr in ipaddress.ip_network("192.168.0.0/16")
+                or addr.is_multicast
+                or addr.is_reserved
+                or addr.is_unspecified
+                or (
+                    addr.version == 4
+                    and (
+                        addr in ipaddress.ip_network("10.0.0.0/8")
+                        or addr in ipaddress.ip_network("172.16.0.0/12")
+                        or addr in ipaddress.ip_network("192.168.0.0/16")
+                        or addr in ipaddress.ip_network("100.64.0.0/10")
+                    )
+                )
+                or (
+                    addr.version == 6
+                    and (
+                        addr in ipaddress.ip_network("fc00::/7")  # ULA
+                        or addr in ipaddress.ip_network("fe80::/10")  # Link-local
+                    )
+                )
             )
             if is_internal and not force:
                 raise ValueError(

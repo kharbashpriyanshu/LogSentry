@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Depends, Header, HTTPException, status
 from pydantic import BaseModel
 
+from app.config.settings import settings
 from app.core.jwt import decode_access_token
 
 
@@ -39,6 +40,7 @@ def get_current_user(
 ) -> UserContext:
     """
     Extracts authenticated user identity from cryptographically signed JWT Bearer token.
+    In production, strictly requires Bearer token authentication.
     Rejects forged user role or tenant headers.
     """
     if authorization and authorization.lower().startswith("bearer "):
@@ -66,7 +68,17 @@ def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-    # Fallback for dev mode/tests: Caller CANNOT forge Admin or SOC_Manager role via unauthenticated headers!
+    # In production or strict auth mode, unauthenticated header fallback is forbidden
+    is_production = getattr(settings, "ENVIRONMENT", "development") == "production"
+    if is_production or getattr(settings, "AUTH_STRICT_JWT", False):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please provide a valid Bearer JWT access token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Controlled development/test fallback:
+    # Caller CANNOT elevate privileges to Admin or SOC_Manager via unauthenticated headers.
     requested_role = x_user_role or "Tier2_Analyst"
     try:
         parsed_role = UserRole(requested_role)
@@ -74,8 +86,7 @@ def get_current_user(
         parsed_role = UserRole.TIER_1_ANALYST
 
     # Disallow privilege escalation via unauthenticated header forgery
-    if parsed_role in (UserRole.ADMIN, UserRole.SOC_MANAGER) and not authorization:
-        # In the absence of a signed JWT token, downgrade unverified privileged claims to Tier 1
+    if parsed_role in (UserRole.ADMIN, UserRole.SOC_MANAGER):
         parsed_role = UserRole.TIER_1_ANALYST
 
     return UserContext(

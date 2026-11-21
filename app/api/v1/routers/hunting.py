@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core.rbac import UserContext, UserRole, require_role
 from app.database.session import get_db
 from app.models.log_event import LogEventModel
 from app.services.duckdb_forensics import (
@@ -42,16 +43,35 @@ def copilot_threat_hunt(
 def run_duckdb_analytics(
     request: ColumnarQueryRequest,
     db: Session = Depends(get_db),
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+            UserRole.THREAT_HUNTER,
+            UserRole.TIER_2_ANALYST,
+        )
+    ),
 ):
     """
     Sub-second Columnar Forensics Query (DuckDB Engine).
-    Executes vectorized analytical SQL queries across millions of log records in milliseconds.
+    Executes vectorized analytical SQL queries across log records in milliseconds.
+    Strictly isolated and scoped to the authenticated analyst's tenant.
     """
     from fastapi import HTTPException
 
+    # Lock tenant_id to user identity (admin may query across/specify tenants)
+    effective_tenant = (
+        request.tenant_id
+        if user.role == UserRole.ADMIN and request.tenant_id
+        else user.tenant_id
+    )
+
     try:
         return DuckDBForensicsEngine.execute_query(
-            db=db, sql_query=request.sql_query, tenant_id=request.tenant_id
+            db=db,
+            sql_query=request.sql_query,
+            tenant_id=effective_tenant,
+            time_range_hours=request.time_range_hours,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

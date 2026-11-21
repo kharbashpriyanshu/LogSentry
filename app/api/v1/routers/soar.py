@@ -1,8 +1,9 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from app.core.rbac import UserContext, UserRole, require_role
 from app.schemas.detection_alert import DetectionAlert
 from app.schemas.severity import Severity
 from app.services.soar_service import SOARService
@@ -48,32 +49,64 @@ class IPTablesBlockRequest(BaseModel):
 
 
 @router.get("/quarantine", response_model=list[dict[str, Any]])
-def list_quarantined_hosts():
+def list_quarantined_hosts(
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+            UserRole.TIER_2_ANALYST,
+            UserRole.TIER_1_ANALYST,
+        )
+    ),
+):
     """List all currently active quarantined / blocked host IPs."""
     return SOARService.get_quarantined_ips()
 
 
 @router.post("/quarantine", response_model=dict[str, Any])
-def quarantine_host(req: QuarantineRequest):
+def quarantine_host(
+    req: QuarantineRequest,
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+            UserRole.TIER_2_ANALYST,
+        )
+    ),
+):
     """Manually quarantine an IP address across active defense controls."""
+    # Derive analyst identity directly from authenticated user identity
+    effective_analyst = user.email or user.user_id
+
     try:
         return SOARService.quarantine_ip(
             ip=req.ip,
             reason=req.reason,
             duration_seconds=req.duration_seconds,
             severity=req.severity,
-            analyst=req.analyst,
+            analyst=effective_analyst,
             containment_type=req.containment_type,
+            tenant_id=user.tenant_id,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.delete("/quarantine/{ip}")
-def release_host(ip: str, req: ReleaseRequest | None = None):
+def release_host(
+    ip: str,
+    req: ReleaseRequest | None = None,
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+            UserRole.TIER_2_ANALYST,
+        )
+    ),
+):
     """Release an IP address from active quarantine."""
-    analyst = req.analyst if req else "admin"
-    success = SOARService.release_ip(ip=ip, analyst=analyst)
+    effective_analyst = user.email or user.user_id
+    success = SOARService.release_ip(ip=ip, analyst=effective_analyst)
     if not success:
         raise HTTPException(
             status_code=404, detail=f"IP '{ip}' is not actively quarantined."
@@ -86,13 +119,31 @@ def release_host(ip: str, req: ReleaseRequest | None = None):
 
 
 @router.get("/history", response_model=list[dict[str, Any]])
-def get_containment_history(limit: int = Query(50, ge=1, le=500)):
+def get_containment_history(
+    limit: int = Query(50, ge=1, le=500),
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+            UserRole.TIER_2_ANALYST,
+            UserRole.TIER_1_ANALYST,
+        )
+    ),
+):
     """Retrieve audit history of all SOAR containment and response actions."""
     return SOARService.get_action_history(limit=limit)
 
 
 @router.post("/firewall/cloudflare")
-async def block_ip_cloudflare(req: CloudflareBlockRequest):
+async def block_ip_cloudflare(
+    req: CloudflareBlockRequest,
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+        )
+    ),
+):
     """Trigger Cloudflare WAF IP Access Rule block."""
     return await SOARService.execute_cloudflare_waf_block(
         ip=req.ip, zone_id=req.zone_id, api_token=req.api_token
@@ -100,7 +151,15 @@ async def block_ip_cloudflare(req: CloudflareBlockRequest):
 
 
 @router.post("/firewall/iptables")
-def block_ip_iptables(req: IPTablesBlockRequest):
+def block_ip_iptables(
+    req: IPTablesBlockRequest,
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+        )
+    ),
+):
     """Trigger Linux iptables containment rule generation/execution."""
     return SOARService.execute_linux_iptables_block(ip=req.ip, dry_run=req.dry_run)
 

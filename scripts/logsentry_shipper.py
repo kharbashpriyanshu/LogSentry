@@ -176,6 +176,8 @@ class LogShipper:
                             )
                     # Reset backoff on success
                     self.backoff_delay = 1.0
+                    # After successful batch, attempt to drain any backlogged spool
+                    self.drain_spool()
         except Exception as e:
             print(
                 f"[-] Network failure to {batch_url}: {e}. Spooling {len(batch)} events to disk."
@@ -193,6 +195,65 @@ class LogShipper:
         except Exception as e:
             print(f"[-] Critical: Failed to write to disk spool: {e}")
 
+    def drain_spool(self):
+        """Reads persistent disk spool, replays queued events to SIEM, and truncates acknowledged items."""
+        if not os.path.exists(self.spool_path) or os.path.getsize(self.spool_path) == 0:
+            return
+
+        try:
+            with open(self.spool_path, encoding="utf-8") as f:
+                lines = [line.strip() for line in f if line.strip()]
+
+            if not lines:
+                return
+
+            spooled_events = []
+            for line in lines:
+                try:
+                    spooled_events.append(json.loads(line))
+                except Exception:
+                    pass
+
+            if not spooled_events:
+                open(self.spool_path, "w", encoding="utf-8").close()
+                return
+
+            print(
+                f"[*] Replaying {len(spooled_events)} backlogged events from disk spool..."
+            )
+            batch = spooled_events[: self.batch_size]
+
+            batch_url = f"{self.server_url}/api/v1/detection/batch"
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+
+            payload = json.dumps(
+                {
+                    "events": batch,
+                    "tenant_id": self.tenant_id,
+                    "agent_id": f"shipper-{HOSTNAME}",
+                }
+            ).encode("utf-8")
+
+            req = urllib.request.Request(  # noqa: S310
+                batch_url, data=payload, headers=headers, method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=8.0) as resp:  # noqa: S310
+                if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    acked = len(data.get("ack_ids", []))
+                    # Remove successfully sent events from spool
+                    remaining = lines[len(batch) :]
+                    with open(self.spool_path, "w", encoding="utf-8") as f:
+                        for rem in remaining:
+                            f.write(rem + "\n")
+                    print(
+                        f"[+] Successfully drained {len(batch)} spooled events ({acked} acknowledged, remaining: {len(remaining)})."
+                    )
+        except Exception as e:
+            print(f"[-] Could not drain spool: {e}")
+
     def run(self):
         print("=" * 68)
         print("      LOGSENTRY SIEM — UNIVERSAL ENTERPRISE LOG SHIPPER         ")
@@ -202,8 +263,12 @@ class LogShipper:
         print(f" Parser:      {self.parser_name}")
         print(f" Watching:    {self.file_patterns}")
         print(f" Checkpoint:  {self.checkpoint_path}")
+        print(f" Disk Spool:  {self.spool_path}")
         print("=" * 68 + "\n")
         print("[+] Shipper active. Forwarding telemetry in real-time...\n")
+
+        # Initial check to drain any existing backlog from previous runs
+        self.drain_spool()
 
         try:
             while self.is_running:

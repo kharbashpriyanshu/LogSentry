@@ -118,14 +118,26 @@ class DuckDBForensicsEngine:
 
     @classmethod
     def sync_from_database(
-        cls, db: Session, tenant_id: str = "default", limit: int = 10000
+        cls,
+        db: Session,
+        tenant_id: str = "default",
+        time_range_hours: int = 24,
+        limit: int = 10000,
     ):
-        """Loads recent telemetry from relational DB into high-speed columnar DuckDB memory."""
+        """Loads recent telemetry from relational DB into high-speed columnar DuckDB memory with strict tenant boundary."""
+        from datetime import UTC, datetime, timedelta
+
         con = cls.get_connection()
         query = db.query(LogEventModel)
 
-        if tenant_id and tenant_id not in ("default", "*", "system"):
+        # Enforce strict tenant boundary — no wildcard or system bypass
+        if tenant_id and tenant_id != "*":
             query = query.filter(LogEventModel.tenant_id == tenant_id)
+
+        # Time range windowing
+        if time_range_hours and time_range_hours > 0:
+            cutoff = datetime.now(UTC) - timedelta(hours=time_range_hours)
+            query = query.filter(LogEventModel.created_at >= cutoff)
 
         records = query.order_by(LogEventModel.created_at.desc()).limit(limit).all()
 
@@ -160,11 +172,17 @@ class DuckDBForensicsEngine:
 
     @classmethod
     def execute_query(
-        cls, db: Session, sql_query: str, tenant_id: str = "default"
+        cls,
+        db: Session,
+        sql_query: str,
+        tenant_id: str = "default",
+        time_range_hours: int = 24,
     ) -> ColumnarQueryResult:
         """Executes vectorized SQL query in DuckDB within a strictly isolated security sandbox."""
         validated_sql = cls.validate_sql_security(sql_query)
-        cls.sync_from_database(db, tenant_id=tenant_id)
+        cls.sync_from_database(
+            db, tenant_id=tenant_id, time_range_hours=time_range_hours
+        )
         con = cls.get_connection()
 
         start = time.perf_counter()

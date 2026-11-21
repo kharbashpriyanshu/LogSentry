@@ -143,16 +143,21 @@ def analyze_batch(
     Returns acknowledgements (ack_ids) so telemetry shippers can safely clear persistent local spools.
     """
     ack_ids: list[str] = []
+    rejected_errors: list[dict[str, str]] = []
     processed_count = 0
     duplicate_count = 0
+    rejected_count = 0
     alerts_generated = 0
     active_campaigns = []
 
     for raw_item in request.events:
+        item_id = str(raw_item.get("event_id") or raw_item.get("id") or "")
         fingerprint = event_deduplicator.compute_event_fingerprint(raw_item)
+        effective_id = item_id or fingerprint
+
         if event_deduplicator.is_duplicate(fingerprint):
             duplicate_count += 1
-            ack_ids.append(raw_item.get("event_id") or fingerprint)
+            ack_ids.append(effective_id)
             continue
 
         # Normalize parser name
@@ -160,16 +165,23 @@ def analyze_batch(
             raw_item["parser_name"] = raw_item.get("source_type") or "generic"
 
         try:
+            if not raw_item.get("timestamp"):
+                from datetime import UTC, datetime
+
+                raw_item["timestamp"] = datetime.now(UTC).isoformat()
             event = LogEvent(**raw_item)
             if request.tenant_id and not getattr(event, "tenant_id", None):
                 event.tenant_id = request.tenant_id
-        except Exception:
-            # Skip unparseable items but acknowledge receipt
-            ack_ids.append(raw_item.get("event_id") or fingerprint)
+        except Exception as exc:
+            # Malformed item: reject explicitly so shipper/client knows it failed
+            rejected_count += 1
+            rejected_errors.append(
+                {"event_id": effective_id, "error": f"Schema validation failed: {exc}"}
+            )
             continue
 
         event_repo.create_event(event)
-        ack_ids.append(getattr(event, "event_id", None) or fingerprint)
+        ack_ids.append(getattr(event, "event_id", None) or effective_id)
         processed_count += 1
 
         alerts = detection_service.analyze_event(event)
@@ -183,15 +195,18 @@ def analyze_batch(
                 active_campaigns.append(campaign)
 
     return BatchDetectionResponse(
-        status="acknowledged",
+        status="acknowledged" if rejected_count == 0 else "partial_success",
         received_count=len(request.events),
         processed_count=processed_count,
         duplicate_count=duplicate_count,
+        rejected_count=rejected_count,
         alerts_generated=alerts_generated,
         ack_ids=ack_ids,
+        rejected_errors=rejected_errors,
         correlated_campaigns=[
             {
                 "campaign_id": c.campaign_id,
+                "tenant_id": getattr(c, "tenant_id", "default"),
                 "title": c.title,
                 "severity": c.severity,
                 "confidence": c.confidence,

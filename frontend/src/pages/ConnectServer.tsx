@@ -65,6 +65,7 @@ function TerminalBox({
 
 export default function ConnectServer() {
   const queryClient = useQueryClient();
+  const [viewSection, setViewSection] = useState<'setup' | 'inventory' | 'tester'>('setup');
   const [activeTab, setActiveTab] = useState<'linux' | 'windows' | 'network' | 'cloud' | 'k8s'>('linux');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -170,15 +171,61 @@ export default function ConnectServer() {
         />
       </div>
 
-      {/* Main Connection Guide & Instructions Tabs */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden shadow-xs">
+      {/* View Section Switcher */}
+      <div className="flex border-b border-[var(--border-subtle)] gap-2">
+        <button
+          onClick={() => setViewSection('setup')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            viewSection === 'setup'
+              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <Terminal className="w-4 h-4" />
+          <span>⚡ 1-Click Setup & Forwarder Commands</span>
+        </button>
+        <button
+          onClick={() => setViewSection('inventory')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            viewSection === 'inventory'
+              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <Server className="w-4 h-4" />
+          <span>🖥️ Connected Server Inventory ({servers.length} Nodes)</span>
+        </button>
+        <button
+          onClick={() => setViewSection('tester')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            viewSection === 'tester'
+              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <Send className="w-4 h-4" />
+          <span>🔌 Manual Handshake Tester</span>
+        </button>
+      </div>
+
+      {/* SECTION 1: Setup Commands & Forwarders */}
+      {(viewSection === 'setup' || viewSection === 'inventory') && (
+        <div className={`bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden shadow-xs ${viewSection === 'inventory' ? 'hidden' : ''}`}>
         <div className="p-5 border-b border-[var(--border-subtle)] bg-[var(--bg-card-subtle)]/50">
-          <h2 className="text-sm font-bold text-[var(--text-primary)]">
-            Select Company Infrastructure Type to Connect
-          </h2>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">
-            Choose your corporate asset below to view 1-click installation commands, configuration files, and network ports.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-blue-600" />
+                Select Operating System or Infrastructure Platform
+              </h2>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                Copy and run the exact commands below on your host to start streaming logs into LogSentry in seconds.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono font-semibold px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-600 border border-blue-500/20 shrink-0">
+              Gateway: {window.location.hostname}:8000
+            </span>
+          </div>
 
           {/* Platform Tabs */}
           <div className="flex flex-wrap gap-2 mt-4">
@@ -403,6 +450,7 @@ end`}
           )}
         </div>
       </div>
+      )}
 
       {/* Interactive Server Connection Tester */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-6 shadow-xs">
@@ -507,6 +555,19 @@ end`}
 
       {/* Live Connected Enterprise Servers Inventory */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden shadow-xs">
+        {/* Telemetry Clarification Banner */}
+        <div className="p-4 bg-blue-500/10 border-b border-blue-500/20 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-blue-500 shrink-0 animate-pulse" />
+            <span className="text-[var(--text-primary)]">
+              <strong>Telemetry Source Transparency:</strong> Node <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">MSI (127.0.0.1)</span> is streaming <strong>real live Windows event & PowerShell telemetry</strong> 24/7 directly from your workstation hardware. Other nodes represent enterprise fleet simulation benchmarks for multi-tier SOC correlation.
+            </span>
+          </div>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-600 text-white shrink-0 self-start md:self-auto">
+            Hybrid Real & Benchmark Fleet
+          </span>
+        </div>
+
         <div className="p-5 border-b border-[var(--border-subtle)] flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
@@ -528,6 +589,7 @@ end`}
               <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-card-subtle)]/50 text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
                 <th className="py-3 px-4">Hostname / Node</th>
                 <th className="py-3 px-4">IPv4 Address</th>
+                <th className="py-3 px-4">Telemetry Origin</th>
                 <th className="py-3 px-4">Platform</th>
                 <th className="py-3 px-4">Parser Engine</th>
                 <th className="py-3 px-4 text-right">Events Ingested</th>
@@ -536,39 +598,58 @@ end`}
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
-              {servers.slice(0, 15).map((srv) => (
-                <tr key={srv.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
-                  <td className="py-3 px-4 font-mono font-bold text-[var(--text-primary)] flex items-center gap-2">
-                    <Server className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                    {srv.hostname}
-                  </td>
-                  <td className="py-3 px-4 font-mono text-[var(--text-secondary)]">{srv.ip}</td>
-                  <td className="py-3 px-4">
-                    <span className="capitalize px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--bg-card-subtle)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
-                      {srv.platform}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-muted)]">{srv.parser}</td>
-                  <td className="py-3 px-4 text-right font-mono font-bold text-[var(--text-primary)]">
-                    {srv.total_events.toLocaleString()}
-                  </td>
-                  <td className="py-3 px-4 text-[11px] text-[var(--text-muted)]">
-                    {new Date(srv.last_seen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    {srv.status === 'streaming' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                        Streaming
+              {servers.slice(0, 25).map((srv) => {
+                const isLiveHost =
+                  srv.hostname?.toUpperCase().includes('MSI') ||
+                  srv.ip === '127.0.0.1' ||
+                  srv.parser === 'windows_event';
+
+                return (
+                  <tr key={srv.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                    <td className="py-3 px-4 font-mono font-bold text-[var(--text-primary)] flex items-center gap-2">
+                      <Server className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                      {srv.hostname}
+                    </td>
+                    <td className="py-3 px-4 font-mono text-[var(--text-secondary)]">{srv.ip}</td>
+                    <td className="py-3 px-4">
+                      {isLiveHost ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Real Host (Live Laptop)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-500/15 text-purple-800 dark:text-purple-300 border border-purple-500/30">
+                          SOC Benchmark Fleet
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="capitalize px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--bg-card-subtle)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
+                        {srv.platform}
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-500/10 text-slate-800 dark:text-slate-300 border border-slate-500/20">
-                        Idle
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-muted)]">{srv.parser}</td>
+                    <td className="py-3 px-4 text-right font-mono font-bold text-[var(--text-primary)]">
+                      {srv.total_events.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-[11px] text-[var(--text-muted)]">
+                      {new Date(srv.last_seen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {srv.status === 'streaming' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                          Streaming
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-500/10 text-slate-800 dark:text-slate-300 border border-slate-500/20">
+                          Idle
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
