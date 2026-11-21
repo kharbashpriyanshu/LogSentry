@@ -104,25 +104,47 @@ The detection flow processes raw strings into actionable security intelligence:
 - MITRE ATT&CK mapping
 - Configurable AI Providers (OpenAI, Gemini, Ollama)
 
-## Screenshots
-Screenshots of the fully integrated LogSentry SIEM platform and SOC workflows:
+## Screenshots & SOC Workflow Tour
 
-### 1. Unified Dashboard
+Visual overview of the fully integrated LogSentry Security Operations Platform across real-world detection, enrichment, investigation, and reporting:
+
+### 1. Unified SOC Telemetry Dashboard
+Real-time streaming telemetry, event rate counters, attack severity distribution, and MITRE ATT&CK coverage overview.
 ![LogSentry Dashboard](docs/images/dashboard.png)
 
-### 2. Alert Triage & AI Containment Strategy
+### 2. High-Throughput Alert Queue & Rule Triage
+Live alert queue with one-click analyst assignments, log parser filters, confidence metrics, and rule attribution.
 ![Alert Triage](docs/images/alerts.png)
+
+### 3. Threat Intelligence & Observable Reputation Center (TIORE)
+Multi-source indicator reputation lookups, automated feed correlation (AbuseIPDB, OTX, URLhaus, ThreatFox, VirusTotal, HIBP), zero-leakage privacy gating, and analyst triage reviews.
+![Threat Intelligence Center](docs/images/threat-intel.png)
+
+### 4. MITRE ATT&CK Matrix & Threat Coverage
+Interactive tactic matrix mapping real-time alerts and Sigma rules directly to adversary techniques.
+![MITRE ATT&CK Matrix](docs/images/mitre-matrix.png)
+
+### 5. Connected Enterprise Server Inventory
+Live telemetry tracking across all corporate nodes (Apache, Nginx, Linux auth, Windows event logs) streaming into the cluster.
+![Connected Server Inventory](docs/images/server-inventory.png)
+
+### 6. Incident Investigation & Attack Graph
+Multi-stage attack campaign correlation, automated blast radius analysis, linked IOCs, and remediation status.
+![Incident Management](docs/images/incidents.png)
+
+### 7. AI Containment Strategy & SOAR Active Defense
+AI-generated containment recommendations with authorized automated actions (IP blocking, host isolation, credential revocation).
 ![AI Containment Strategy](docs/images/ai-containment.png)
 
-### 3. Incident Investigation & Forensic Timeline
-![Incident Management](docs/images/incidents.png)
-![Incident Timeline Audit Log](docs/images/incident-timeline.png)
+### 8. System Health & Infrastructure Monitoring
+Memory usage, active workers, queue throughput, database connectivity, and node telemetry heartbeat status.
+![System Health Monitoring](docs/images/system-health.png)
 
-### 4. Threat Intelligence & Automated SOC Reporting
-![Threat Intelligence Enrichment](docs/images/threat-intel.png)
+### 9. Executive & Compliance Reporting
+Automated forensic timeline generation and export capabilities in PDF, JSON, and technical CSV formats.
 ![Incident Reporting](docs/images/reports.png)
 
-*(Note: Additional alert evidence and enrichment screenshots such as `docs/images/alert-details.png` are available in `docs/images/` and detailed in the [End-to-End Demonstration & Evaluation Guide](docs/DEMO_GUIDE.md).)*
+*(Note: Additional forensic artifacts and playbooks are detailed in the [Enterprise SOC Incident Response Playbooks](docs/SOC_INCIDENT_RESPONSE_PLAYBOOKS.md) and [Demonstration & Evaluation Guide](docs/DEMO_GUIDE.md).)*
 ## Security Architecture
 LogSentry implements strict production security controls:
 - **Production fail-fast configuration:** Will not start in `production` without explicitly setting `DATABASE_URI`.
