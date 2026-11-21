@@ -23,6 +23,7 @@ from fastapi.responses import Response
 
 from app.ai.models import AIAnalysisResponse
 from app.api.dependencies import get_reporting_service
+from app.core.rbac import UserContext, get_current_user
 from app.enrichment.models import ThreatEnrichment
 from app.reports.csv_generator import CSVGenerator
 from app.reports.exceptions import (
@@ -76,6 +77,7 @@ _last_report: ExecutiveReport | TechnicalReport | IncidentReport | None = None  
 @router.post("/generate", summary="Generate a structured incident report")
 def generate_report(
     payload: GenerateReportRequest,
+    user: UserContext = Depends(get_current_user),
     service: ReportingService = Depends(get_reporting_service),
 ):
     """
@@ -110,7 +112,10 @@ def generate_report(
     summary="Export the last generated report as a PDF",
     response_class=Response,
 )
-def export_pdf(service: ReportingService = Depends(get_reporting_service)):
+def export_pdf(
+    user: UserContext = Depends(get_current_user),
+    service: ReportingService = Depends(get_reporting_service),
+):
     """
     Export the most recently generated report as a professional PDF document.
     Call `/generate` first to produce a report.
@@ -138,7 +143,10 @@ def export_pdf(service: ReportingService = Depends(get_reporting_service)):
     summary="Export the last generated report as CSV (ZIP archive)",
     response_class=Response,
 )
-def export_csv(service: ReportingService = Depends(get_reporting_service)):
+def export_csv(
+    user: UserContext = Depends(get_current_user),
+    service: ReportingService = Depends(get_reporting_service),
+):
     """
     Export the most recently generated report as a ZIP archive containing
     one CSV file per data sheet (alert_data, threat_intelligence, timeline, ioc).
@@ -175,7 +183,10 @@ def export_csv(service: ReportingService = Depends(get_reporting_service)):
     summary="Export the last generated report as structured JSON",
     response_class=Response,
 )
-def export_json(service: ReportingService = Depends(get_reporting_service)):
+def export_json(
+    user: UserContext = Depends(get_current_user),
+    service: ReportingService = Depends(get_reporting_service),
+):
     """
     Export the most recently generated report as a complete structured JSON document.
     All nested relationships are preserved.

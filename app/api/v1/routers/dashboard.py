@@ -2,13 +2,17 @@ from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
+from app.core.rbac import UserContext, get_current_user
 from app.repositories.dashboard_repository import DashboardRepository
 from app.services.websocket import manager
 
 router = APIRouter()
 
 
-def get_dashboard_repository(db: Session = Depends(get_db)) -> DashboardRepository:
+def get_dashboard_repository(
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> DashboardRepository:
     return DashboardRepository(db)
 
 

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.dependencies import get_incident_repository, get_timeline_repository
+from app.core.rbac import UserContext, UserRole, get_current_user, require_role
 from app.repositories.incident_repository import IncidentRepository
 from app.repositories.timeline_repository import TimelineRepository
 from app.schemas.incident import IncidentCreate, IncidentResponse, IncidentUpdate
@@ -12,6 +13,14 @@ router = APIRouter()
 @router.post("", response_model=IncidentResponse, status_code=201)
 def create_incident(
     data: IncidentCreate,
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+            UserRole.TIER_2_ANALYST,
+            UserRole.THREAT_HUNTER,
+        )
+    ),
     repo: IncidentRepository = Depends(get_incident_repository),
     timeline: TimelineRepository = Depends(get_timeline_repository),
 ):
@@ -32,6 +41,7 @@ def list_incidents(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
     status: str | None = None,
+    user: UserContext = Depends(get_current_user),
     repo: IncidentRepository = Depends(get_incident_repository),
 ):
     return repo.get_incidents(page=page, limit=limit, status=status)
@@ -39,7 +49,9 @@ def list_incidents(
 
 @router.get("/{incident_id}", response_model=IncidentResponse)
 def get_incident(
-    incident_id: str, repo: IncidentRepository = Depends(get_incident_repository)
+    incident_id: str,
+    user: UserContext = Depends(get_current_user),
+    repo: IncidentRepository = Depends(get_incident_repository),
 ):
     incident = repo.get_incident(incident_id)
     if not incident:
@@ -51,6 +63,14 @@ def get_incident(
 def update_incident(
     incident_id: str,
     updates: IncidentUpdate,
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+            UserRole.TIER_2_ANALYST,
+            UserRole.THREAT_HUNTER,
+        )
+    ),
     repo: IncidentRepository = Depends(get_incident_repository),
     timeline: TimelineRepository = Depends(get_timeline_repository),
 ):
@@ -122,6 +142,7 @@ def add_incident_comment(
 @router.get("/{incident_id}/graph")
 def get_incident_attack_graph(
     incident_id: str,
+    user: UserContext = Depends(get_current_user),
     repo: IncidentRepository = Depends(get_incident_repository),
 ):
     """

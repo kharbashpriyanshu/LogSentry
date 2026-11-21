@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.ai.exceptions import AIError
 from app.ai.models import AIAnalysisResponse
 from app.api.dependencies import get_ai_repository, get_ai_service, get_alert_repository
+from app.core.rbac import UserContext, get_current_user
 from app.models.ai_analysis import AIAnalysisModel
 from app.repositories.ai_repository import AIRepository
 from app.repositories.alert_repository import AlertRepository
@@ -21,6 +22,7 @@ class AnalyzeRequest(BaseModel):
 @router.post("/analyze", response_model=AIAnalysisResponse)
 def analyze_alert(
     request: AnalyzeRequest,
+    user: UserContext = Depends(get_current_user),
     ai_service: AIService = Depends(get_ai_service),
     alert_repo: AlertRepository = Depends(get_alert_repository),
     ai_repo: AIRepository = Depends(get_ai_repository),
@@ -58,7 +60,9 @@ def analyze_alert(
 
 @router.get("/alerts/{alert_id}/ai-analyses")
 def get_alert_analyses(
-    alert_id: str, ai_repo: AIRepository = Depends(get_ai_repository)
+    alert_id: str,
+    user: UserContext = Depends(get_current_user),
+    ai_repo: AIRepository = Depends(get_ai_repository),
 ):
     analyses = ai_repo.get_analyses_for_alert(alert_id)
     return [

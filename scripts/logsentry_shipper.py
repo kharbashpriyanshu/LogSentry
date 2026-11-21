@@ -146,6 +146,7 @@ class LogShipper:
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
+            headers["X-Agent-Key"] = self.api_key
 
         payload = json.dumps(
             {
@@ -227,6 +228,7 @@ class LogShipper:
             headers = {"Content-Type": "application/json"}
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
+                headers["X-Agent-Key"] = self.api_key
 
             payload = json.dumps(
                 {

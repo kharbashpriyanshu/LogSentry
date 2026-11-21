@@ -7,6 +7,7 @@ from app.api.dependencies import (
     get_incident_repository,
     get_timeline_repository,
 )
+from app.core.rbac import UserContext, UserRole, get_current_user
 from app.repositories.alert_repository import AlertRepository
 from app.repositories.incident_repository import IncidentRepository
 from app.repositories.timeline_repository import TimelineRepository
@@ -30,10 +31,17 @@ def get_alerts(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
     severity: str | None = None,
+    tenant_id: str | None = None,
+    user: UserContext = Depends(get_current_user),
     repo: AlertRepository = Depends(get_alert_repository),
 ):
-    """Get all alerts with pagination and filtering."""
-    return repo.get_alerts(page=page, limit=limit, severity=severity)
+    """Get all alerts with pagination and filtering, scoped strictly to caller's tenant."""
+    effective_tenant = (
+        tenant_id
+        if user.role == UserRole.ADMIN and tenant_id
+        else user.tenant_id
+    )
+    return repo.get_alerts(page=page, limit=limit, severity=severity, tenant_id=effective_tenant)
 
 
 @router.patch("/{alert_id}", response_model=DetectionAlert)

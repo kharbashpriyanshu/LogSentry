@@ -55,6 +55,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application startup and shutdown hooks."""
     setup_logging()
     queue_service.start_worker()
+
+    # Bootstrap default enterprise tenants and administrator
+    try:
+        from app.database.session import SessionLocal
+        from app.services.identity_service import IdentityService
+        with SessionLocal() as db:
+            IdentityService.bootstrap_default_tenants_and_admin(db)
+    except Exception as exc:
+        logger.warning(f"Initial identity bootstrap notice: {exc}")
+
     logger.info(
         "LogSentry starting",
         extra={

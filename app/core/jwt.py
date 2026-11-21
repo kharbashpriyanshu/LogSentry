@@ -1,48 +1,43 @@
 """LogSentry Cryptographic JWT Authentication Module.
 
-Implements RFC 7519 compliant JSON Web Tokens (HS256) using standard-library cryptography.
-Zero external dependencies, fast, thread-safe, and secure.
+Implements RFC 7519 compliant JSON Web Tokens pinned strictly to HMAC-SHA256 (HS256)
+using PyJWT. Enforces issuer, audience, subject, expiration, issuance, token type,
+and tenant binding.
 """
 
-import base64
-import hashlib
-import hmac
-import json
-import time
+from datetime import UTC, datetime, timedelta
 from typing import Any
+
+import jwt
+from jwt.exceptions import (
+    ExpiredSignatureError,
+    ImmatureSignatureError,
+    InvalidAudienceError,
+    InvalidIssuerError,
+    InvalidSignatureError,
+    InvalidTokenError,
+    MissingRequiredClaimError,
+    PyJWTError,
+)
 
 from app.config.settings import settings
 
 JWT_ALGORITHM = "HS256"
 JWT_ISSUER = "logsentry-siem"
 JWT_AUDIENCE = "logsentry-soc"
+TOKEN_TYPE_ACCESS = "access"
 
-# Secret key validation: in non-dev, must meet minimum security entropy
-_configured_key = getattr(
-    settings, "SECRET_KEY", "logsentry-enterprise-soc-jwt-secret-key-2026"
+PROTECTED_CLAIMS = frozenset(
+    {"iss", "aud", "sub", "role", "tenant_id", "iat", "exp", "typ"}
 )
-if (
-    getattr(settings, "ENVIRONMENT", "development") == "production"
-    and _configured_key == "logsentry-enterprise-soc-jwt-secret-key-2026"
-):
-    raise RuntimeError(
-        "Production security violation: Default JWT SECRET_KEY is not permitted in production."
-    )
-
-SECRET_KEY = _configured_key
 
 
-def _base64url_encode(data: bytes) -> str:
-    """Encodes bytes to URL-safe base64 without padding."""
-    return base64.urlsafe_b64encode(data).rstrip(b"=").decode("utf-8")
-
-
-def _base64url_decode(data: str) -> bytes:
-    """Decodes URL-safe base64 string, restoring padding if needed."""
-    rem = len(data) % 4
-    if rem > 0:
-        data += "=" * (4 - rem)
-    return base64.urlsafe_b64decode(data.encode("utf-8"))
+def get_secret_key() -> str:
+    """Retrieves validated SECRET_KEY from application configuration."""
+    key = getattr(settings, "SECRET_KEY", None)
+    if not key:
+        return "logsentry-insecure-dev-secret-key-min-32-chars-2026!"
+    return key
 
 
 def create_access_token(
@@ -50,116 +45,133 @@ def create_access_token(
     role: str,
     tenant_id: str = "default",
     email: str | None = None,
-    expires_delta_minutes: int = 120,
+    expires_delta_minutes: int | None = None,
     extra_claims: dict[str, Any] | None = None,
 ) -> str:
-    """Creates a cryptographically signed RFC 7519 HS256 JWT access token."""
-    now = int(time.time())
-    header = {"alg": JWT_ALGORITHM, "typ": "JWT"}
+    """
+    Creates a cryptographically signed RFC 7519 HS256 JWT access token.
 
-    # Base standard claims
+    Mandatory claims embedded:
+      - iss: logsentry-siem
+      - aud: logsentry-soc
+      - sub: user_id
+      - role: role
+      - tenant_id: tenant_id
+      - typ: access
+      - iat: UTC issuance timestamp
+      - exp: UTC expiration timestamp
+    """
+    now = datetime.now(UTC)
+    minutes = (
+        expires_delta_minutes
+        if expires_delta_minutes is not None
+        else getattr(settings, "AUTH_TOKEN_EXPIRE_MINUTES", 120)
+    )
+    expire = now + timedelta(minutes=minutes)
+
     payload: dict[str, Any] = {
         "iss": JWT_ISSUER,
         "aud": JWT_AUDIENCE,
-        "sub": user_id,
+        "sub": str(user_id),
         "email": email or f"{user_id}@logsentry.corp",
-        "role": role,
-        "tenant_id": tenant_id,
-        "iat": now,
-        "exp": now + (expires_delta_minutes * 60),
+        "role": str(role),
+        "tenant_id": str(tenant_id),
+        "typ": TOKEN_TYPE_ACCESS,
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
     }
 
-    # Safe extra claims — do NOT allow overwriting protected claims
-    protected_claims = {"iss", "aud", "sub", "role", "tenant_id", "iat", "exp"}
+    # Safe extra claims — prevent overwriting core security claims
     if extra_claims:
         for k, v in extra_claims.items():
-            if k not in protected_claims:
+            if k not in PROTECTED_CLAIMS:
                 payload[k] = v
 
-    header_b64 = _base64url_encode(
-        json.dumps(header, separators=(",", ":")).encode("utf-8")
+    secret = get_secret_key()
+    return jwt.encode(
+        payload,
+        secret,
+        algorithm=JWT_ALGORITHM,
+        headers={"typ": "JWT", "alg": JWT_ALGORITHM},
     )
-    payload_b64 = _base64url_encode(
-        json.dumps(payload, separators=(",", ":")).encode("utf-8")
-    )
-
-    signing_input = f"{header_b64}.{payload_b64}".encode()
-    signature = hmac.new(
-        SECRET_KEY.encode("utf-8"), signing_input, hashlib.sha256
-    ).digest()
-    sig_b64 = _base64url_encode(signature)
-
-    return f"{header_b64}.{payload_b64}.{sig_b64}"
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
     """
     Decodes and validates an HS256 JWT access token.
-    Validates algorithm header, cryptographic HMAC signature, standard claims,
-    and expiration timestamp.
+
+    Enforces:
+      - Algorithm whitelist: strictly HS256 (rejects 'none', asymmetric, etc.)
+      - Issuer validation: 'logsentry-siem'
+      - Audience validation: 'logsentry-soc'
+      - Expiration and clock-skew checking
+      - Mandatory claims: sub, role, tenant_id, typ, iat, exp
+      - Token type: strictly 'access'
+
+    Raises:
+      ValueError: on any signature mismatch, malformed payload, claim violation, or expiration.
     """
-    parts = token.strip().split(".")
-    if len(parts) != 3:
+    if not token or not isinstance(token, str):
+        raise ValueError("Invalid token: token must be a non-empty string")
+
+    clean_token = token.strip()
+    if clean_token.count(".") != 2:
         raise ValueError("Invalid JWT format: token must contain 3 dot-separated parts")
 
-    header_b64, payload_b64, sig_b64 = parts
+    secret = get_secret_key()
 
-    # Parse and validate header
     try:
-        header_bytes = _base64url_decode(header_b64)
-        header = json.loads(header_bytes.decode("utf-8"))
-    except Exception as e:
-        raise ValueError(f"Corrupt JWT header: {e}")
+        # First verify unverified header to ensure alg is specifically HS256
+        unverified_header = jwt.get_unverified_header(clean_token)
+        if unverified_header.get("alg") != JWT_ALGORITHM:
+            raise ValueError(
+                f"Unsupported JWT algorithm '{unverified_header.get('alg')}'. Pinned to '{JWT_ALGORITHM}'."
+            )
+        if unverified_header.get("typ") != "JWT":
+            raise ValueError(
+                f"Invalid JWT type in header '{unverified_header.get('typ')}'. Expected 'JWT'."
+            )
 
-    if header.get("alg") != JWT_ALGORITHM:
-        raise ValueError(
-            f"Unsupported JWT algorithm '{header.get('alg')}'. Expected '{JWT_ALGORITHM}'."
-        )
-    if header.get("typ") != "JWT":
-        raise ValueError(f"Invalid JWT type '{header.get('typ')}'. Expected 'JWT'.")
-
-    # Verify signature
-    signing_input = f"{header_b64}.{payload_b64}".encode()
-    expected_sig = hmac.new(
-        SECRET_KEY.encode("utf-8"), signing_input, hashlib.sha256
-    ).digest()
-    try:
-        actual_sig = _base64url_decode(sig_b64)
-    except Exception as e:
-        raise ValueError(f"Invalid JWT signature encoding: {e}")
-
-    if not hmac.compare_digest(expected_sig, actual_sig):
-        raise ValueError("JWT signature verification failed: invalid token")
-
-    # Parse payload
-    try:
-        payload_bytes = _base64url_decode(payload_b64)
-        payload = json.loads(payload_bytes.decode("utf-8"))
-    except Exception as e:
-        raise ValueError(f"Corrupt JWT payload: {e}")
-
-    # Enforce mandatory claims
-    for required_claim in ("sub", "role", "iat", "exp"):
-        if required_claim not in payload:
-            raise ValueError(f"Missing mandatory JWT claim '{required_claim}'")
-
-    # Validate issuer & audience when present
-    if "iss" in payload and payload["iss"] != JWT_ISSUER:
-        raise ValueError(
-            f"Invalid JWT issuer '{payload['iss']}'. Expected '{JWT_ISSUER}'"
-        )
-    if "aud" in payload and payload["aud"] != JWT_AUDIENCE:
-        raise ValueError(
-            f"Invalid JWT audience '{payload['aud']}'. Expected '{JWT_AUDIENCE}'"
+        payload = jwt.decode(
+            clean_token,
+            secret,
+            algorithms=[JWT_ALGORITHM],
+            audience=JWT_AUDIENCE,
+            issuer=JWT_ISSUER,
+            options={
+                "verify_signature": True,
+                "verify_exp": True,
+                "verify_iat": True,
+                "verify_aud": True,
+                "verify_iss": True,
+                "require": ["exp", "iat", "sub", "role", "tenant_id"],
+            },
+            leeway=10,  # 10s leeway for minor clock skew
         )
 
-    # Check expiration
-    now = int(time.time())
-    if now > int(payload["exp"]):
+        # Validate token type claim
+        if payload.get("typ") != TOKEN_TYPE_ACCESS:
+            raise ValueError(
+                f"Invalid token type '{payload.get('typ')}'. Expected '{TOKEN_TYPE_ACCESS}'."
+            )
+
+        return payload
+
+    except ExpiredSignatureError:
         raise ValueError("JWT access token has expired")
-
-    # Check not-before / future timestamp
-    if int(payload["iat"]) > now + 60:
+    except ImmatureSignatureError:
         raise ValueError("JWT issued in the future (clock skew error)")
-
-    return payload
+    except InvalidAudienceError:
+        raise ValueError(f"Invalid JWT audience. Expected '{JWT_AUDIENCE}'")
+    except InvalidIssuerError:
+        raise ValueError(f"Invalid JWT issuer. Expected '{JWT_ISSUER}'")
+    except MissingRequiredClaimError as e:
+        raise ValueError(f"Missing mandatory JWT claim: {e}")
+    except (InvalidSignatureError, InvalidTokenError) as e:
+        raise ValueError(f"JWT signature verification failed: {e}")
+    except PyJWTError as e:
+        raise ValueError(f"JWT verification error: {e}")
+    except ValueError:
+        raise
+    except Exception as e:
+        raise ValueError(f"Corrupt or invalid JWT: {e}")

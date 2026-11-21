@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.rbac import UserContext, UserRole, require_role
+from app.core.rbac import UserContext, UserRole, get_current_user, require_role
 from app.database.session import get_db
 from app.models.log_event import LogEventModel
 from app.services.duckdb_forensics import (
@@ -26,6 +26,7 @@ router = APIRouter(prefix="/hunting", tags=["Threat Hunting"])
 @router.post("/copilot", response_model=CopilotResponse)
 def copilot_threat_hunt(
     request: CopilotQueryRequest,
+    user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -57,7 +58,6 @@ def run_duckdb_analytics(
     Executes vectorized analytical SQL queries across log records in milliseconds.
     Strictly isolated and scoped to the authenticated analyst's tenant.
     """
-    from fastapi import HTTPException
 
     # Lock tenant_id to user identity (admin may query across/specify tenants)
     effective_tenant = (
@@ -80,6 +80,7 @@ def run_duckdb_analytics(
 @router.post("/search", response_model=HuntingSearchResult)
 def execute_threat_hunt(
     request: HuntingQueryRequest,
+    user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -88,11 +89,17 @@ def execute_threat_hunt(
       - source_ip:192.168.1.* AND status_code:>=400
       - endpoint:*/wp-admin* OR action:SSH_FAILED_LOGIN
     """
-    # Fetch recent telemetry from DB
+    effective_tenant = (
+        request.tenant_id
+        if user.role == UserRole.ADMIN and request.tenant_id
+        else user.tenant_id
+    )
+
+    # Fetch recent telemetry from DB scoped to tenant
     query = db.query(LogEventModel)
-    if request.tenant_id:
+    if effective_tenant:
         query = query.filter(
-            (LogEventModel.tenant_id == request.tenant_id)
+            (LogEventModel.tenant_id == effective_tenant)
             | (LogEventModel.tenant_id == "default")
             | (LogEventModel.tenant_id.is_(None))
         )

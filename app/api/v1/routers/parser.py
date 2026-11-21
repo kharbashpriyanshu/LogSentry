@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.dependencies import get_parsing_service
 from app.config.settings import settings
+from app.core.rbac import UserContext, get_current_user
 from app.schemas.api import ParseFileResponse, ParseLineRequest, ParseResponse
 from app.services.parsing_service import ParsingService
 
@@ -53,6 +54,7 @@ def _sanitise_filename(filename: str) -> str:
 )
 def parse_line(
     request: ParseLineRequest,
+    user: UserContext = Depends(get_current_user),
     parsing_service: ParsingService = Depends(get_parsing_service),
 ) -> ParseResponse:
     """Parse a single raw log line using the specified parser."""
@@ -71,6 +73,7 @@ def parse_line(
 async def parse_file(
     parser_name: str = Form(...),
     file: UploadFile = File(...),
+    user: UserContext = Depends(get_current_user),
     parsing_service: ParsingService = Depends(get_parsing_service),
 ) -> ParseFileResponse:
     """

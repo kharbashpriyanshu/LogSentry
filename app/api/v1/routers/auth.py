@@ -1,21 +1,18 @@
-import hashlib
-import hmac
-from typing import Any
+from datetime import datetime
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from app.core.jwt import create_access_token
 from app.core.rbac import UserContext, UserRole, get_current_user, require_role
+from app.database.session import get_db
+from app.models.agent_credential import AgentCredentialModel
+from app.models.tenant import TenantModel, UserTenantMembershipModel
+from app.services.identity_service import IdentityService
 
 router = APIRouter(prefix="/auth", tags=["Identity & RBAC"])
-
-
-def _hash_password(password: str, salt: str = "logsentry_soc_salt_2026") -> str:
-    """Cryptographic PBKDF2-HMAC-SHA256 password hash."""
-    return hashlib.pbkdf2_hmac(
-        "sha256", password.encode("utf-8"), salt.encode("utf-8"), 100_000
-    ).hex()
 
 
 class LoginRequest(BaseModel):
@@ -33,93 +30,92 @@ class TokenResponse(BaseModel):
     user: UserContext
 
 
-# Built-in salted PBKDF2 user directory with assigned tenant boundaries
-_DEMO_SALT = "logsentry_soc_salt_2026"
-SOC_DIRECTORY: dict[str, dict[str, Any]] = {
-    "admin": {
-        "password_hash": _hash_password("admin", _DEMO_SALT),
-        "role": UserRole.ADMIN,
-        "email": "admin@logsentry.corp",
-        "allowed_tenants": ["*"],  # Admin can access any tenant
-        "default_tenant": "default",
-    },
-    "soc_manager": {
-        "password_hash": _hash_password("manager123", _DEMO_SALT),
-        "role": UserRole.SOC_MANAGER,
-        "email": "manager@logsentry.corp",
-        "allowed_tenants": ["default", "corp-sec-ops"],
-        "default_tenant": "default",
-    },
-    "threat_hunter": {
-        "password_hash": _hash_password("hunter123", _DEMO_SALT),
-        "role": UserRole.THREAT_HUNTER,
-        "email": "hunter@logsentry.corp",
-        "allowed_tenants": ["default", "threat-hunting-lab"],
-        "default_tenant": "default",
-    },
-    "analyst": {
-        "password_hash": _hash_password("analyst123", _DEMO_SALT),
-        "role": UserRole.TIER_2_ANALYST,
-        "email": "analyst@logsentry.corp",
-        "allowed_tenants": ["default"],
-        "default_tenant": "default",
-    },
-    "junior_analyst": {
-        "password_hash": _hash_password("junior123", _DEMO_SALT),
-        "role": UserRole.TIER_1_ANALYST,
-        "email": "junior@logsentry.corp",
-        "allowed_tenants": ["default"],
-        "default_tenant": "default",
-    },
-}
+class AgentEnrollRequest(BaseModel):
+    name: str = Field(..., description="Collector or shipper agent name e.g. 'bastion-shipper-01'")
+    tenant_id: str = Field("default", description="Tenant to bind this collector agent to")
+
+
+class AgentEnrollResponse(BaseModel):
+    agent_id: str
+    name: str
+    tenant_id: str
+    api_key: str
+    api_key_prefix: str
+    created_at: str
+
+
+class AgentSummaryResponse(BaseModel):
+    id: str
+    name: str
+    tenant_id: str
+    api_key_prefix: str
+    is_active: bool
+    last_used_at: datetime | None = None
+    created_at: datetime
+
+
+class TenantResponse(BaseModel):
+    id: str
+    name: str
+    description: str | None = None
+    is_active: bool
 
 
 @router.post("/login", response_model=TokenResponse)
 @router.post("/token", response_model=TokenResponse)
-def login_for_access_token(form_data: LoginRequest):
+def login_for_access_token(
+    form_data: LoginRequest,
+    db: Session = Depends(get_db),
+):
     """
-    Authenticates SOC user credentials with PBKDF2-HMAC-SHA256 and issues a cryptographically
-    signed HS256 JWT access token. Enforces strict role hierarchy and tenant boundaries.
+    Authenticates SOC user credentials against database with Argon2id password verification
+    and issues a cryptographically signed HS256 JWT access token. Enforces strict role
+    hierarchy and tenant boundaries.
     """
-    account = SOC_DIRECTORY.get(form_data.username.lower())
-    if not account:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    # Ensure bootstrap default accounts exist
+    IdentityService.bootstrap_default_tenants_and_admin(db)
 
-    computed_hash = _hash_password(form_data.password, _DEMO_SALT)
-    if not hmac.compare_digest(account["password_hash"], computed_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+    try:
+        user_record, bound_tenant_id = IdentityService.authenticate_user(
+            db=db,
+            username=form_data.username,
+            password=form_data.password,
+            requested_tenant_id=form_data.tenant_id or "default",
         )
-
-    # Validate tenant membership: non-admins cannot log in to unassigned tenants
-    allowed = account.get("allowed_tenants", ["default"])
-    target_tenant = form_data.tenant_id or account.get("default_tenant", "default")
-    if "*" not in allowed and target_tenant not in allowed:
+    except PermissionError as pe:
+        # Account disabled or tenant membership violation
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"User '{form_data.username}' is not authorized to access tenant '{target_tenant}'.",
+            detail=str(pe),
+        )
+    except ValueError as ve:
+        # Invalid credentials or missing tenant
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(ve),
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    role = account["role"]
+    role_str = user_record.role
+    try:
+        user_role = UserRole(role_str)
+    except ValueError:
+        user_role = UserRole.TIER_1_ANALYST
+
     token = create_access_token(
-        user_id=form_data.username,
-        role=role.value,
-        tenant_id=target_tenant,
-        email=account["email"],
+        user_id=user_record.username,
+        role=user_role.value,
+        tenant_id=bound_tenant_id,
+        email=user_record.email,
         expires_delta_minutes=120,
     )
 
     user_ctx = UserContext(
-        user_id=form_data.username,
-        email=account["email"],
-        role=role,
-        tenant_id=target_tenant,
+        user_id=user_record.username,
+        email=user_record.email,
+        role=user_role,
+        tenant_id=bound_tenant_id,
+        is_agent=False,
     )
 
     return TokenResponse(
@@ -134,6 +130,108 @@ def login_for_access_token(form_data: LoginRequest):
 def get_my_identity(user: UserContext = Depends(get_current_user)):
     """Retrieve current authenticated analyst identity, role, and tenant."""
     return user
+
+
+@router.get("/tenants", response_model=List[TenantResponse])
+def get_user_tenants(
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List tenants accessible by the authenticated user."""
+    if user.role == UserRole.ADMIN:
+        tenants = db.query(TenantModel).filter(TenantModel.is_active == True).all()  # noqa: E712
+    else:
+        memberships = (
+            db.query(UserTenantMembershipModel)
+            .join(TenantModel, TenantModel.id == UserTenantMembershipModel.tenant_id)
+            .filter(
+                UserTenantMembershipModel.user_id == user.user_id,
+                TenantModel.is_active == True,  # noqa: E712
+            )
+            .all()
+        )
+        tenant_ids = [m.tenant_id for m in memberships]
+        if not tenant_ids and user.tenant_id:
+            tenant_ids = [user.tenant_id]
+        tenants = db.query(TenantModel).filter(TenantModel.id.in_(tenant_ids)).all()
+
+    return [
+        TenantResponse(
+            id=t.id,
+            name=t.name,
+            description=t.description,
+            is_active=t.is_active,
+        )
+        for t in tenants
+    ]
+
+
+@router.post("/agents/enroll", response_model=AgentEnrollResponse)
+def enroll_collector_agent(
+    payload: AgentEnrollRequest,
+    user: UserContext = Depends(require_role(UserRole.ADMIN, UserRole.SOC_MANAGER)),
+    db: Session = Depends(get_db),
+):
+    """
+    Enroll a new machine collector agent (shipper, endpoint sensor) and generate
+    a scoped agent API key. Requires Admin or SOC Manager role.
+    """
+    try:
+        agent_data = IdentityService.enroll_agent(
+            db=db,
+            name=payload.name,
+            tenant_id=payload.tenant_id or user.tenant_id,
+        )
+        return AgentEnrollResponse(**agent_data)
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve),
+        )
+
+
+@router.get("/agents", response_model=List[AgentSummaryResponse])
+def list_enrolled_agents(
+    user: UserContext = Depends(require_role(UserRole.ADMIN, UserRole.SOC_MANAGER)),
+    db: Session = Depends(get_db),
+):
+    """List enrolled collector agents for the caller's tenant."""
+    query = db.query(AgentCredentialModel)
+    if user.role != UserRole.ADMIN:
+        query = query.filter(AgentCredentialModel.tenant_id == user.tenant_id)
+    agents = query.order_by(AgentCredentialModel.created_at.desc()).all()
+
+    return [
+        AgentSummaryResponse(
+            id=str(a.id),
+            name=a.name,
+            tenant_id=a.tenant_id,
+            api_key_prefix=a.api_key_prefix,
+            is_active=a.is_active,
+            last_used_at=a.last_used_at,
+            created_at=a.created_at,
+        )
+        for a in agents
+    ]
+
+
+@router.delete("/agents/{agent_id}")
+def revoke_agent(
+    agent_id: str,
+    user: UserContext = Depends(require_role(UserRole.ADMIN, UserRole.SOC_MANAGER)),
+    db: Session = Depends(get_db),
+):
+    """Revoke an agent's credentials immediately."""
+    agent = db.query(AgentCredentialModel).filter(AgentCredentialModel.id == agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found")
+
+    if user.role != UserRole.ADMIN and agent.tenant_id != user.tenant_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot revoke agent belonging to another tenant")
+
+    agent.is_active = False
+    db.commit()
+    return {"status": "success", "message": f"Agent '{agent.name}' revoked successfully."}
 
 
 @router.get("/admin-only")

@@ -1,21 +1,24 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.rbac import UserContext, UserRole, get_current_user, require_role
 from app.services.syslog_service import syslog_service
 
 router = APIRouter()
 
 
 @router.get("/status", response_model=dict[str, Any])
-def get_syslog_status():
+def get_syslog_status(user: UserContext = Depends(get_current_user)):
     """Retrieve status, configuration, and traffic statistics of the Syslog UDP listener."""
     return syslog_service.get_status()
 
 
 @router.post("/start")
-async def start_syslog_listener():
-    """Start the asynchronous background Syslog listener (UDP 1514)."""
+async def start_syslog_listener(
+    user: UserContext = Depends(require_role(UserRole.ADMIN, UserRole.SOC_MANAGER)),
+):
+    """Start the asynchronous background Syslog listener (UDP 1514). Requires Admin/SOC_Manager."""
     success = await syslog_service.start()
     if not success:
         raise HTTPException(
@@ -26,7 +29,9 @@ async def start_syslog_listener():
 
 
 @router.post("/stop")
-def stop_syslog_listener():
-    """Stop the background Syslog listener."""
+def stop_syslog_listener(
+    user: UserContext = Depends(require_role(UserRole.ADMIN, UserRole.SOC_MANAGER)),
+):
+    """Stop the background Syslog listener. Requires Admin/SOC_Manager."""
     syslog_service.stop()
     return {"status": "stopped", "is_running": syslog_service.is_running}

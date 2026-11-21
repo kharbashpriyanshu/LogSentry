@@ -9,6 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db, get_detection_service
+from app.core.rbac import UserContext, UserRole, get_current_user
 from app.models.log_event import LogEventModel
 from app.schemas.log_event import LogEvent
 from app.services.detection_service import DetectionService
@@ -32,17 +33,26 @@ class ServerPingRequest(BaseModel):
 
 
 @router.get("/servers")
-def get_connected_servers(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
+def get_connected_servers(
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[dict[str, Any]]:
     """Lists all enterprise servers currently or recently transmitting telemetry to LogSentry."""
-    results = (
-        db.query(
-            LogEventModel.source,
-            LogEventModel.source_ip,
-            LogEventModel.source_type,
-            func.count(LogEventModel.id).label("total_events"),
-            func.max(LogEventModel.created_at).label("last_seen"),
+    base_query = db.query(
+        LogEventModel.source,
+        LogEventModel.source_ip,
+        LogEventModel.source_type,
+        func.count(LogEventModel.id).label("total_events"),
+        func.max(LogEventModel.created_at).label("last_seen"),
+    )
+    if user.role != UserRole.ADMIN:
+        base_query = base_query.filter(
+            (LogEventModel.tenant_id == user.tenant_id)
+            | (LogEventModel.tenant_id == "default")
+            | (LogEventModel.tenant_id.is_(None))
         )
-        .group_by(
+    results = (
+        base_query.group_by(
             LogEventModel.source, LogEventModel.source_ip, LogEventModel.source_type
         )
         .all()
@@ -99,6 +109,7 @@ def get_connected_servers(db: Session = Depends(get_db)) -> list[dict[str, Any]]
 @router.post("/test-ping")
 def test_server_ping(
     req: ServerPingRequest,
+    user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
     detection_service: DetectionService = Depends(get_detection_service),
 ) -> dict[str, Any]:

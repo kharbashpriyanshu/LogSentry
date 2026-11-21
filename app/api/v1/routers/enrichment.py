@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from app.api.dependencies import get_enrichment_repository, get_enrichment_service
+from app.core.rbac import UserContext, get_current_user
 from app.enrichment.models import NormalizedThreatIntel, ThreatEnrichment
 from app.models.enrichment import EnrichmentModel
 from app.repositories.enrichment_repository import EnrichmentRepository
@@ -16,6 +17,7 @@ router = APIRouter()
 @router.post("/enrich", response_model=list[ThreatEnrichment])
 def analyze_alert(
     alert: DetectionAlert,
+    user: UserContext = Depends(get_current_user),
     enrichment_service: EnrichmentService = Depends(get_enrichment_service),
 ):
     try:
@@ -28,6 +30,7 @@ def analyze_alert(
 def lookup_ioc(
     observable: str,
     force_refresh: bool = False,
+    user: UserContext = Depends(get_current_user),
     enrichment_service: EnrichmentService = Depends(get_enrichment_service),
     enrichment_repo: EnrichmentRepository = Depends(get_enrichment_repository),
 ):
@@ -66,6 +69,7 @@ def lookup_ioc(
 @router.get("/history")
 def get_enrichment_history(
     limit: int = 10,
+    user: UserContext = Depends(get_current_user),
     enrichment_repo: EnrichmentRepository = Depends(get_enrichment_repository),
 ):
     history = enrichment_repo.get_recent_enrichments(limit=limit)

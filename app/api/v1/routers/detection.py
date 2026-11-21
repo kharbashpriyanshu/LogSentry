@@ -8,6 +8,12 @@ from app.api.dependencies import (
     get_log_event_repository,
     get_parsing_service,
 )
+from app.core.rbac import (
+    UserContext,
+    UserRole,
+    get_authenticated_agent_or_user,
+    require_role,
+)
 from app.detection.correlation import correlation_engine
 from app.detection.registry import RuleRegistry
 from app.detection.yaml_rule import YamlDetectionRule, YamlRuleLoader
@@ -54,8 +60,10 @@ def list_detection_rules():
 
 
 @router.post("/rules/reload")
-def reload_dynamic_rules():
-    """Reload all dynamic YAML / Sigma rules from the rules/ directory."""
+def reload_dynamic_rules(
+    user: UserContext = Depends(require_role(UserRole.ADMIN, UserRole.SOC_MANAGER)),
+):
+    """Reload all dynamic YAML / Sigma rules from the rules/ directory. Requires Admin/SOC_Manager."""
     loaded = YamlRuleLoader.load_directory("rules")
     return {
         "status": "success",
@@ -67,6 +75,7 @@ def reload_dynamic_rules():
 @router.post("/analyze", response_model=DetectionResponse)
 def analyze_event(
     request: DetectionRequest,
+    principal: UserContext = Depends(get_authenticated_agent_or_user),
     detection_service: DetectionService = Depends(get_detection_service),
     alert_repo: AlertRepository = Depends(get_alert_repository),
     event_repo: LogEventRepository = Depends(get_log_event_repository),
@@ -76,9 +85,15 @@ def analyze_event(
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Invalid event schema: {e}")
 
+    # Enforce tenant boundary
+    if principal.role != UserRole.ADMIN or not getattr(event, "tenant_id", None):
+        event.tenant_id = principal.tenant_id
+
     event_repo.create_event(event)
     alerts = detection_service.analyze_event(event)
     for alert in alerts:
+        if not getattr(alert, "tenant_id", None):
+            alert.tenant_id = event.tenant_id
         alert_repo.create_alert(alert)
     return DetectionResponse(alerts=[a.model_dump() for a in alerts])
 
@@ -134,6 +149,7 @@ async def analyze_file(
 @router.post("/batch", response_model=BatchDetectionResponse)
 def analyze_batch(
     request: BatchDetectionRequest,
+    principal: UserContext = Depends(get_authenticated_agent_or_user),
     detection_service: DetectionService = Depends(get_detection_service),
     alert_repo: AlertRepository = Depends(get_alert_repository),
     event_repo: LogEventRepository = Depends(get_log_event_repository),
@@ -141,6 +157,7 @@ def analyze_batch(
     """
     High-throughput batch ingestion endpoint with idempotent deduplication and real-time attack correlation.
     Returns acknowledgements (ack_ids) so telemetry shippers can safely clear persistent local spools.
+    Enforces strict tenant assignment based on authenticated agent / user identity.
     """
     ack_ids: list[str] = []
     rejected_errors: list[dict[str, str]] = []
@@ -150,8 +167,15 @@ def analyze_batch(
     alerts_generated = 0
     active_campaigns = []
 
+    # Enforce tenant scoping: agents and non-admins cannot write to arbitrary tenants
+    enforced_tenant = principal.tenant_id
+    if principal.role == UserRole.ADMIN and request.tenant_id:
+        enforced_tenant = request.tenant_id
+
     for raw_item in request.events:
         item_id = str(raw_item.get("event_id") or raw_item.get("id") or "")
+        # Ensure tenant_id in raw_item matches enforced tenant
+        raw_item["tenant_id"] = enforced_tenant
         fingerprint = event_deduplicator.compute_event_fingerprint(raw_item)
         effective_id = item_id or fingerprint
 
@@ -170,8 +194,7 @@ def analyze_batch(
 
                 raw_item["timestamp"] = datetime.now(UTC).isoformat()
             event = LogEvent(**raw_item)
-            if request.tenant_id and not getattr(event, "tenant_id", None):
-                event.tenant_id = request.tenant_id
+            event.tenant_id = enforced_tenant
         except Exception as exc:
             # Malformed item: reject explicitly so shipper/client knows it failed
             rejected_count += 1

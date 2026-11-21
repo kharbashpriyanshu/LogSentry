@@ -1,6 +1,6 @@
 import logging
 
-from pydantic import field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
@@ -28,8 +28,28 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
 
     # ---------------------------------------------------------------------------
-    # Security
+    # Security & Authentication
     # ---------------------------------------------------------------------------
+    SECRET_KEY: str = Field(
+        default="logsentry-insecure-dev-secret-key-min-32-chars-2026!",
+        description="Cryptographic signing key for JWT tokens and internal HMACs",
+    )
+    AUTH_TOKEN_EXPIRE_MINUTES: int = Field(
+        default=120,
+        description="JWT access token expiration lifetime in minutes",
+    )
+    AUTH_STRICT_MODE: bool = Field(
+        default=False,
+        description="When True, enforces signed JWT Bearer authentication for all endpoints",
+    )
+    INITIAL_ADMIN_USERNAME: str = Field(
+        default="admin",
+        description="Default administrator username provisioned at initial bootstrap",
+    )
+    INITIAL_ADMIN_PASSWORD: str = Field(
+        default="admin",
+        description="Default administrator bootstrap password",
+    )
     # Maximum allowed request body size in bytes (1 MB)
     MAX_REQUEST_SIZE_BYTES: int = 1 * 1024 * 1024
     # Maximum file upload size in bytes (10 MB)
@@ -147,8 +167,26 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_requirements(self) -> "Settings":
-        """Enforce stricter requirements when ENVIRONMENT=production."""
+        """Enforce stricter security requirements when ENVIRONMENT=production."""
+        dev_default_secret = "logsentry-insecure-dev-secret-key-min-32-chars-2026!"
         if self.ENVIRONMENT == "production":
+            self.AUTH_STRICT_MODE = True
+
+            if not self.SECRET_KEY or self.SECRET_KEY == dev_default_secret:
+                raise ValueError(
+                    "SECRET_KEY must be set to a secure, randomly generated secret in production. "
+                    "Default development secret key is strictly prohibited."
+                )
+            if len(self.SECRET_KEY) < 32:
+                raise ValueError(
+                    f"SECRET_KEY length must be at least 32 characters in production (got {len(self.SECRET_KEY)})."
+                )
+
+            if self.INITIAL_ADMIN_PASSWORD == "admin":
+                raise ValueError(
+                    "INITIAL_ADMIN_PASSWORD cannot be 'admin' in production environment."
+                )
+
             if not self.DATABASE_URI:
                 raise ValueError(
                     "DATABASE_URI must be set when ENVIRONMENT=production. "
