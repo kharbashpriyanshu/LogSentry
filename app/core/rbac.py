@@ -90,6 +90,7 @@ ROLE_PERMISSIONS: dict[UserRole, set[str]] = {
 
 class UserContext(BaseModel):
     user_id: str
+    username: str = ""
     email: str
     role: UserRole
     tenant_id: str = "default"
@@ -122,10 +123,12 @@ def get_current_user(
             except ValueError:
                 role = UserRole.TIER_1_ANALYST
 
+            username = payload.get("username") or payload.get("sub", "analyst")
             return UserContext(
                 user_id=payload.get("sub", "analyst-001"),
+                username=username,
                 email=payload.get(
-                    "email", f"{payload.get('sub', 'analyst')}@logsentry.corp"
+                    "email", f"{username}@logsentry.corp"
                 ),
                 role=role,
                 tenant_id=payload.get("tenant_id", "default"),
@@ -162,6 +165,7 @@ def get_current_user(
 
     return UserContext(
         user_id=x_user_id or "analyst-001",
+        username=x_user_id or "analyst-001",
         email=f"{x_user_id or 'analyst'}@logsentry.corp",
         role=parsed_role,
         tenant_id=x_tenant_id or "default",
@@ -201,6 +205,7 @@ def get_authenticated_agent_or_user(
 
         return UserContext(
             user_id=str(agent.id),
+            username=agent.name,
             email=f"{agent.name}@agents.logsentry.internal",
             role=UserRole.TIER_1_ANALYST,
             tenant_id=str(agent.tenant_id),

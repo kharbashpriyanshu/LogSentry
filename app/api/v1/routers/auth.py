@@ -5,11 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.config.settings import settings
 from app.core.jwt import create_access_token
 from app.core.rbac import UserContext, UserRole, get_current_user, require_role
 from app.database.session import get_db
 from app.models.agent_credential import AgentCredentialModel
 from app.models.tenant import TenantModel, UserTenantMembershipModel
+from app.models.user import UserModel
 from app.services.identity_service import IdentityService
 
 router = APIRouter(prefix="/auth", tags=["Identity & RBAC"])
@@ -52,6 +54,12 @@ class AgentSummaryResponse(BaseModel):
     is_active: bool
     last_used_at: datetime | None = None
     created_at: datetime
+
+
+class CreateTenantRequest(BaseModel):
+    id: str = Field(..., description="Unique alphanumeric tenant slug/ID e.g. 'corp-sec-ops'")
+    name: str = Field(..., description="Enterprise workspace or client name")
+    description: str | None = Field(None, description="Optional tenant description")
 
 
 class TenantResponse(BaseModel):
@@ -102,16 +110,20 @@ def login_for_access_token(
     except ValueError:
         user_role = UserRole.TIER_1_ANALYST
 
+    token_lifetime_minutes = getattr(settings, "AUTH_TOKEN_EXPIRE_MINUTES", 120)
+
     token = create_access_token(
-        user_id=user_record.username,
+        user_id=str(user_record.id),
         role=user_role.value,
         tenant_id=bound_tenant_id,
         email=user_record.email,
-        expires_delta_minutes=120,
+        expires_delta_minutes=token_lifetime_minutes,
+        extra_claims={"username": user_record.username},
     )
 
     user_ctx = UserContext(
-        user_id=user_record.username,
+        user_id=str(user_record.id),
+        username=user_record.username,
         email=user_record.email,
         role=user_role,
         tenant_id=bound_tenant_id,
@@ -121,7 +133,7 @@ def login_for_access_token(
     return TokenResponse(
         access_token=token,
         token_type="bearer",  # noqa: S106
-        expires_in_minutes=120,
+        expires_in_minutes=token_lifetime_minutes,
         user=user_ctx,
     )
 
@@ -141,11 +153,14 @@ def get_user_tenants(
     if user.role == UserRole.ADMIN:
         tenants = db.query(TenantModel).filter(TenantModel.is_active == True).all()  # noqa: E712
     else:
+        # Check by user ID UUID or joined username to ensure exact match
         memberships = (
             db.query(UserTenantMembershipModel)
             .join(TenantModel, TenantModel.id == UserTenantMembershipModel.tenant_id)
+            .join(UserModel, UserModel.id == UserTenantMembershipModel.user_id)
             .filter(
-                UserTenantMembershipModel.user_id == user.user_id,
+                (UserTenantMembershipModel.user_id == user.user_id)
+                | (UserModel.username == user.username),
                 TenantModel.is_active == True,  # noqa: E712
             )
             .all()
@@ -166,6 +181,37 @@ def get_user_tenants(
     ]
 
 
+@router.post("/tenants", response_model=TenantResponse, status_code=201)
+def create_tenant(
+    payload: CreateTenantRequest,
+    user: UserContext = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    """Explicitly provision a new enterprise tenant. Restricted to Admin role."""
+    clean_id = payload.id.strip()
+    existing = db.query(TenantModel).filter(TenantModel.id == clean_id).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Tenant '{clean_id}' already exists.",
+        )
+    tenant = TenantModel(
+        id=clean_id,
+        name=payload.name.strip(),
+        description=payload.description,
+        is_active=True,
+    )
+    db.add(tenant)
+    db.commit()
+    db.refresh(tenant)
+    return TenantResponse(
+        id=tenant.id,
+        name=tenant.name,
+        description=tenant.description,
+        is_active=tenant.is_active,
+    )
+
+
 @router.post("/agents/enroll", response_model=AgentEnrollResponse)
 def enroll_collector_agent(
     payload: AgentEnrollRequest,
@@ -174,13 +220,23 @@ def enroll_collector_agent(
 ):
     """
     Enroll a new machine collector agent (shipper, endpoint sensor) and generate
-    a scoped agent API key. Requires Admin or SOC Manager role.
+    a scoped agent API key. Enforces manager-to-tenant boundary.
     """
+    # Cross-tenant enrollment prevention: SOC Managers cannot enroll agents for other tenants
+    target_tenant = user.tenant_id
+    if user.role == UserRole.ADMIN:
+        target_tenant = payload.tenant_id or user.tenant_id
+    elif payload.tenant_id and payload.tenant_id != user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"SOC Managers can only enroll agents for their own tenant '{user.tenant_id}'. Cross-tenant enrollment is forbidden.",
+        )
+
     try:
         agent_data = IdentityService.enroll_agent(
             db=db,
             name=payload.name,
-            tenant_id=payload.tenant_id or user.tenant_id,
+            tenant_id=target_tenant,
         )
         return AgentEnrollResponse(**agent_data)
     except ValueError as ve:

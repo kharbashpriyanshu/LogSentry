@@ -8,6 +8,7 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.config.settings import settings
+from app.core.ssrf import validate_outbound_url
 from app.database.session import SessionLocal
 from app.models.soar_action import SOARActionModel
 from app.schemas.detection_alert import DetectionAlert
@@ -25,6 +26,7 @@ class QuarantinedHost:
         severity: str = "HIGH",
         analyst: str = "SYSTEM_AUTOMATION",
         containment_type: str = "IN_MEMORY",
+        tenant_id: str = "default",
     ):
         self.ip = ip
         self.reason = reason
@@ -36,6 +38,7 @@ class QuarantinedHost:
         self.containment_type = (
             containment_type  # IN_MEMORY | CLOUDFLARE | AWS_WAF | IPTABLES
         )
+        self.tenant_id = tenant_id
         self.status = "ACTIVE"  # ACTIVE | RELEASED | EXPIRED
 
     @property
@@ -48,6 +51,7 @@ class QuarantinedHost:
         remaining = max(0, int((self.expires_at - datetime.now(UTC)).total_seconds()))
         return {
             "ip": self.ip,
+            "tenant_id": self.tenant_id,
             "reason": self.reason,
             "quarantined_at": self.quarantined_at.isoformat(),
             "expires_at": self.expires_at.isoformat(),
@@ -66,7 +70,7 @@ class SOARService:
     Handles automated webhook alerting, active containment, firewall blocking, and ticketing.
     """
 
-    _quarantine_store: dict[str, QuarantinedHost] = {}
+    _quarantine_store: dict[tuple[str, str], QuarantinedHost] = {}
     _action_history: list[dict[str, Any]] = []
 
     @classmethod
@@ -134,8 +138,9 @@ class SOARService:
             severity=severity,
             analyst=analyst,
             containment_type=containment_type,
+            tenant_id=tenant_id,
         )
-        cls._quarantine_store[ip] = record
+        cls._quarantine_store[(tenant_id, ip)] = record
 
         # Generate rollback command
         rollback_cmd = (
@@ -170,7 +175,9 @@ class SOARService:
                 db.add(soar_record)
                 db.commit()
             except Exception as e:
-                logger.warning(f"Failed to persist SOAR action to database: {e}")
+                logger.error(f"Failed to persist SOAR action to database: {e}")
+                cls._quarantine_store.pop((tenant_id, ip), None)
+                raise RuntimeError(f"Database persistence failure for SOAR containment: {e}")
             finally:
                 if close_db:
                     db.close()
@@ -179,6 +186,7 @@ class SOARService:
             "timestamp": datetime.now(UTC).isoformat(),
             "action": "QUARANTINE_IP",
             "ip": ip,
+            "tenant_id": tenant_id,
             "reason": reason,
             "duration_seconds": duration_seconds,
             "analyst": analyst,
@@ -192,11 +200,19 @@ class SOARService:
 
     @classmethod
     def rollback_action(
-        cls, target_ip: str, analyst: str = "SOC_ANALYST", db: Session | None = None
+        cls,
+        target_ip: str,
+        analyst: str = "SOC_ANALYST",
+        tenant_id: str = "default",
+        db: Session | None = None,
     ) -> bool:
         """Rolls back an active containment action and updates database status."""
         return cls.release_ip(
-            target_ip, analyst=analyst, reason="Manual containment rollback", db=db
+            target_ip,
+            analyst=analyst,
+            reason="Manual containment rollback",
+            tenant_id=tenant_id,
+            db=db,
         )
 
     @classmethod
@@ -205,15 +221,17 @@ class SOARService:
         ip: str,
         analyst: str = "SOC_ANALYST",
         reason: str = "Containment completed",
+        tenant_id: str = "default",
         db: Session | None = None,
     ) -> bool:
-        """Release an IP from quarantine and record rollback in persistent audit table."""
+        """Release an IP from quarantine within the specified tenant boundary."""
         released = False
-        if ip in cls._quarantine_store:
-            cls._quarantine_store[ip].status = "RELEASED"
+        key = (tenant_id, ip)
+        if key in cls._quarantine_store:
+            cls._quarantine_store[key].status = "RELEASED"
             released = True
 
-        # Update in database if present
+        # Update in database scoped strictly to this tenant
         close_db = False
         if db is None:
             try:
@@ -227,7 +245,9 @@ class SOARService:
                 active_records = (
                     db.query(SOARActionModel)
                     .filter(
-                        SOARActionModel.target == ip, SOARActionModel.status == "ACTIVE"
+                        SOARActionModel.tenant_id == tenant_id,
+                        SOARActionModel.target == ip,
+                        SOARActionModel.status == "ACTIVE",
                     )
                     .all()
                 )
@@ -237,7 +257,8 @@ class SOARService:
                 if active_records:
                     released = True
             except Exception as e:
-                logger.warning(f"Failed to update SOAR release in DB: {e}")
+                logger.error(f"Failed to update SOAR release in DB: {e}")
+                raise RuntimeError(f"Database error during SOAR release: {e}")
             finally:
                 if close_db:
                     db.close()
@@ -246,25 +267,30 @@ class SOARService:
             "timestamp": datetime.now(UTC).isoformat(),
             "action": "RELEASE_IP",
             "ip": ip,
+            "tenant_id": tenant_id,
             "analyst": analyst,
             "reason": reason,
         }
         cls._action_history.append(action)
-        logger.info(f"SOAR Active Response: Released IP {ip} by {analyst}.")
+        logger.info(f"SOAR Active Response: Released IP {ip} in tenant {tenant_id} by {analyst}.")
         return released
 
     @classmethod
-    def is_ip_quarantined(cls, ip: str) -> bool:
-        """Check if an IP is currently actively quarantined."""
-        record = cls._quarantine_store.get(ip)
+    def is_ip_quarantined(cls, ip: str, tenant_id: str = "default") -> bool:
+        """Check if an IP is currently actively quarantined within a tenant."""
+        record = cls._quarantine_store.get((tenant_id, ip))
         if not record:
             return False
         return not record.is_expired
 
     @classmethod
-    def get_quarantined_ips(cls, include_expired: bool = False) -> list[dict[str, Any]]:
-        """List quarantined hosts."""
+    def get_quarantined_ips(
+        cls, tenant_id: str | None = None, include_expired: bool = False
+    ) -> list[dict[str, Any]]:
+        """List quarantined hosts scoped strictly by tenant."""
         records = cls._quarantine_store.values()
+        if tenant_id and tenant_id != "*":
+            records = [r for r in records if r.tenant_id == tenant_id]
         if not include_expired:
             records = [r for r in records if not r.is_expired]
         return [r.to_dict() for r in records]
@@ -423,10 +449,13 @@ class SOARService:
     async def dispatch_webhook_alert(
         cls, alert: DetectionAlert, webhook_url: str | None = None
     ) -> bool:
-        """Dispatches a rich Slack / Teams interactive incident alert."""
+        """Dispatches a rich Slack / Teams interactive incident alert with SSRF validation."""
         target_url = webhook_url or getattr(settings, "SOAR_WEBHOOK_URL", None)
         if not target_url:
             return False
+
+        # Validate URL to prevent SSRF against loopback, private networks, and cloud metadata
+        validate_outbound_url(target_url)
 
         payload = cls.build_slack_alert_card(alert)
 

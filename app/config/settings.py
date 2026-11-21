@@ -167,36 +167,56 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_requirements(self) -> "Settings":
-        """Enforce stricter security requirements when ENVIRONMENT=production."""
-        dev_default_secret = "logsentry-insecure-dev-secret-key-min-32-chars-2026!"
-        if self.ENVIRONMENT == "production":
+        """Enforce stricter security requirements when ENVIRONMENT in (production, staging)."""
+        insecure_secrets = {
+            "logsentry-insecure-dev-secret-key-min-32-chars-2026!",
+            "CHANGE_ME_GENERATE_HIGH_ENTROPY_HEX_SECRET_MIN_32_CHARS",
+            "logsentry-enterprise-soc-jwt-secret-key-2026",
+        }
+        insecure_passwords = {
+            "admin",
+            "password",
+            "123456",
+            "admin123",
+            "LogSentry#Admin2026!Enterprise",
+            "CHANGE_ME_GENERATE_STRONG_RANDOM_ADMIN_PASSWORD",
+        }
+
+        if self.ENVIRONMENT in ("production", "staging"):
             self.AUTH_STRICT_MODE = True
 
-            if not self.SECRET_KEY or self.SECRET_KEY == dev_default_secret:
+            if not self.SECRET_KEY or self.SECRET_KEY in insecure_secrets or "CHANGE_ME" in self.SECRET_KEY:
                 raise ValueError(
-                    "SECRET_KEY must be set to a secure, randomly generated secret in production. "
+                    f"SECRET_KEY must be set to a secure, randomly generated secret in {self.ENVIRONMENT}. "
                     "Default development secret key is strictly prohibited."
                 )
             if len(self.SECRET_KEY) < 32:
                 raise ValueError(
-                    f"SECRET_KEY length must be at least 32 characters in production (got {len(self.SECRET_KEY)})."
+                    f"SECRET_KEY length must be at least 32 characters in {self.ENVIRONMENT} (got {len(self.SECRET_KEY)})."
                 )
 
-            if self.INITIAL_ADMIN_PASSWORD == "admin":
+            if (
+                not self.INITIAL_ADMIN_PASSWORD
+                or self.INITIAL_ADMIN_PASSWORD in insecure_passwords
+                or "CHANGE_ME" in self.INITIAL_ADMIN_PASSWORD
+                or len(self.INITIAL_ADMIN_PASSWORD) < 12
+            ):
                 raise ValueError(
-                    "INITIAL_ADMIN_PASSWORD cannot be 'admin' in production environment."
+                    f"INITIAL_ADMIN_PASSWORD must be a strong unique credential (>= 12 characters) in {self.ENVIRONMENT}. "
+                    "Default or known example passwords are strictly prohibited."
                 )
 
-            if not self.DATABASE_URI:
-                raise ValueError(
-                    "DATABASE_URI must be set when ENVIRONMENT=production. "
-                    "Do not rely on default credentials in production."
-                )
-            if self.POSTGRES_PASSWORD == "postgres":
-                logger.warning(
-                    "⚠️  Default POSTGRES_PASSWORD detected in production environment. "
-                    "Change immediately."
-                )
+            if self.ENVIRONMENT == "production":
+                if not self.DATABASE_URI:
+                    raise ValueError(
+                        "DATABASE_URI must be set when ENVIRONMENT=production. "
+                        "Do not rely on default credentials in production."
+                    )
+                if self.POSTGRES_PASSWORD == "postgres":
+                    logger.warning(
+                        "⚠️  Default POSTGRES_PASSWORD detected in production environment. "
+                        "Change immediately."
+                    )
         return self
 
     model_config = SettingsConfigDict(

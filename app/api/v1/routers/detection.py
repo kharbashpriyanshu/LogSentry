@@ -12,6 +12,7 @@ from app.core.rbac import (
     UserContext,
     UserRole,
     get_authenticated_agent_or_user,
+    get_current_user,
     require_role,
 )
 from app.detection.correlation import correlation_engine
@@ -101,6 +102,7 @@ def analyze_event(
 @router.post("/detect", response_model=DetectionAlert)
 def detect_single_event(
     request: DetectionRequest,
+    principal: UserContext = Depends(get_authenticated_agent_or_user),
     detection_service: DetectionService = Depends(get_detection_service),
     alert_repo: AlertRepository = Depends(get_alert_repository),
     event_repo: LogEventRepository = Depends(get_log_event_repository),
@@ -110,6 +112,10 @@ def detect_single_event(
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Invalid event schema: {e}")
 
+    # Enforce tenant boundary
+    if principal.role != UserRole.ADMIN or not getattr(event, "tenant_id", None):
+        event.tenant_id = principal.tenant_id
+
     event_repo.create_event(event)
     alerts = detection_service.analyze_event(event)
     if not alerts:
@@ -117,6 +123,8 @@ def detect_single_event(
             status_code=404, detail="No alerts generated for this event."
         )
     for alert in alerts:
+        if not getattr(alert, "tenant_id", None):
+            alert.tenant_id = event.tenant_id
         alert_repo.create_alert(alert)
     return alerts[0]
 
@@ -125,6 +133,7 @@ def detect_single_event(
 async def analyze_file(
     parser_name: str = Form(...),
     file: UploadFile = File(...),
+    user: UserContext = Depends(get_current_user),
     parsing_service: ParsingService = Depends(get_parsing_service),
     detection_service: DetectionService = Depends(get_detection_service),
     alert_repo: AlertRepository = Depends(get_alert_repository),
@@ -137,9 +146,13 @@ async def analyze_file(
     _, _, _, events = await parsing_service.parse_file(parser_name, file)
     all_alerts = []
     for event in events:
+        if user.role != UserRole.ADMIN or not getattr(event, "tenant_id", None):
+            event.tenant_id = user.tenant_id
         event_repo.create_event(event)
         alerts = detection_service.analyze_event(event)
         for alert in alerts:
+            if not getattr(alert, "tenant_id", None):
+                alert.tenant_id = event.tenant_id
             alert_repo.create_alert(alert)
             all_alerts.append(alert)
 
@@ -179,7 +192,7 @@ def analyze_batch(
         fingerprint = event_deduplicator.compute_event_fingerprint(raw_item)
         effective_id = item_id or fingerprint
 
-        if event_deduplicator.is_duplicate(fingerprint):
+        if event_deduplicator.check_duplicate(fingerprint):
             duplicate_count += 1
             ack_ids.append(effective_id)
             continue
@@ -203,7 +216,17 @@ def analyze_batch(
             )
             continue
 
-        event_repo.create_event(event)
+        try:
+            event_repo.create_event(event)
+        except Exception as exc:
+            rejected_count += 1
+            rejected_errors.append(
+                {"event_id": effective_id, "error": f"Persistence failed: {exc}"}
+            )
+            continue
+
+        # Successfully validated and persisted — safe to record in deduplication cache
+        event_deduplicator.record_seen(fingerprint)
         ack_ids.append(getattr(event, "event_id", None) or effective_id)
         processed_count += 1
 

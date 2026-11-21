@@ -35,9 +35,21 @@ PROTECTED_CLAIMS = frozenset(
 def get_secret_key() -> str:
     """Retrieves validated SECRET_KEY from application configuration."""
     key = getattr(settings, "SECRET_KEY", None)
-    if not key:
-        return "logsentry-insecure-dev-secret-key-min-32-chars-2026!"
-    return key
+    is_prod_or_staging = getattr(settings, "ENVIRONMENT", "development") in (
+        "production",
+        "staging",
+    )
+    if is_prod_or_staging:
+        if (
+            not key
+            or key == "logsentry-insecure-dev-secret-key-min-32-chars-2026!"
+            or "CHANGE_ME" in key
+            or len(key) < 32
+        ):
+            raise RuntimeError(
+                "Production/Staging violation: SECRET_KEY must be a securely provisioned key with >= 32 characters."
+            )
+    return key or "logsentry-insecure-dev-secret-key-min-32-chars-2026!"
 
 
 def create_access_token(

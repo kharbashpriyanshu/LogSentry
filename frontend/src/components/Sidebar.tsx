@@ -37,17 +37,12 @@ export default function Sidebar() {
   return (
     <aside className="w-64 flex flex-col border-r border-[var(--border-default)] bg-[var(--bg-sidebar)] transition-colors duration-200 select-none">
       {/* Brand Header */}
-      <div className="h-16 flex items-center px-5 border-b border-[var(--border-subtle)] shrink-0 gap-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-blue-500/20 border border-[var(--border-default)] flex items-center justify-center shadow-xs">
-          <img src="/branding/logo.svg" alt="LogSentry Logo" className="w-5 h-5 drop-shadow-xs" />
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-base font-extrabold text-[var(--text-primary)] tracking-tight">LogSentry</span>
-            <span className="text-[10px] px-1.5 py-0.2 font-bold uppercase tracking-wider rounded-md bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/25">SOC</span>
-          </div>
-          <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide truncate">AI Incident SIEM</p>
-        </div>
+      <div className="h-18 flex items-center px-4 border-b border-[var(--border-subtle)] shrink-0">
+        <img
+          src="/branding/logo_full.png"
+          alt="LogSentry SOC — Security Operations Platform"
+          className="h-13 w-auto object-contain drop-shadow-sm max-w-[225px] transform hover:scale-105 transition-transform duration-200"
+        />
       </div>
 
       {/* Nav section label */}

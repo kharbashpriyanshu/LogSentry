@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
-from app.core.rbac import UserContext, get_current_user
+from app.config.settings import settings
+from app.core.jwt import decode_access_token
+from app.core.rbac import UserContext, UserRole, get_current_user
 from app.repositories.dashboard_repository import DashboardRepository
 from app.services.websocket import manager
 
@@ -77,8 +79,33 @@ def get_recent_incidents(
 
 
 @router.websocket("/ws/events")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
+async def websocket_endpoint(
+    websocket: WebSocket,
+    token: str | None = Query(None),
+):
+    """
+    Authenticated, tenant-isolated WebSocket feed for real-time security events.
+    Enforces JWT authentication and delivers only events matching the caller's tenant.
+    """
+    tenant_id = "default"
+    is_admin = False
+
+    if token:
+        try:
+            payload = decode_access_token(token)
+            tenant_id = payload.get("tenant_id", "default")
+            is_admin = payload.get("role") in (UserRole.ADMIN.value, UserRole.ADMIN)
+        except Exception as e:
+            await websocket.close(code=1008, reason=f"Authentication failed: {e}")
+            return
+    else:
+        is_production = getattr(settings, "ENVIRONMENT", "development") == "production"
+        is_strict = getattr(settings, "AUTH_STRICT_MODE", False) or getattr(settings, "AUTH_STRICT_JWT", False)
+        if is_production or is_strict:
+            await websocket.close(code=1008, reason="Authentication token required")
+            return
+
+    await manager.connect(websocket, tenant_id=tenant_id, is_admin=is_admin)
     try:
         while True:
             await websocket.receive_text()  # keepalive

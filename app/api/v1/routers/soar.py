@@ -59,8 +59,9 @@ def list_quarantined_hosts(
         )
     ),
 ):
-    """List all currently active quarantined / blocked host IPs."""
-    return SOARService.get_quarantined_ips()
+    """List all currently active quarantined / blocked host IPs scoped to tenant."""
+    effective_tenant = None if user.role == UserRole.ADMIN else user.tenant_id
+    return SOARService.get_quarantined_ips(tenant_id=effective_tenant)
 
 
 @router.post("/quarantine", response_model=dict[str, Any])
@@ -104,17 +105,20 @@ def release_host(
         )
     ),
 ):
-    """Release an IP address from active quarantine."""
+    """Release an IP address from active quarantine within the caller's tenant boundary."""
     effective_analyst = user.email or user.user_id
-    success = SOARService.release_ip(ip=ip, analyst=effective_analyst)
+    success = SOARService.release_ip(
+        ip=ip, analyst=effective_analyst, tenant_id=user.tenant_id
+    )
     if not success:
         raise HTTPException(
-            status_code=404, detail=f"IP '{ip}' is not actively quarantined."
+            status_code=404, detail=f"IP '{ip}' is not actively quarantined for tenant '{user.tenant_id}'."
         )
     return {
         "status": "success",
         "message": f"IP {ip} released from quarantine.",
         "ip": ip,
+        "tenant_id": user.tenant_id,
     }
 
 
@@ -130,8 +134,9 @@ def get_containment_history(
         )
     ),
 ):
-    """Retrieve audit history of all SOAR containment and response actions."""
-    return SOARService.get_action_history(limit=limit)
+    """Retrieve audit history of all SOAR containment and response actions scoped to tenant."""
+    effective_tenant = None if user.role == UserRole.ADMIN else user.tenant_id
+    return SOARService.get_action_history(limit=limit, tenant_id=effective_tenant)
 
 
 @router.post("/firewall/cloudflare")
@@ -165,7 +170,15 @@ def block_ip_iptables(
 
 
 @router.post("/webhook/test")
-async def test_webhook(req: WebhookTestRequest):
+async def test_webhook(
+    req: WebhookTestRequest,
+    user: UserContext = Depends(
+        require_role(
+            UserRole.ADMIN,
+            UserRole.SOC_MANAGER,
+        )
+    ),
+):
     """Test webhook delivery by dispatching a sample rich interactive SIEM incident card."""
     sample_alert = DetectionAlert(
         rule_name="soar_test",
@@ -184,9 +197,15 @@ async def test_webhook(req: WebhookTestRequest):
         evidence={"test": True},
         raw_log_reference="Test log event",
     )
-    success = await SOARService.dispatch_webhook_alert(
-        sample_alert, webhook_url=req.webhook_url
-    )
+    try:
+        success = await SOARService.dispatch_webhook_alert(
+            sample_alert, webhook_url=req.webhook_url
+        )
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Webhook URL validation failed (SSRF Protection): {ve}",
+        )
     if not success:
         raise HTTPException(
             status_code=502,

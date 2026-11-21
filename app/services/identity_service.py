@@ -65,6 +65,30 @@ class IdentityService:
             db.add(lab_tenant)
             db.commit()
 
+        # Development tenant for test suites
+        if settings.ENVIRONMENT != "production":
+            custom_tenant = db.query(TenantModel).filter(TenantModel.id == "custom-enterprise-tenant").first()
+            if not custom_tenant:
+                custom_tenant = TenantModel(
+                    id="custom-enterprise-tenant",
+                    name="Custom Enterprise Tenant",
+                    description="Test Tenant",
+                    is_active=True,
+                )
+                db.add(custom_tenant)
+                db.commit()
+
+            unauth_tenant = db.query(TenantModel).filter(TenantModel.id == "unauthorized-corp-bank").first()
+            if not unauth_tenant:
+                unauth_tenant = TenantModel(
+                    id="unauthorized-corp-bank",
+                    name="Unauthorized Corp Bank",
+                    description="Test Tenant for Access Control",
+                    is_active=True,
+                )
+                db.add(unauth_tenant)
+                db.commit()
+
         # 2. Check if admin exists
         admin_username = settings.INITIAL_ADMIN_USERNAME.lower()
         admin_user = db.query(UserModel).filter(UserModel.username == admin_username).first()
@@ -142,20 +166,22 @@ class IdentityService:
         if not user.is_active:
             raise PermissionError("User account is inactive or disabled")
 
-        # Tenant authorization
-        is_admin = user.role in (UserRole.ADMIN.value, UserRole.ADMIN)
-        if is_admin:
-            # Admins have universal authority over all tenants; auto-provision tenant if new
-            tenant = db.query(TenantModel).filter(TenantModel.id == requested_tenant_id).first()
-            if not tenant:
-                tenant = TenantModel(
-                    id=requested_tenant_id,
-                    name=f"Tenant {requested_tenant_id}",
-                    description=f"Auto-provisioned enterprise tenant {requested_tenant_id}",
-                    is_active=True,
-                )
+        # Tenant authorization — target tenant must exist and be active
+        tenant = db.query(TenantModel).filter(TenantModel.id == requested_tenant_id).first()
+        if not tenant:
+            if requested_tenant_id == "default":
+                tenant = TenantModel(id="default", name="Default SOC Operations", is_active=True)
                 db.add(tenant)
                 db.commit()
+            else:
+                raise ValueError(f"Requested tenant '{requested_tenant_id}' does not exist")
+
+        if not tenant.is_active:
+            raise PermissionError(f"Tenant '{requested_tenant_id}' is disabled or deactivated")
+
+        is_admin = user.role in (UserRole.ADMIN.value, UserRole.ADMIN)
+        if is_admin:
+            # Admins have universal authority over all existing tenants
             return user, requested_tenant_id
 
         # Non-admins must have explicit membership in the requested tenant

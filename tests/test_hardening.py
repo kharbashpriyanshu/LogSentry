@@ -416,7 +416,13 @@ class TestSettingsValidators:
             Settings(AI_TEMPERATURE=3.0)
 
     def test_valid_settings_accepted(self):
-        s = Settings(ENVIRONMENT="staging", LOG_LEVEL="DEBUG", AI_PROVIDER="gemini")
+        s = Settings(
+            ENVIRONMENT="staging",
+            LOG_LEVEL="DEBUG",
+            AI_PROVIDER="gemini",
+            SECRET_KEY="a" * 32,
+            INITIAL_ADMIN_PASSWORD="Strong#AdminPassword2026!",
+        )
         assert s.ENVIRONMENT == "staging"
         assert s.LOG_LEVEL == "DEBUG"
 

@@ -578,8 +578,8 @@ export function AboutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     >
       <div className="flex flex-col items-center text-center py-4 space-y-4">
         {/* Logo Badge */}
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-blue-500/20 border border-[var(--border-default)] flex items-center justify-center p-3 shadow-md">
-          <img src="/branding/logo.svg" alt="LogSentry Logo" className="w-10 h-10 drop-shadow-xs" />
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/10 via-stone-500/10 to-amber-500/10 border border-[var(--border-default)] flex items-center justify-center p-2 shadow-md">
+          <img src="/branding/logo_mark.png" alt="LogSentry Logo" className="w-12 h-12 object-contain drop-shadow-xs" />
         </div>
 
         <div>
