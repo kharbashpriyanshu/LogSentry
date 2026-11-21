@@ -33,8 +33,12 @@ class TokenResponse(BaseModel):
 
 
 class AgentEnrollRequest(BaseModel):
-    name: str = Field(..., description="Collector or shipper agent name e.g. 'bastion-shipper-01'")
-    tenant_id: str = Field("default", description="Tenant to bind this collector agent to")
+    name: str = Field(
+        ..., description="Collector or shipper agent name e.g. 'bastion-shipper-01'"
+    )
+    tenant_id: str = Field(
+        "default", description="Tenant to bind this collector agent to"
+    )
 
 
 class AgentEnrollResponse(BaseModel):
@@ -57,7 +61,9 @@ class AgentSummaryResponse(BaseModel):
 
 
 class CreateTenantRequest(BaseModel):
-    id: str = Field(..., description="Unique alphanumeric tenant slug/ID e.g. 'corp-sec-ops'")
+    id: str = Field(
+        ..., description="Unique alphanumeric tenant slug/ID e.g. 'corp-sec-ops'"
+    )
     name: str = Field(..., description="Enterprise workspace or client name")
     description: str | None = Field(None, description="Optional tenant description")
 
@@ -151,7 +157,7 @@ def get_user_tenants(
 ):
     """List tenants accessible by the authenticated user."""
     if user.role == UserRole.ADMIN:
-        tenants = db.query(TenantModel).filter(TenantModel.is_active == True).all()  # noqa: E712
+        tenants = db.query(TenantModel).filter(TenantModel.is_active.is_(True)).all()
     else:
         # Check by user ID UUID or joined username to ensure exact match
         memberships = (
@@ -278,16 +284,28 @@ def revoke_agent(
     db: Session = Depends(get_db),
 ):
     """Revoke an agent's credentials immediately."""
-    agent = db.query(AgentCredentialModel).filter(AgentCredentialModel.id == agent_id).first()
+    agent = (
+        db.query(AgentCredentialModel)
+        .filter(AgentCredentialModel.id == agent_id)
+        .first()
+    )
     if not agent:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found"
+        )
 
     if user.role != UserRole.ADMIN and agent.tenant_id != user.tenant_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot revoke agent belonging to another tenant")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot revoke agent belonging to another tenant",
+        )
 
     agent.is_active = False
     db.commit()
-    return {"status": "success", "message": f"Agent '{agent.name}' revoked successfully."}
+    return {
+        "status": "success",
+        "message": f"Agent '{agent.name}' revoked successfully.",
+    }
 
 
 @router.get("/admin-only")

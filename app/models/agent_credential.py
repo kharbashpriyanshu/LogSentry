@@ -12,7 +12,9 @@ class AgentCredentialModel(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(128), nullable=False)
-    api_key_hash = Column(String(64), unique=True, index=True, nullable=False)  # SHA-256
+    api_key_hash = Column(
+        String(64), unique=True, index=True, nullable=False
+    )  # SHA-256
     api_key_prefix = Column(String(16), nullable=False)  # e.g. "lgs_agt_7a8b..."
     tenant_id = Column(
         String(64),

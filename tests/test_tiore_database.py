@@ -56,7 +56,9 @@ def extractor():
 
 
 def test_get_or_create_observable_idempotency(repo, extractor):
-    extracted = extractor.validate_and_normalize_ip("198.51.100.42", source_field="source_ip")
+    extracted = extractor.validate_and_normalize_ip(
+        "198.51.100.42", source_field="source_ip"
+    )
     assert extracted is not None
 
     # First insert creates row
@@ -166,7 +168,9 @@ def test_event_observable_linking(repo, extractor, db_session):
 
 
 def test_multi_tenant_match_isolation(repo, extractor):
-    obs = repo.get_or_create_observable(extractor.validate_and_normalize_ip("185.220.101.5"))
+    obs = repo.get_or_create_observable(
+        extractor.validate_and_normalize_ip("185.220.101.5")
+    )
 
     # Create match for Tenant Alpha
     repo.create_match(
@@ -250,7 +254,9 @@ def test_multi_tenant_audit_isolation(repo):
 
 
 def test_observable_cascade_deletion(repo, extractor, db_session):
-    obs = repo.get_or_create_observable(extractor.validate_and_normalize_ip("198.51.100.99"))
+    obs = repo.get_or_create_observable(
+        extractor.validate_and_normalize_ip("198.51.100.99")
+    )
     source = repo.get_or_create_source("otx", "OTX", "feed")
 
     repo.save_record(obs.id, source.id, "MALICIOUS", 0.8)

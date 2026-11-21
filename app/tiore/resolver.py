@@ -66,7 +66,9 @@ class ObservableMemoryCache:
     def __init__(self, maxsize: int = 10000, ttl_seconds: int = 3600):
         self._maxsize = maxsize
         self._ttl_seconds = ttl_seconds
-        self._cache: OrderedDict[str, tuple[datetime, ResolvedIntelligence]] = OrderedDict()
+        self._cache: OrderedDict[str, tuple[datetime, ResolvedIntelligence]] = (
+            OrderedDict()
+        )
         self._lock = threading.Lock()
 
     def get(self, key: str) -> ResolvedIntelligence | None:
@@ -196,7 +198,9 @@ class IntelligenceResolver:
         bypass_cache: bool = False,
     ) -> list[ResolvedIntelligence]:
         return [
-            self.resolve(extracted, tenant_id=tenant_id, db=db, bypass_cache=bypass_cache)
+            self.resolve(
+                extracted, tenant_id=tenant_id, db=db, bypass_cache=bypass_cache
+            )
             for extracted in extracted_list
         ]
 
@@ -204,7 +208,9 @@ class IntelligenceResolver:
     # Private Helpers
     # -------------------------------------------------------------------------
 
-    def _evaluate_privacy_gate(self, extracted: ExtractedObservable) -> ResolvedIntelligence | None:
+    def _evaluate_privacy_gate(
+        self, extracted: ExtractedObservable
+    ) -> ResolvedIntelligence | None:
         p_class = extracted.privacy_classification
 
         if p_class == PrivacyClassification.LINK_LOCAL_METADATA:
@@ -245,7 +251,10 @@ class IntelligenceResolver:
                 cache_source="privacy_gate",
             )
 
-        if p_class == PrivacyClassification.PII_SENSITIVE and not extracted.is_eligible_for_external_lookup:
+        if (
+            p_class == PrivacyClassification.PII_SENSITIVE
+            and not extracted.is_eligible_for_external_lookup
+        ):
             # PII observables are suppressed from public internet lookups
             # They can only match local database records if explicitly seeded
             return None
@@ -275,12 +284,18 @@ class IntelligenceResolver:
             # Check expiration / staleness
             is_stale = False
             if rec.expires_at:
-                expires_at = rec.expires_at.replace(tzinfo=UTC) if rec.expires_at.tzinfo is None else rec.expires_at
+                expires_at = (
+                    rec.expires_at.replace(tzinfo=UTC)
+                    if rec.expires_at.tzinfo is None
+                    else rec.expires_at
+                )
                 if expires_at < now:
                     is_stale = True
             elif rec.retrieved_at:
                 retrieved_at = (
-                    rec.retrieved_at.replace(tzinfo=UTC) if rec.retrieved_at.tzinfo is None else rec.retrieved_at
+                    rec.retrieved_at.replace(tzinfo=UTC)
+                    if rec.retrieved_at.tzinfo is None
+                    else rec.retrieved_at
                 )
                 if now - retrieved_at > timedelta(days=30):
                     is_stale = True
@@ -318,7 +333,11 @@ class IntelligenceResolver:
                 confidence=round(effective_conf, 2),
                 threat_types=rec.threat_types or [],
                 evidence=rec.evidence or {},
-                retrieved_at=rec.retrieved_at.isoformat() if rec.retrieved_at else now.isoformat(),
+                retrieved_at=(
+                    rec.retrieved_at.isoformat()
+                    if rec.retrieved_at
+                    else now.isoformat()
+                ),
                 expires_at=rec.expires_at.isoformat() if rec.expires_at else None,
             )
             source_matches.append(asdict(evidence))
@@ -377,7 +396,13 @@ def seed_curated_threat_intel(db: Session) -> None:
             1,
             ["ipv4", "ipv6", "domain", "url", "sha256", "email", "phone"],
         ),
-        ("abuseipdb", "AbuseIPDB Threat Intelligence", "commercial", 1, ["ipv4", "ipv6"]),
+        (
+            "abuseipdb",
+            "AbuseIPDB Threat Intelligence",
+            "commercial",
+            1,
+            ["ipv4", "ipv6"],
+        ),
         (
             "alienvault_otx",
             "AlienVault OTX Community Feed",
@@ -386,8 +411,20 @@ def seed_curated_threat_intel(db: Session) -> None:
             ["ipv4", "ipv6", "domain", "url", "md5", "sha1", "sha256"],
         ),
         ("urlhaus", "abuse.ch URLhaus Feed", "open_source", 1, ["url", "domain"]),
-        ("threatfox", "abuse.ch ThreatFox Feed", "open_source", 1, ["ipv4", "domain", "url", "md5", "sha256"]),
-        ("virustotal", "VirusTotal Intelligence", "commercial", 1, ["md5", "sha1", "sha256", "url", "domain", "ipv4"]),
+        (
+            "threatfox",
+            "abuse.ch ThreatFox Feed",
+            "open_source",
+            1,
+            ["ipv4", "domain", "url", "md5", "sha256"],
+        ),
+        (
+            "virustotal",
+            "VirusTotal Intelligence",
+            "commercial",
+            1,
+            ["md5", "sha1", "sha256", "url", "domain", "ipv4"],
+        ),
         ("hibp_prefix", "HaveIBeenPwned k-Anonymity Feed", "commercial", 2, ["email"]),
     ]
 
@@ -416,7 +453,11 @@ def seed_curated_threat_intel(db: Session) -> None:
             "classification": "MALICIOUS",
             "confidence": 0.98,
             "threat_types": ["exploit_scanner", "log4shell", "masscan"],
-            "evidence": {"abuse_score": 100, "reports_count": 842, "isp": "Hostkey B.V."},
+            "evidence": {
+                "abuse_score": 100,
+                "reports_count": 842,
+                "isp": "Hostkey B.V.",
+            },
         },
         # Tor Exit Node / Brute Force IP
         {
@@ -425,7 +466,10 @@ def seed_curated_threat_intel(db: Session) -> None:
             "classification": "SUSPICIOUS",
             "confidence": 0.85,
             "threat_types": ["tor_exit", "bruteforce_actor"],
-            "evidence": {"pulse_count": 24, "tags": ["tor", "scanner", "ssh-bruteforce"]},
+            "evidence": {
+                "pulse_count": 24,
+                "tags": ["tor", "scanner", "ssh-bruteforce"],
+            },
         },
         # C2 Phishing Domain
         {
@@ -461,7 +505,10 @@ def seed_curated_threat_intel(db: Session) -> None:
             "classification": "MALICIOUS",
             "confidence": 0.99,
             "threat_types": ["credential_dumping", "mimikatz", "hacktool"],
-            "evidence": {"signature": "HackTool:Win32/Mimikatz", "mitre_id": "T1003.001"},
+            "evidence": {
+                "signature": "HackTool:Win32/Mimikatz",
+                "mitre_id": "T1003.001",
+            },
         },
     ]
 

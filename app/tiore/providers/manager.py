@@ -47,7 +47,9 @@ class ProviderManager:
     def register_adapter(self, adapter: BaseObservableAdapter) -> None:
         self.adapters.append(adapter)
 
-    def get_eligible_adapters(self, observable: ExtractedObservable) -> list[BaseObservableAdapter]:
+    def get_eligible_adapters(
+        self, observable: ExtractedObservable
+    ) -> list[BaseObservableAdapter]:
         return [adapter for adapter in self.adapters if adapter.is_eligible(observable)]
 
     def query_providers(
@@ -66,16 +68,23 @@ class ProviderManager:
         results: list[ProviderLookupResult] = []
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_adapter = {executor.submit(adapter.lookup, observable): adapter for adapter in eligible}
+            future_to_adapter = {
+                executor.submit(adapter.lookup, observable): adapter
+                for adapter in eligible
+            }
 
             try:
-                for future in as_completed(future_to_adapter, timeout=overall_timeout_sec):
+                for future in as_completed(
+                    future_to_adapter, timeout=overall_timeout_sec
+                ):
                     adapter = future_to_adapter[future]
                     try:
                         res = future.result()
                         results.append(res)
                     except Exception as exc:
-                        logger.warning(f"Error querying provider {adapter.source_id}: {exc}")
+                        logger.warning(
+                            f"Error querying provider {adapter.source_id}: {exc}"
+                        )
                         results.append(
                             ProviderLookupResult(
                                 source_id=adapter.source_id,
@@ -86,7 +95,9 @@ class ProviderManager:
                             )
                         )
             except TimeoutError:
-                logger.warning(f"Overall timeout exceeded during provider queries for {observable.masked_value}")
+                logger.warning(
+                    f"Overall timeout exceeded during provider queries for {observable.masked_value}"
+                )
 
         return results
 
@@ -130,7 +141,10 @@ class ProviderManager:
                 repo.update_source_health(
                     r.source_id,
                     health_status="degraded",
-                    rate_limit_state={"status": "rate_limited", "timestamp": now.isoformat()},
+                    rate_limit_state={
+                        "status": "rate_limited",
+                        "timestamp": now.isoformat(),
+                    },
                 )
             elif r.status == "error":
                 repo.update_source_health(

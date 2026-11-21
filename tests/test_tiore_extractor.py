@@ -56,7 +56,9 @@ def test_extract_loopback_and_metadata_ip(extractor):
 
 def test_extract_ipv6(extractor):
     # Public IPv6
-    obs_v6 = extractor.validate_and_normalize_ip("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+    obs_v6 = extractor.validate_and_normalize_ip(
+        "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+    )
     assert obs_v6 is not None
     assert obs_v6.observable_type == ObservableType.IPV6
     # Compressed form
@@ -91,7 +93,13 @@ def test_extract_public_domain(extractor):
 
 
 def test_extract_internal_domain(extractor):
-    for dom in ["dc01.corp", "bastion.internal", "server.local", "router.lan", "localhost"]:
+    for dom in [
+        "dc01.corp",
+        "bastion.internal",
+        "server.local",
+        "router.lan",
+        "localhost",
+    ]:
         obs = extractor.validate_and_normalize_domain(dom)
         assert obs is not None
         assert obs.privacy_classification == PrivacyClassification.INTERNAL_DOMAIN
@@ -166,8 +174,13 @@ def test_extract_hashes(extractor):
 
 def test_invalid_hash_rejected(extractor):
     # Wrong character length or invalid hex characters
-    assert extractor.validate_and_normalize_hash("e4d909c290d0fb1ca068ffaddf22cbd") is None  # 31 chars
-    assert extractor.validate_and_normalize_hash("e4d909c290d0fb1ca068ffaddf22cbz0") is None  # 'z' invalid hex
+    assert (
+        extractor.validate_and_normalize_hash("e4d909c290d0fb1ca068ffaddf22cbd") is None
+    )  # 31 chars
+    assert (
+        extractor.validate_and_normalize_hash("e4d909c290d0fb1ca068ffaddf22cbz0")
+        is None
+    )  # 'z' invalid hex
 
 
 # ==============================================================================

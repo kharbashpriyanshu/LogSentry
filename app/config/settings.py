@@ -186,7 +186,11 @@ class Settings(BaseSettings):
         if self.ENVIRONMENT in ("production", "staging"):
             self.AUTH_STRICT_MODE = True
 
-            if not self.SECRET_KEY or self.SECRET_KEY in insecure_secrets or "CHANGE_ME" in self.SECRET_KEY:
+            if (
+                not self.SECRET_KEY
+                or self.SECRET_KEY in insecure_secrets
+                or "CHANGE_ME" in self.SECRET_KEY
+            ):
                 raise ValueError(
                     f"SECRET_KEY must be set to a secure, randomly generated secret in {self.ENVIRONMENT}. "
                     "Default development secret key is strictly prohibited."

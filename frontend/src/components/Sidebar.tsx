@@ -37,11 +37,11 @@ export default function Sidebar() {
   return (
     <aside className="w-64 flex flex-col border-r border-[var(--border-default)] bg-[var(--bg-sidebar)] transition-colors duration-200 select-none">
       {/* Brand Header */}
-      <div className="h-20 flex items-center px-3.5 border-b border-[var(--border-subtle)] shrink-0 overflow-hidden">
+      <div className="h-20 flex items-center justify-center px-2.5 border-b border-[var(--border-subtle)] shrink-0 overflow-hidden">
         <img
           src="/branding/logo_full.png"
           alt="LogSentry SOC — Security Operations Platform"
-          className="w-full max-w-[224px] h-auto max-h-[70px] object-contain drop-shadow-sm transform hover:scale-105 transition-transform duration-200"
+          className="w-full max-w-[236px] h-auto max-h-[72px] object-contain drop-shadow-sm transform scale-105 hover:scale-110 transition-transform duration-200"
         />
       </div>
 

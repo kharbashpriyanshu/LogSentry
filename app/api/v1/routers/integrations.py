@@ -51,12 +51,9 @@ def get_connected_servers(
             | (LogEventModel.tenant_id == "default")
             | (LogEventModel.tenant_id.is_(None))
         )
-    results = (
-        base_query.group_by(
-            LogEventModel.source, LogEventModel.source_ip, LogEventModel.source_type
-        )
-        .all()
-    )
+    results = base_query.group_by(
+        LogEventModel.source, LogEventModel.source_ip, LogEventModel.source_type
+    ).all()
 
     now = datetime.now(UTC)
     servers = []

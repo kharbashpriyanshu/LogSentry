@@ -139,7 +139,9 @@ def test_tiore_automatic_ingestion_observable_matching(api_client, auth_headers)
         }
     }
 
-    resp = api_client.post("/api/v1/detection/analyze", json=ingest_payload, headers=auth_headers)
+    resp = api_client.post(
+        "/api/v1/detection/analyze", json=ingest_payload, headers=auth_headers
+    )
     assert resp.status_code == 200
 
     # Query matches endpoint for tenant-tiore
@@ -155,7 +157,10 @@ def test_tiore_automatic_ingestion_observable_matching(api_client, auth_headers)
     match_id = matches[0]["id"]
     review_resp = api_client.patch(
         f"/api/v1/threat-intel/matches/{match_id}/review",
-        json={"review_status": "confirmed_threat", "notes": "Confirmed active Log4Shell probe targeting DMZ."},
+        json={
+            "review_status": "confirmed_threat",
+            "notes": "Confirmed active Log4Shell probe targeting DMZ.",
+        },
         headers=auth_headers,
     )
     assert review_resp.status_code == 200

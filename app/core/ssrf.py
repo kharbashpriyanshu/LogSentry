@@ -47,7 +47,9 @@ def validate_outbound_url(url: str) -> str:
     if not hostname:
         raise ValueError("URL must specify a valid hostname.")
 
-    if hostname in _FORBIDDEN_HOSTNAMES or hostname.endswith((".local", ".internal", ".localhost")):
+    if hostname in _FORBIDDEN_HOSTNAMES or hostname.endswith(
+        (".local", ".internal", ".localhost")
+    ):
         raise ValueError(f"SSRF Protection: Hostname '{hostname}' is not permitted.")
 
     # Resolve hostname to verify destination IP addresses
@@ -78,6 +80,8 @@ def validate_outbound_url(url: str) -> str:
 
         # Explicit check for AWS/GCP/Azure link-local metadata IP
         if ip_str == "169.254.169.254":
-            raise ValueError("SSRF Protection: Access to cloud metadata service is strictly blocked.")
+            raise ValueError(
+                "SSRF Protection: Access to cloud metadata service is strictly blocked."
+            )
 
     return url.strip()

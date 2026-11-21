@@ -177,7 +177,9 @@ class SOARService:
             except Exception as e:
                 logger.error(f"Failed to persist SOAR action to database: {e}")
                 cls._quarantine_store.pop((tenant_id, ip), None)
-                raise RuntimeError(f"Database persistence failure for SOAR containment: {e}")
+                raise RuntimeError(
+                    f"Database persistence failure for SOAR containment: {e}"
+                )
             finally:
                 if close_db:
                     db.close()
@@ -272,7 +274,9 @@ class SOARService:
             "reason": reason,
         }
         cls._action_history.append(action)
-        logger.info(f"SOAR Active Response: Released IP {ip} in tenant {tenant_id} by {analyst}.")
+        logger.info(
+            f"SOAR Active Response: Released IP {ip} in tenant {tenant_id} by {analyst}."
+        )
         return released
 
     @classmethod

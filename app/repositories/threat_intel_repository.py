@@ -31,9 +31,15 @@ class ThreatIntelRepository:
     # Observables
     # -------------------------------------------------------------------------
 
-    def get_or_create_observable(self, extracted: ExtractedObservable) -> ObservableModel:
+    def get_or_create_observable(
+        self, extracted: ExtractedObservable
+    ) -> ObservableModel:
         """Finds existing observable by fingerprint or creates a new canonical entry."""
-        obs = self.db.query(ObservableModel).filter(ObservableModel.fingerprint == extracted.fingerprint).first()
+        obs = (
+            self.db.query(ObservableModel)
+            .filter(ObservableModel.fingerprint == extracted.fingerprint)
+            .first()
+        )
 
         now = datetime.now(UTC)
         if obs:
@@ -61,9 +67,15 @@ class ThreatIntelRepository:
         return obs
 
     def get_observable_by_fingerprint(self, fingerprint: str) -> ObservableModel | None:
-        return self.db.query(ObservableModel).filter(ObservableModel.fingerprint == fingerprint).first()
+        return (
+            self.db.query(ObservableModel)
+            .filter(ObservableModel.fingerprint == fingerprint)
+            .first()
+        )
 
-    def get_observable_by_value(self, obs_type: str, normalized_val: str) -> ObservableModel | None:
+    def get_observable_by_value(
+        self, obs_type: str, normalized_val: str
+    ) -> ObservableModel | None:
         return (
             self.db.query(ObservableModel)
             .filter(
@@ -84,7 +96,12 @@ class ThreatIntelRepository:
             query = query.filter(ObservableModel.type == obs_type)
 
         total = query.count()
-        items = query.order_by(desc(ObservableModel.last_seen)).offset((page - 1) * limit).limit(limit).all()
+        items = (
+            query.order_by(desc(ObservableModel.last_seen))
+            .offset((page - 1) * limit)
+            .limit(limit)
+            .all()
+        )
         return items, total
 
     # -------------------------------------------------------------------------
@@ -94,7 +111,7 @@ class ThreatIntelRepository:
     def get_sources(self, enabled_only: bool = True) -> list[ThreatIntelSourceModel]:
         query = self.db.query(ThreatIntelSourceModel)
         if enabled_only:
-            query = query.filter(ThreatIntelSourceModel.is_enabled == True)  # noqa: E712
+            query = query.filter(ThreatIntelSourceModel.is_enabled.is_(True))
         return query.all()
 
     def get_or_create_source(
@@ -106,7 +123,11 @@ class ThreatIntelRepository:
         is_enabled: bool = True,
         supported_types: list[str] | None = None,
     ) -> ThreatIntelSourceModel:
-        source = self.db.query(ThreatIntelSourceModel).filter(ThreatIntelSourceModel.id == source_id).first()
+        source = (
+            self.db.query(ThreatIntelSourceModel)
+            .filter(ThreatIntelSourceModel.id == source_id)
+            .first()
+        )
         if source:
             return source
 
@@ -125,9 +146,16 @@ class ThreatIntelRepository:
         return source
 
     def update_source_health(
-        self, source_id: str, health_status: str, rate_limit_state: dict[str, Any] | None = None
+        self,
+        source_id: str,
+        health_status: str,
+        rate_limit_state: dict[str, Any] | None = None,
     ) -> None:
-        source = self.db.query(ThreatIntelSourceModel).filter(ThreatIntelSourceModel.id == source_id).first()
+        source = (
+            self.db.query(ThreatIntelSourceModel)
+            .filter(ThreatIntelSourceModel.id == source_id)
+            .first()
+        )
         if source:
             source.health_status = health_status
             if rate_limit_state is not None:
@@ -196,8 +224,14 @@ class ThreatIntelRepository:
         self.db.refresh(record)
         return record
 
-    def get_records_for_observable(self, observable_id: str) -> list[ThreatIntelRecordModel]:
-        return self.db.query(ThreatIntelRecordModel).filter(ThreatIntelRecordModel.observable_id == observable_id).all()
+    def get_records_for_observable(
+        self, observable_id: str
+    ) -> list[ThreatIntelRecordModel]:
+        return (
+            self.db.query(ThreatIntelRecordModel)
+            .filter(ThreatIntelRecordModel.observable_id == observable_id)
+            .all()
+        )
 
     # -------------------------------------------------------------------------
     # Event-Observable Associations
@@ -281,8 +315,12 @@ class ThreatIntelRepository:
 
         return query.order_by(desc(ThreatIntelMatchModel.matched_at)).limit(limit).all()
 
-    def get_match_by_id(self, match_id: str, tenant_id: str, is_admin: bool = False) -> ThreatIntelMatchModel | None:
-        query = self.db.query(ThreatIntelMatchModel).filter(ThreatIntelMatchModel.id == match_id)
+    def get_match_by_id(
+        self, match_id: str, tenant_id: str, is_admin: bool = False
+    ) -> ThreatIntelMatchModel | None:
+        query = self.db.query(ThreatIntelMatchModel).filter(
+            ThreatIntelMatchModel.id == match_id
+        )
         if not is_admin:
             query = query.filter(ThreatIntelMatchModel.tenant_id == tenant_id)
         return query.first()
@@ -345,7 +383,9 @@ class ThreatIntelRepository:
         self.db.refresh(audit)
         return audit
 
-    def get_audits(self, tenant_id: str, is_admin: bool = False, limit: int = 50) -> list[ThreatIntelAuditModel]:
+    def get_audits(
+        self, tenant_id: str, is_admin: bool = False, limit: int = 50
+    ) -> list[ThreatIntelAuditModel]:
         query = self.db.query(ThreatIntelAuditModel)
         if not is_admin:
             query = query.filter(ThreatIntelAuditModel.tenant_id == tenant_id)

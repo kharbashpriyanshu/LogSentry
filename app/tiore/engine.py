@@ -133,12 +133,16 @@ class TIOREEngine:
 
         # Check if external provider query is requested and permissible
         if force_external:
-            if observable.is_eligible_for_external_lookup or (observable.observable_type == ObservableType.EMAIL):
+            if observable.is_eligible_for_external_lookup or (
+                observable.observable_type == ObservableType.EMAIL
+            ):
                 results = self.provider_manager.query_providers(observable)
                 if results:
                     self.provider_manager.persist_results(observable, results, db=db)
                     external_disclosed = True
-                    disclosed_to = [r.source_id for r in results if r.status == "success"]
+                    disclosed_to = [
+                        r.source_id for r in results if r.status == "success"
+                    ]
 
         # Audit the investigation query
         repo.record_audit(
@@ -155,7 +159,9 @@ class TIOREEngine:
         )
 
         # Resolve updated intelligence
-        resolved = self.resolver.resolve(observable, tenant_id=tenant_id, db=db, bypass_cache=force_external)
+        resolved = self.resolver.resolve(
+            observable, tenant_id=tenant_id, db=db, bypass_cache=force_external
+        )
 
         return {
             "status": "success",
@@ -168,8 +174,12 @@ class TIOREEngine:
                 "validation_status": observable.validation_status.value,
                 "privacy_classification": observable.privacy_classification.value,
                 "is_eligible_for_external_lookup": observable.is_eligible_for_external_lookup,
-                "first_seen": obs_model.first_seen.isoformat() if obs_model.first_seen else None,
-                "last_seen": obs_model.last_seen.isoformat() if obs_model.last_seen else None,
+                "first_seen": (
+                    obs_model.first_seen.isoformat() if obs_model.first_seen else None
+                ),
+                "last_seen": (
+                    obs_model.last_seen.isoformat() if obs_model.last_seen else None
+                ),
             },
             "reputation": resolved.to_dict(),
             "audit": {

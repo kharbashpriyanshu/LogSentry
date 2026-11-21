@@ -62,6 +62,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         from app.database.session import SessionLocal
         from app.services.identity_service import IdentityService
         from app.tiore.resolver import seed_curated_threat_intel
+
         with SessionLocal() as db:
             IdentityService.bootstrap_default_tenants_and_admin(db)
             seed_curated_threat_intel(db)

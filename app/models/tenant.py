@@ -30,7 +30,10 @@ class UserTenantMembershipModel(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(
-        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        String(36),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     tenant_id = Column(
         String(64),

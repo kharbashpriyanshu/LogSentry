@@ -112,7 +112,8 @@ def release_host(
     )
     if not success:
         raise HTTPException(
-            status_code=404, detail=f"IP '{ip}' is not actively quarantined for tenant '{user.tenant_id}'."
+            status_code=404,
+            detail=f"IP '{ip}' is not actively quarantined for tenant '{user.tenant_id}'.",
         )
     return {
         "status": "success",

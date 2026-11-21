@@ -8,7 +8,17 @@ event associations, match correlation, and privacy audit logs with multi-tenant 
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 
 from app.database.base import Base
@@ -30,15 +40,33 @@ class ObservableModel(Base):
     raw_masked = Column(String(2048), nullable=False)
     fingerprint = Column(String(64), unique=True, nullable=False, index=True)
     validation_status = Column(String(32), nullable=False, default="valid")
-    privacy_classification = Column(String(32), nullable=False, default="public_routable")
+    privacy_classification = Column(
+        String(32), nullable=False, default="public_routable"
+    )
     is_eligible_for_external_lookup = Column(Boolean, nullable=False, default=False)
     metadata_json = Column("metadata", JSON, nullable=True)
-    first_seen = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
-    last_seen = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    first_seen = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    last_seen = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
 
-    records = relationship("ThreatIntelRecordModel", back_populates="observable", cascade="all, delete-orphan")
-    matches = relationship("ThreatIntelMatchModel", back_populates="observable", cascade="all, delete-orphan")
-    event_links = relationship("EventObservableModel", back_populates="observable", cascade="all, delete-orphan")
+    records = relationship(
+        "ThreatIntelRecordModel",
+        back_populates="observable",
+        cascade="all, delete-orphan",
+    )
+    matches = relationship(
+        "ThreatIntelMatchModel",
+        back_populates="observable",
+        cascade="all, delete-orphan",
+    )
+    event_links = relationship(
+        "EventObservableModel",
+        back_populates="observable",
+        cascade="all, delete-orphan",
+    )
 
 
 class ThreatIntelSourceModel(Base):
@@ -49,17 +77,23 @@ class ThreatIntelSourceModel(Base):
 
     __tablename__ = "threat_sources"
 
-    id = Column(String(64), primary_key=True)  # e.g. 'abuseipdb', 'otx', 'urlhaus', 'local_curated'
+    id = Column(
+        String(64), primary_key=True
+    )  # e.g. 'abuseipdb', 'otx', 'urlhaus', 'local_curated'
     name = Column(String(128), nullable=False)
     category = Column(String(64), nullable=False)
-    reliability_tier = Column(Integer, nullable=False, default=3)  # 1 (low) to 5 (authoritative)
+    reliability_tier = Column(
+        Integer, nullable=False, default=3
+    )  # 1 (low) to 5 (authoritative)
     is_enabled = Column(Boolean, nullable=False, default=True)
     supported_types = Column(JSON, nullable=True)
     rate_limit_state = Column(JSON, nullable=True)
     last_sync = Column(DateTime(timezone=True), nullable=True)
     health_status = Column(String(32), nullable=False, default="healthy")
 
-    records = relationship("ThreatIntelRecordModel", back_populates="source", cascade="all, delete-orphan")
+    records = relationship(
+        "ThreatIntelRecordModel", back_populates="source", cascade="all, delete-orphan"
+    )
 
 
 class ThreatIntelRecordModel(Base):
@@ -72,17 +106,31 @@ class ThreatIntelRecordModel(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     observable_id = Column(
-        String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True
+        String(36),
+        ForeignKey("threat_observables.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    source_id = Column(String(64), ForeignKey("threat_sources.id", ondelete="CASCADE"), nullable=False, index=True)
-    classification = Column(String(32), nullable=False, index=True)  # MALICIOUS, SUSPICIOUS, EXPOSED, BENIGN, UNKNOWN
+    source_id = Column(
+        String(64),
+        ForeignKey("threat_sources.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    classification = Column(
+        String(32), nullable=False, index=True
+    )  # MALICIOUS, SUSPICIOUS, EXPOSED, BENIGN, UNKNOWN
     confidence = Column(Float, nullable=False, default=0.0)
-    threat_types = Column(JSON, nullable=True)  # e.g. ["brute_force", "c2", "ransomware", "phishing"]
+    threat_types = Column(
+        JSON, nullable=True
+    )  # e.g. ["brute_force", "c2", "ransomware", "phishing"]
     evidence = Column(JSON, nullable=True)
     raw_payload = Column(JSON, nullable=True)
     first_reported = Column(DateTime(timezone=True), nullable=True)
     last_reported = Column(DateTime(timezone=True), nullable=True)
-    retrieved_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    retrieved_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
     expires_at = Column(DateTime(timezone=True), nullable=True)
 
     observable = relationship("ObservableModel", back_populates="records")
@@ -98,13 +146,23 @@ class EventObservableModel(Base):
     __tablename__ = "event_observables"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    event_id = Column(String, ForeignKey("log_events.id", ondelete="CASCADE"), nullable=False, index=True)
+    event_id = Column(
+        String,
+        ForeignKey("log_events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     observable_id = Column(
-        String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True
+        String(36),
+        ForeignKey("threat_observables.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     field_name = Column(String(64), nullable=False)
     tenant_id = Column(String(64), nullable=False, default="default", index=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
 
     observable = relationship("ObservableModel", back_populates="event_links")
 
@@ -119,11 +177,26 @@ class ThreatIntelMatchModel(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     observable_id = Column(
-        String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True
+        String(36),
+        ForeignKey("threat_observables.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    event_id = Column(String, ForeignKey("log_events.id", ondelete="SET NULL"), nullable=True, index=True)
-    alert_id = Column(String, ForeignKey("alerts.id", ondelete="SET NULL"), nullable=True, index=True)
-    incident_id = Column(String, ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True, index=True)
+    event_id = Column(
+        String,
+        ForeignKey("log_events.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    alert_id = Column(
+        String, ForeignKey("alerts.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    incident_id = Column(
+        String,
+        ForeignKey("incidents.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     classification = Column(String(32), nullable=False, index=True)
     confidence = Column(Float, nullable=False, default=0.0)
     verdict_reason = Column(String(512), nullable=False)
@@ -131,7 +204,9 @@ class ThreatIntelMatchModel(Base):
     review_status = Column(String(32), nullable=False, default="unreviewed")
     reviewed_by = Column(String(64), nullable=True)
     analyst_notes = Column(Text, nullable=True)
-    matched_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    matched_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
 
     observable = relationship("ObservableModel", back_populates="matches")
 
@@ -155,4 +230,6 @@ class ThreatIntelAuditModel(Base):
     lookup_method = Column(String(32), nullable=False)
     external_disclosed = Column(Boolean, nullable=False, default=False)
     disclosed_to = Column(JSON, nullable=True)
-    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    timestamp = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )

@@ -24,12 +24,23 @@ router = APIRouter()
 
 
 class IndicatorLookupRequest(BaseModel):
-    indicator: str = Field(..., min_length=2, max_length=2048, description="IP, Domain, URL, Hash, Email, or Phone")
-    force_external: bool = Field(False, description="Whether to query configured external threat intelligence feeds")
+    indicator: str = Field(
+        ...,
+        min_length=2,
+        max_length=2048,
+        description="IP, Domain, URL, Hash, Email, or Phone",
+    )
+    force_external: bool = Field(
+        False,
+        description="Whether to query configured external threat intelligence feeds",
+    )
 
 
 class MatchReviewRequest(BaseModel):
-    review_status: str = Field(..., description="under_review, confirmed_threat, false_positive, benign_exception")
+    review_status: str = Field(
+        ...,
+        description="under_review, confirmed_threat, false_positive, benign_exception",
+    )
     notes: str | None = Field(None, max_length=1000)
 
 
@@ -59,7 +70,9 @@ def lookup_indicator(
 
 @router.get("/matches")
 def get_threat_matches(
-    classification: str | None = Query(None, description="MALICIOUS, SUSPICIOUS, EXPOSED"),
+    classification: str | None = Query(
+        None, description="MALICIOUS, SUSPICIOUS, EXPOSED"
+    ),
     limit: int = Query(50, ge=1, le=200),
     user: UserContext = Depends(get_current_user),
     repo: ThreatIntelRepository = Depends(get_threat_intel_repository),
@@ -102,16 +115,29 @@ def review_match(
     match_id: str,
     request: MatchReviewRequest,
     user: UserContext = Depends(
-        require_role(UserRole.TIER_1_ANALYST, UserRole.TIER_2_ANALYST, UserRole.SOC_MANAGER, UserRole.ADMIN)
+        require_role(
+            UserRole.TIER_1_ANALYST,
+            UserRole.TIER_2_ANALYST,
+            UserRole.SOC_MANAGER,
+            UserRole.ADMIN,
+        )
     ),
     repo: ThreatIntelRepository = Depends(get_threat_intel_repository),
 ):
     """
     Triage and review an identified threat match.
     """
-    valid_statuses = ("unreviewed", "under_review", "confirmed_threat", "false_positive", "benign_exception")
+    valid_statuses = (
+        "unreviewed",
+        "under_review",
+        "confirmed_threat",
+        "false_positive",
+        "benign_exception",
+    )
     if request.review_status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f"Invalid review_status. Allowed: {valid_statuses}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid review_status. Allowed: {valid_statuses}"
+        )
 
     is_admin = user.role == UserRole.ADMIN
     updated = repo.update_match_review(
@@ -123,7 +149,9 @@ def review_match(
         is_admin=is_admin,
     )
     if not updated:
-        raise HTTPException(status_code=404, detail="Threat match not found or access denied.")
+        raise HTTPException(
+            status_code=404, detail="Threat match not found or access denied."
+        )
 
     return {
         "status": "success",
@@ -145,7 +173,9 @@ def get_observables(
     """
     Returns inventory of tracked canonical observables.
     """
-    items, total = repo.get_observables_paginated(page=page, limit=limit, obs_type=obs_type)
+    items, total = repo.get_observables_paginated(
+        page=page, limit=limit, obs_type=obs_type
+    )
     return {
         "items": [
             {
@@ -236,13 +266,23 @@ def get_stats(
     is_admin = user.role == UserRole.ADMIN
     match_query = db.query(ThreatIntelMatchModel)
     if not is_admin:
-        match_query = match_query.filter(ThreatIntelMatchModel.tenant_id == user.tenant_id)
+        match_query = match_query.filter(
+            ThreatIntelMatchModel.tenant_id == user.tenant_id
+        )
 
     total_matches = match_query.count()
-    malicious_matches = match_query.filter(ThreatIntelMatchModel.classification == "MALICIOUS").count()
-    suspicious_matches = match_query.filter(ThreatIntelMatchModel.classification == "SUSPICIOUS").count()
-    exposed_matches = match_query.filter(ThreatIntelMatchModel.classification == "EXPOSED").count()
-    unreviewed_matches = match_query.filter(ThreatIntelMatchModel.review_status == "unreviewed").count()
+    malicious_matches = match_query.filter(
+        ThreatIntelMatchModel.classification == "MALICIOUS"
+    ).count()
+    suspicious_matches = match_query.filter(
+        ThreatIntelMatchModel.classification == "SUSPICIOUS"
+    ).count()
+    exposed_matches = match_query.filter(
+        ThreatIntelMatchModel.classification == "EXPOSED"
+    ).count()
+    unreviewed_matches = match_query.filter(
+        ThreatIntelMatchModel.review_status == "unreviewed"
+    ).count()
 
     total_observables = db.query(ObservableModel).count()
     sources = repo.get_sources(enabled_only=False)

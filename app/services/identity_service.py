@@ -25,9 +25,7 @@ from app.models.user import UserModel
 logger = logging.getLogger(__name__)
 
 # Precomputed dummy Argon2id hash for constant-time dummy verification when user is not found
-_DUMMY_ARGON2_HASH = (
-    "$argon2id$v=19$m=65536,t=3,p=4$c29tZXJhbmRvbXNhbHQx$6tB2p9+sOaR7v8o7J4I7gH+q6fT1d4y9s7E6w5Z0aBc"
-)
+_DUMMY_ARGON2_HASH = "$argon2id$v=19$m=65536,t=3,p=4$c29tZXJhbmRvbXNhbHQx$6tB2p9+sOaR7v8o7J4I7gH+q6fT1d4y9s7E6w5Z0aBc"
 
 
 class IdentityService:
@@ -40,7 +38,9 @@ class IdentityService:
         In development mode, also ensures demonstration analysts are provisioned.
         """
         # 1. Ensure default tenant exists
-        default_tenant = db.query(TenantModel).filter(TenantModel.id == "default").first()
+        default_tenant = (
+            db.query(TenantModel).filter(TenantModel.id == "default").first()
+        )
         if not default_tenant:
             default_tenant = TenantModel(
                 id="default",
@@ -54,7 +54,9 @@ class IdentityService:
             logger.info("Initialized default enterprise tenant: 'default'")
 
         # Secondary tenant for multi-tenant isolation testing
-        lab_tenant = db.query(TenantModel).filter(TenantModel.id == "lab-sec-ops").first()
+        lab_tenant = (
+            db.query(TenantModel).filter(TenantModel.id == "lab-sec-ops").first()
+        )
         if not lab_tenant:
             lab_tenant = TenantModel(
                 id="lab-sec-ops",
@@ -67,7 +69,11 @@ class IdentityService:
 
         # Development tenant for test suites
         if settings.ENVIRONMENT != "production":
-            custom_tenant = db.query(TenantModel).filter(TenantModel.id == "custom-enterprise-tenant").first()
+            custom_tenant = (
+                db.query(TenantModel)
+                .filter(TenantModel.id == "custom-enterprise-tenant")
+                .first()
+            )
             if not custom_tenant:
                 custom_tenant = TenantModel(
                     id="custom-enterprise-tenant",
@@ -78,7 +84,11 @@ class IdentityService:
                 db.add(custom_tenant)
                 db.commit()
 
-            unauth_tenant = db.query(TenantModel).filter(TenantModel.id == "unauthorized-corp-bank").first()
+            unauth_tenant = (
+                db.query(TenantModel)
+                .filter(TenantModel.id == "unauthorized-corp-bank")
+                .first()
+            )
             if not unauth_tenant:
                 unauth_tenant = TenantModel(
                     id="unauthorized-corp-bank",
@@ -91,7 +101,9 @@ class IdentityService:
 
         # 2. Check if admin exists
         admin_username = settings.INITIAL_ADMIN_USERNAME.lower()
-        admin_user = db.query(UserModel).filter(UserModel.username == admin_username).first()
+        admin_user = (
+            db.query(UserModel).filter(UserModel.username == admin_username).first()
+        )
         if not admin_user:
             admin_user = UserModel(
                 username=admin_username,
@@ -105,10 +117,24 @@ class IdentityService:
             db.refresh(admin_user)
 
             # Assign membership to default and lab tenants
-            db.add(UserTenantMembershipModel(user_id=admin_user.id, tenant_id="default", role=UserRole.ADMIN.value))
-            db.add(UserTenantMembershipModel(user_id=admin_user.id, tenant_id="lab-sec-ops", role=UserRole.ADMIN.value))
+            db.add(
+                UserTenantMembershipModel(
+                    user_id=admin_user.id,
+                    tenant_id="default",
+                    role=UserRole.ADMIN.value,
+                )
+            )
+            db.add(
+                UserTenantMembershipModel(
+                    user_id=admin_user.id,
+                    tenant_id="lab-sec-ops",
+                    role=UserRole.ADMIN.value,
+                )
+            )
             db.commit()
-            logger.info(f"Bootstrapped initial enterprise admin user '{admin_username}' with tenant memberships.")
+            logger.info(
+                f"Bootstrapped initial enterprise admin user '{admin_username}' with tenant memberships."
+            )
         elif settings.ENVIRONMENT != "production":
             # In development, synchronize admin password with configured INITIAL_ADMIN_PASSWORD
             admin_user.hashed_password = hash_password(settings.INITIAL_ADMIN_PASSWORD)
@@ -117,13 +143,39 @@ class IdentityService:
         # In development/test mode, seed standard role accounts if missing
         if settings.ENVIRONMENT != "production":
             dev_accounts = [
-                ("soc_manager", "manager123", "manager@logsentry.corp", UserRole.SOC_MANAGER.value, ["default", "lab-sec-ops"]),
-                ("threat_hunter", "hunter123", "hunter@logsentry.corp", UserRole.THREAT_HUNTER.value, ["default"]),
-                ("analyst", "analyst123", "analyst@logsentry.corp", UserRole.TIER_2_ANALYST.value, ["default"]),
-                ("junior_analyst", "junior123", "junior@logsentry.corp", UserRole.TIER_1_ANALYST.value, ["default"]),
+                (
+                    "soc_manager",
+                    "manager123",
+                    "manager@logsentry.corp",
+                    UserRole.SOC_MANAGER.value,
+                    ["default", "lab-sec-ops"],
+                ),
+                (
+                    "threat_hunter",
+                    "hunter123",
+                    "hunter@logsentry.corp",
+                    UserRole.THREAT_HUNTER.value,
+                    ["default"],
+                ),
+                (
+                    "analyst",
+                    "analyst123",
+                    "analyst@logsentry.corp",
+                    UserRole.TIER_2_ANALYST.value,
+                    ["default"],
+                ),
+                (
+                    "junior_analyst",
+                    "junior123",
+                    "junior@logsentry.corp",
+                    UserRole.TIER_1_ANALYST.value,
+                    ["default"],
+                ),
             ]
             for uname, pwd, email, role, tenants in dev_accounts:
-                existing = db.query(UserModel).filter(UserModel.username == uname).first()
+                existing = (
+                    db.query(UserModel).filter(UserModel.username == uname).first()
+                )
                 if not existing:
                     user_obj = UserModel(
                         username=uname,
@@ -136,7 +188,11 @@ class IdentityService:
                     db.commit()
                     db.refresh(user_obj)
                     for t_id in tenants:
-                        db.add(UserTenantMembershipModel(user_id=user_obj.id, tenant_id=t_id, role=role))
+                        db.add(
+                            UserTenantMembershipModel(
+                                user_id=user_obj.id, tenant_id=t_id, role=role
+                            )
+                        )
                     db.commit()
 
     @staticmethod
@@ -154,7 +210,11 @@ class IdentityService:
           - Multi-tenant boundary check: non-admins cannot authenticate into unassigned tenants.
           - Account status check: rejects inactive accounts.
         """
-        user = db.query(UserModel).filter(UserModel.username == username.strip().lower()).first()
+        user = (
+            db.query(UserModel)
+            .filter(UserModel.username == username.strip().lower())
+            .first()
+        )
         if not user:
             # Perform dummy verification to neutralize user enumeration timing side-channels
             verify_password(password, _DUMMY_ARGON2_HASH)
@@ -167,17 +227,25 @@ class IdentityService:
             raise PermissionError("User account is inactive or disabled")
 
         # Tenant authorization — target tenant must exist and be active
-        tenant = db.query(TenantModel).filter(TenantModel.id == requested_tenant_id).first()
+        tenant = (
+            db.query(TenantModel).filter(TenantModel.id == requested_tenant_id).first()
+        )
         if not tenant:
             if requested_tenant_id == "default":
-                tenant = TenantModel(id="default", name="Default SOC Operations", is_active=True)
+                tenant = TenantModel(
+                    id="default", name="Default SOC Operations", is_active=True
+                )
                 db.add(tenant)
                 db.commit()
             else:
-                raise ValueError(f"Requested tenant '{requested_tenant_id}' does not exist")
+                raise ValueError(
+                    f"Requested tenant '{requested_tenant_id}' does not exist"
+                )
 
         if not tenant.is_active:
-            raise PermissionError(f"Tenant '{requested_tenant_id}' is disabled or deactivated")
+            raise PermissionError(
+                f"Tenant '{requested_tenant_id}' is disabled or deactivated"
+            )
 
         is_admin = user.role in (UserRole.ADMIN.value, UserRole.ADMIN)
         if is_admin:
@@ -232,7 +300,9 @@ class IdentityService:
         db.commit()
         db.refresh(agent)
 
-        logger.info(f"Enrolled collector agent '{name}' for tenant '{tenant_id}' with prefix '{api_key_prefix}'")
+        logger.info(
+            f"Enrolled collector agent '{name}' for tenant '{tenant_id}' with prefix '{api_key_prefix}'"
+        )
         return {
             "agent_id": str(agent.id),
             "name": agent.name,

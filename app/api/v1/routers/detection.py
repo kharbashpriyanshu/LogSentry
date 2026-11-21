@@ -102,7 +102,9 @@ def analyze_event(
             alert.tenant_id = event.tenant_id
         alert_repo.create_alert(alert)
         if not first_alert_id:
-            first_alert_id = getattr(alert, "alert_id", None) or getattr(alert, "id", None)
+            first_alert_id = getattr(alert, "alert_id", None) or getattr(
+                alert, "id", None
+            )
 
     # TIORE: Synchronous observable extraction & local threat matching
     try:
@@ -155,7 +157,8 @@ def detect_single_event(
             event_data=event.model_dump(),
             tenant_id=event.tenant_id,
             db=db,
-            alert_id=getattr(alerts[0], "alert_id", None) or getattr(alerts[0], "id", None),
+            alert_id=getattr(alerts[0], "alert_id", None)
+            or getattr(alerts[0], "id", None),
         )
     except Exception:
         pass
@@ -282,7 +285,12 @@ def analyze_batch(
                 event_data=event.model_dump(),
                 tenant_id=event.tenant_id,
                 db=db,
-                alert_id=getattr(alerts[0], "alert_id", None) or getattr(alerts[0], "id", None) if alerts else None,
+                alert_id=(
+                    getattr(alerts[0], "alert_id", None)
+                    or getattr(alerts[0], "id", None)
+                    if alerts
+                    else None
+                ),
             )
         except Exception:
             pass

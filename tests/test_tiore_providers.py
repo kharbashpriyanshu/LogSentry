@@ -23,7 +23,11 @@ from app.tiore.models import (
 )
 from app.tiore.providers.abuseipdb import AbuseIPDBAdapter
 from app.tiore.providers.alienvault import AlienVaultOTXAdapter
-from app.tiore.providers.base import BaseObservableAdapter, CircuitState, ProviderLookupResult
+from app.tiore.providers.base import (
+    BaseObservableAdapter,
+    CircuitState,
+    ProviderLookupResult,
+)
 from app.tiore.providers.hibp import HIBPPrefixAdapter
 from app.tiore.providers.manager import ProviderManager
 from app.tiore.providers.threatfox import ThreatFoxAdapter
@@ -303,7 +307,9 @@ def test_provider_manager_and_persistence(test_db_session):
 
     assert len(saved_ids) == 1
     # Check that record is in database
-    records = repo.get_records_for_observable(repo.get_observable_by_fingerprint(obs.fingerprint).id)
+    records = repo.get_records_for_observable(
+        repo.get_observable_by_fingerprint(obs.fingerprint).id
+    )
     assert len(records) == 1
     assert records[0].classification == "MALICIOUS"
     assert records[0].confidence == 0.95

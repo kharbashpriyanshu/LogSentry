@@ -19,7 +19,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.config.settings import Settings
-from app.core.jwt import JWT_ALGORITHM, JWT_AUDIENCE, JWT_ISSUER, create_access_token, decode_access_token
+from app.core.jwt import (
+    JWT_ALGORITHM,
+    JWT_AUDIENCE,
+    JWT_ISSUER,
+    create_access_token,
+    decode_access_token,
+)
 from app.core.password import hash_password, verify_password
 from app.core.rbac import UserRole, get_current_user
 from app.database.base import Base
@@ -54,12 +60,15 @@ def client():
 # 1. Configuration & Production Startup Validation
 # ==============================================================================
 
+
 def test_production_secret_key_validation():
     """Ensures production startup fails if SECRET_KEY is missing, default, or < 32 chars."""
     dev_default = "logsentry-insecure-dev-secret-key-min-32-chars-2026!"
 
     # 1. Dev default in production MUST raise ValueError
-    with pytest.raises(ValueError, match="Default development secret key is strictly prohibited"):
+    with pytest.raises(
+        ValueError, match="Default development secret key is strictly prohibited"
+    ):
         Settings(
             ENVIRONMENT="production",
             DATABASE_URI="postgresql://db.corp:5432/siem",
@@ -88,6 +97,7 @@ def test_production_secret_key_validation():
 # 2. Argon2id Password Hashing
 # ==============================================================================
 
+
 def test_argon2id_hashing_and_verification():
     """Verifies Argon2id produces valid RFC 9106 hashes and verifies correctly."""
     password = "SuperSecretPassword#2026!"
@@ -106,6 +116,7 @@ def test_argon2id_hashing_and_verification():
 # ==============================================================================
 # 3. PyJWT HS256 Cryptographic Verification
 # ==============================================================================
+
 
 def test_jwt_valid_lifecycle_and_claims():
     """Creates a JWT and asserts all required claims are populated and decoded."""
@@ -139,7 +150,16 @@ def test_jwt_tampering_and_algorithm_none_rejected():
 
     # 2. Algorithm 'none' attack token
     none_token = jwt.encode(
-        {"sub": "admin", "iss": JWT_ISSUER, "aud": JWT_AUDIENCE, "role": "Admin", "tenant_id": "default", "typ": "access", "iat": int(time.time()), "exp": int(time.time()) + 3600},
+        {
+            "sub": "admin",
+            "iss": JWT_ISSUER,
+            "aud": JWT_AUDIENCE,
+            "role": "Admin",
+            "tenant_id": "default",
+            "typ": "access",
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 3600,
+        },
         key="",
         algorithm="none",
     )
@@ -164,41 +184,54 @@ def test_jwt_protected_claims_cannot_be_overwritten():
 # 4. Multi-Tenant Boundaries & Persistent Authentication
 # ==============================================================================
 
+
 def test_login_flow_and_tenant_restriction(client):
     """Verifies database authentication with Argon2id and strict tenant membership."""
     # 1. Successful admin login on default tenant
-    res = client.post("/api/v1/auth/login", json={
-        "username": "admin",
-        "password": "admin",
-        "tenant_id": "default",
-    })
+    res = client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": "admin",
+            "password": "admin",
+            "tenant_id": "default",
+        },
+    )
     assert res.status_code == 200
     data = res.json()
     assert "access_token" in data
     assert data["user"]["role"] == UserRole.ADMIN.value
 
     # 2. Invalid password rejected with 401
-    bad_res = client.post("/api/v1/auth/login", json={
-        "username": "admin",
-        "password": "WrongPassword123!",
-        "tenant_id": "default",
-    })
+    bad_res = client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": "admin",
+            "password": "WrongPassword123!",
+            "tenant_id": "default",
+        },
+    )
     assert bad_res.status_code == 401
 
     # 3. Non-existent user rejected with identical error (timing attack resistance)
-    ghost_res = client.post("/api/v1/auth/login", json={
-        "username": "non_existent_ghost_user_999",
-        "password": "AnyPassword123!",
-        "tenant_id": "default",
-    })
+    ghost_res = client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": "non_existent_ghost_user_999",
+            "password": "AnyPassword123!",
+            "tenant_id": "default",
+        },
+    )
     assert ghost_res.status_code == 401
 
     # 4. Non-admin attempting to access unauthorized tenant is rejected (403)
-    unauthorized_tenant_res = client.post("/api/v1/auth/login", json={
-        "username": "analyst",
-        "password": "analyst123",
-        "tenant_id": "lab-sec-ops",  # analyst only belongs to 'default'
-    })
+    unauthorized_tenant_res = client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": "analyst",
+            "password": "analyst123",
+            "tenant_id": "lab-sec-ops",  # analyst only belongs to 'default'
+        },
+    )
     assert unauthorized_tenant_res.status_code == 403
 
 
@@ -206,14 +239,18 @@ def test_login_flow_and_tenant_restriction(client):
 # 5. Machine-to-Machine Agent Authentication & Scoped Ingestion
 # ==============================================================================
 
+
 def test_agent_enrollment_and_batch_ingestion(client):
     """Enrolls a collector agent, transmits a batch with its API key, and verifies tenant scoping."""
     # 1. Login as Admin
-    admin_login = client.post("/api/v1/auth/login", json={
-        "username": "admin",
-        "password": "admin",
-        "tenant_id": "default",
-    })
+    admin_login = client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": "admin",
+            "password": "admin",
+            "tenant_id": "default",
+        },
+    )
     admin_token = admin_login.json()["access_token"]
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
@@ -246,7 +283,9 @@ def test_agent_enrollment_and_batch_ingestion(client):
         "tenant_id": "default",
     }
     agent_headers = {"X-Agent-Key": api_key}
-    ingest_res = client.post("/api/v1/detection/batch", headers=agent_headers, json=batch_payload)
+    ingest_res = client.post(
+        "/api/v1/detection/batch", headers=agent_headers, json=batch_payload
+    )
     assert ingest_res.status_code == 200
     assert ingest_res.json()["processed_count"] == 1
 
@@ -262,7 +301,9 @@ def test_agent_enrollment_and_batch_ingestion(client):
     revoke_res = client.delete(f"/api/v1/auth/agents/{agent_id}", headers=admin_headers)
     assert revoke_res.status_code == 200
 
-    revoked_ingest_res = client.post("/api/v1/detection/batch", headers=agent_headers, json=batch_payload)
+    revoked_ingest_res = client.post(
+        "/api/v1/detection/batch", headers=agent_headers, json=batch_payload
+    )
     assert revoked_ingest_res.status_code == 401
 
 
@@ -270,13 +311,19 @@ def test_agent_enrollment_and_batch_ingestion(client):
 # 6. Privilege Escalation Defenses & Router RBAC Matrix
 # ==============================================================================
 
+
 def test_unauthenticated_privilege_escalation_blocked(client):
     """Ensures callers cannot forge X-User-Role: Admin to bypass authorization."""
     # Attempting to call an admin-only endpoint with forged headers
-    res = client.get("/api/v1/auth/admin-only", headers={"X-User-Role": "Admin", "X-User-Id": "attacker"})
+    res = client.get(
+        "/api/v1/auth/admin-only",
+        headers={"X-User-Role": "Admin", "X-User-Id": "attacker"},
+    )
     # Must be downgraded to Tier1_Analyst and denied with 403
     assert res.status_code == 403
 
     # Attempting to reload detection rules with forged headers
-    reload_res = client.post("/api/v1/detection/rules/reload", headers={"X-User-Role": "Admin"})
+    reload_res = client.post(
+        "/api/v1/detection/rules/reload", headers={"X-User-Role": "Admin"}
+    )
     assert reload_res.status_code == 403

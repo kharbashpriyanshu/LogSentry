@@ -100,7 +100,12 @@ class UserContext(BaseModel):
         if self.role == UserRole.ADMIN:
             return True
         perms = ROLE_PERMISSIONS.get(self.role, set())
-        return "*" in perms or permission in perms or "read:all" in perms and permission.startswith("read:")
+        return (
+            "*" in perms
+            or permission in perms
+            or "read:all" in perms
+            and permission.startswith("read:")
+        )
 
 
 def get_current_user(
@@ -127,9 +132,7 @@ def get_current_user(
             return UserContext(
                 user_id=payload.get("sub", "analyst-001"),
                 username=username,
-                email=payload.get(
-                    "email", f"{username}@logsentry.corp"
-                ),
+                email=payload.get("email", f"{username}@logsentry.corp"),
                 role=role,
                 tenant_id=payload.get("tenant_id", "default"),
                 is_agent=False,
@@ -143,7 +146,9 @@ def get_current_user(
 
     # In production or strict auth mode, unauthenticated header fallback is forbidden
     is_production = getattr(settings, "ENVIRONMENT", "development") == "production"
-    is_strict = getattr(settings, "AUTH_STRICT_MODE", False) or getattr(settings, "AUTH_STRICT_JWT", False)
+    is_strict = getattr(settings, "AUTH_STRICT_MODE", False) or getattr(
+        settings, "AUTH_STRICT_JWT", False
+    )
     if is_production or is_strict:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -248,7 +253,9 @@ def require_role(*allowed_roles: UserRole):
 def require_permission(permission: str):
     """Dependency that enforces fine-grained permission authorization."""
 
-    def permission_checker(user: UserContext = Depends(get_current_user)) -> UserContext:
+    def permission_checker(
+        user: UserContext = Depends(get_current_user),
+    ) -> UserContext:
         if not user.has_permission(permission):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

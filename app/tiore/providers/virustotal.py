@@ -111,7 +111,9 @@ class VirusTotalAdapter(BaseObservableAdapter):
             total = malicious + suspicious + harmless + undetected
 
             threat_types: list[str] = []
-            suggested_threat = attrs.get("popular_threat_classification", {}).get("suggested_threat_label")
+            suggested_threat = attrs.get("popular_threat_classification", {}).get(
+                "suggested_threat_label"
+            )
             if suggested_threat:
                 threat_types.append(suggested_threat.lower())
 

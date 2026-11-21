@@ -93,7 +93,9 @@ class BaseObservableAdapter(ABC):
         with self._circuit_lock:
             now = datetime.now(UTC)
             if self._circuit_state == CircuitState.OPEN:
-                if now - self._last_state_change > timedelta(seconds=self.recovery_timeout_sec):
+                if now - self._last_state_change > timedelta(
+                    seconds=self.recovery_timeout_sec
+                ):
                     self._circuit_state = CircuitState.HALF_OPEN
                     self._last_state_change = now
             return self._circuit_state
@@ -121,7 +123,9 @@ class BaseObservableAdapter(ABC):
             now = time.time()
             cutoff = now - 60.0
             # Evict timestamps older than 1 minute
-            self._request_timestamps = [t for t in self._request_timestamps if t > cutoff]
+            self._request_timestamps = [
+                t for t in self._request_timestamps if t > cutoff
+            ]
             if len(self._request_timestamps) >= self.requests_per_minute:
                 return True
             self._request_timestamps.append(now)

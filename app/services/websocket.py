@@ -55,14 +55,16 @@ class ConnectionManager:
             event.get("data", {}) if isinstance(event.get("data"), dict) else {}
         )
         event_tenant = (
-            event.get("tenant_id")
-            or event_data.get("tenant_id")
-            or "default"
+            event.get("tenant_id") or event_data.get("tenant_id") or "default"
         )
 
         for connection, info in list(self.connections.items()):
             # Enforce tenant isolation: send only if connection is Admin or matches event tenant
-            if not info["is_admin"] and info["tenant_id"] != event_tenant and info["tenant_id"] != "*":
+            if (
+                not info["is_admin"]
+                and info["tenant_id"] != event_tenant
+                and info["tenant_id"] != "*"
+            ):
                 continue
 
             try:

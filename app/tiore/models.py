@@ -51,9 +51,15 @@ class ExtractedObservable(BaseModel):
     raw_value: str
     normalized_value: str
     masked_value: str
-    fingerprint: str = Field(..., description="Keyed HMAC for PII, SHA-256 for public indicators")
-    source_field: str = Field(..., description="Field in event or log where indicator was discovered")
+    fingerprint: str = Field(
+        ..., description="Keyed HMAC for PII, SHA-256 for public indicators"
+    )
+    source_field: str = Field(
+        ..., description="Field in event or log where indicator was discovered"
+    )
     validation_status: ValidationStatus = ValidationStatus.VALID
-    privacy_classification: PrivacyClassification = PrivacyClassification.PUBLIC_ROUTABLE
+    privacy_classification: PrivacyClassification = (
+        PrivacyClassification.PUBLIC_ROUTABLE
+    )
     is_eligible_for_external_lookup: bool = False
     metadata: dict[str, Any] = Field(default_factory=dict)

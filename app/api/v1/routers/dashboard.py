@@ -100,7 +100,9 @@ async def websocket_endpoint(
             return
     else:
         is_production = getattr(settings, "ENVIRONMENT", "development") == "production"
-        is_strict = getattr(settings, "AUTH_STRICT_MODE", False) or getattr(settings, "AUTH_STRICT_JWT", False)
+        is_strict = getattr(settings, "AUTH_STRICT_MODE", False) or getattr(
+            settings, "AUTH_STRICT_JWT", False
+        )
         if is_production or is_strict:
             await websocket.close(code=1008, reason="Authentication token required")
             return

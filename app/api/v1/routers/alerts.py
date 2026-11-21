@@ -37,11 +37,11 @@ def get_alerts(
 ):
     """Get all alerts with pagination and filtering, scoped strictly to caller's tenant."""
     effective_tenant = (
-        tenant_id
-        if user.role == UserRole.ADMIN and tenant_id
-        else user.tenant_id
+        tenant_id if user.role == UserRole.ADMIN and tenant_id else user.tenant_id
     )
-    return repo.get_alerts(page=page, limit=limit, severity=severity, tenant_id=effective_tenant)
+    return repo.get_alerts(
+        page=page, limit=limit, severity=severity, tenant_id=effective_tenant
+    )
 
 
 @router.patch("/{alert_id}", response_model=DetectionAlert)

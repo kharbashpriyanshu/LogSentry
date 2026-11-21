@@ -60,7 +60,9 @@ INTERNAL_TLDS = {
 }
 
 # Regex patterns for fast extraction
-IPV4_REGEX = re.compile(r"\b(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b")
+IPV4_REGEX = re.compile(
+    r"\b(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b"
+)
 IPV6_REGEX = re.compile(
     r"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b|"
     r"\b(?:[0-9a-fA-F]{1,4}:){1,7}:|"
@@ -68,12 +70,16 @@ IPV6_REGEX = re.compile(
     r"\b(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}\b"
 )
 URL_REGEX = re.compile(r"https?://[^\s<>\"'{}|\\^`\[\]]+")
-DOMAIN_REGEX = re.compile(r"\b(?=.{4,253}\b)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}\b")
+DOMAIN_REGEX = re.compile(
+    r"\b(?=.{4,253}\b)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}\b"
+)
 HASH_SHA256_REGEX = re.compile(r"\b[a-fA-F0-9]{64}\b")
 HASH_SHA1_REGEX = re.compile(r"\b[a-fA-F0-9]{40}\b")
 HASH_MD5_REGEX = re.compile(r"\b[a-fA-F0-9]{32}\b")
 EMAIL_REGEX = re.compile(r"\b[a-zA-Z0-9_.+-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,63}\b")
-PHONE_E164_REGEX = re.compile(r"(?:\+)[1-9]\d{0,2}[-.\s]?(?:\(?\d{1,4}\)?[-.\s]?)?\d{1,4}[-.\s]?\d{1,9}\b")
+PHONE_E164_REGEX = re.compile(
+    r"(?:\+)[1-9]\d{0,2}[-.\s]?(?:\(?\d{1,4}\)?[-.\s]?)?\d{1,4}[-.\s]?\d{1,9}\b"
+)
 
 
 class ObservableExtractor:
@@ -83,10 +89,14 @@ class ObservableExtractor:
     """
 
     def __init__(self, hmac_key: str | None = None) -> None:
-        raw_key = hmac_key or getattr(settings, "SECRET_KEY", "logsentry-tiore-keyed-hmac-salt")
+        raw_key = hmac_key or getattr(
+            settings, "SECRET_KEY", "logsentry-tiore-keyed-hmac-salt"
+        )
         self._hmac_key = raw_key.encode("utf-8")
 
-    def _generate_fingerprint(self, obs_type: ObservableType, normalized_value: str) -> str:
+    def _generate_fingerprint(
+        self, obs_type: ObservableType, normalized_value: str
+    ) -> str:
         """
         Generates deterministic fingerprint.
         Public indicators use standard SHA-256.
@@ -98,7 +108,9 @@ class ObservableExtractor:
                 f"{obs_type.value}:{normalized_value}".encode(),
                 hashlib.sha256,
             ).hexdigest()
-        return hashlib.sha256(f"{obs_type.value}:{normalized_value}".encode()).hexdigest()
+        return hashlib.sha256(
+            f"{obs_type.value}:{normalized_value}".encode()
+        ).hexdigest()
 
     def _mask_value(self, obs_type: ObservableType, val: str) -> str:
         """Masks sensitive values for analyst display."""
@@ -122,14 +134,24 @@ class ObservableExtractor:
             parsed = urlsplit(val)
             if parsed.username or parsed.password:
                 netloc = parsed.netloc.split("@")[-1]
-                return urlunsplit((parsed.scheme, f"***:***@{netloc}", parsed.path, parsed.query, parsed.fragment))
+                return urlunsplit(
+                    (
+                        parsed.scheme,
+                        f"***:***@{netloc}",
+                        parsed.path,
+                        parsed.query,
+                        parsed.fragment,
+                    )
+                )
         return val
 
     # -------------------------------------------------------------------------
     # Individual Type Parsers & Validators
     # -------------------------------------------------------------------------
 
-    def validate_and_normalize_ip(self, raw_ip: str, source_field: str = "generic") -> ExtractedObservable | None:
+    def validate_and_normalize_ip(
+        self, raw_ip: str, source_field: str = "generic"
+    ) -> ExtractedObservable | None:
         clean = raw_ip.strip()
         try:
             ip_obj = ipaddress.ip_address(clean)
@@ -200,7 +222,9 @@ class ObservableExtractor:
                 raw_value=raw_domain,
                 normalized_value="localhost",
                 masked_value="localhost",
-                fingerprint=self._generate_fingerprint(ObservableType.DOMAIN, "localhost"),
+                fingerprint=self._generate_fingerprint(
+                    ObservableType.DOMAIN, "localhost"
+                ),
                 source_field=source_field,
                 validation_status=ValidationStatus.VALID,
                 privacy_classification=PrivacyClassification.INTERNAL_DOMAIN,
@@ -214,10 +238,15 @@ class ObservableExtractor:
         parts = ascii_domain.split(".")
         tld = parts[-1]
         is_internal = tld in INTERNAL_TLDS or any(
-            part in ("localhost", "internal", "lan", "corp", "corpnet") for part in parts
+            part in ("localhost", "internal", "lan", "corp", "corpnet")
+            for part in parts
         )
 
-        privacy = PrivacyClassification.INTERNAL_DOMAIN if is_internal else PrivacyClassification.PUBLIC_ROUTABLE
+        privacy = (
+            PrivacyClassification.INTERNAL_DOMAIN
+            if is_internal
+            else PrivacyClassification.PUBLIC_ROUTABLE
+        )
 
         return ExtractedObservable(
             observable_type=ObservableType.DOMAIN,
@@ -236,7 +265,9 @@ class ObservableExtractor:
             },
         )
 
-    def validate_and_normalize_url(self, raw_url: str, source_field: str = "generic") -> ExtractedObservable | None:
+    def validate_and_normalize_url(
+        self, raw_url: str, source_field: str = "generic"
+    ) -> ExtractedObservable | None:
         clean = raw_url.strip()
         if len(clean) > 2048:
             return None
@@ -287,7 +318,10 @@ class ObservableExtractor:
         # Standardize port removal
         netloc = hostname
         port = parsed.port
-        if port and not ((parsed.scheme == "http" and port == 80) or (parsed.scheme == "https" and port == 443)):
+        if port and not (
+            (parsed.scheme == "http" and port == 80)
+            or (parsed.scheme == "https" and port == 443)
+        ):
             netloc = f"{hostname}:{port}"
 
         normalized_url = urlunsplit(
@@ -318,7 +352,9 @@ class ObservableExtractor:
             },
         )
 
-    def validate_and_normalize_hash(self, raw_hash: str, source_field: str = "generic") -> ExtractedObservable | None:
+    def validate_and_normalize_hash(
+        self, raw_hash: str, source_field: str = "generic"
+    ) -> ExtractedObservable | None:
         clean = raw_hash.strip().lower()
         length = len(clean)
 
@@ -344,7 +380,9 @@ class ObservableExtractor:
             metadata={"algorithm": obs_type.value, "length": length},
         )
 
-    def validate_and_normalize_email(self, raw_email: str, source_field: str = "generic") -> ExtractedObservable | None:
+    def validate_and_normalize_email(
+        self, raw_email: str, source_field: str = "generic"
+    ) -> ExtractedObservable | None:
         clean = raw_email.strip().lower()
         if not clean or len(clean) > 254:
             return None
@@ -372,7 +410,9 @@ class ObservableExtractor:
             },
         )
 
-    def validate_and_normalize_phone(self, raw_phone: str, source_field: str = "generic") -> ExtractedObservable | None:
+    def validate_and_normalize_phone(
+        self, raw_phone: str, source_field: str = "generic"
+    ) -> ExtractedObservable | None:
         clean = raw_phone.strip()
         # Require international prefix '+' to avoid ambiguous guessing of local area codes
         if not clean.startswith("+"):
@@ -402,7 +442,9 @@ class ObservableExtractor:
     # Comprehensive Event & Unstructured Text Extraction
     # -------------------------------------------------------------------------
 
-    def extract_from_text(self, text: str, source_field: str = "raw_log") -> list[ExtractedObservable]:
+    def extract_from_text(
+        self, text: str, source_field: str = "raw_log"
+    ) -> list[ExtractedObservable]:
         """
         Extracts all recognized observables from arbitrary text with deduplication.
         Safely enforces maximum text scan size (64 KB) to prevent regex DoS.
@@ -423,7 +465,9 @@ class ObservableExtractor:
         # 1. URLs (extract URLs first so domain/ip extractor doesn't duplicate hostnames from URLs)
         extracted_url_hosts: set[str] = set()
         for match in URL_REGEX.finditer(bounded_text):
-            obs = self.validate_and_normalize_url(match.group(0), source_field=source_field)
+            obs = self.validate_and_normalize_url(
+                match.group(0), source_field=source_field
+            )
             if obs:
                 add_if_unique(obs)
                 host = obs.metadata.get("hostname")
@@ -432,35 +476,69 @@ class ObservableExtractor:
 
         # 2. Email addresses
         for match in EMAIL_REGEX.finditer(bounded_text):
-            add_if_unique(self.validate_and_normalize_email(match.group(0), source_field=source_field))
+            add_if_unique(
+                self.validate_and_normalize_email(
+                    match.group(0), source_field=source_field
+                )
+            )
 
         # 3. Phone numbers with + prefix
         for match in PHONE_E164_REGEX.finditer(bounded_text):
-            add_if_unique(self.validate_and_normalize_phone(match.group(0), source_field=source_field))
+            add_if_unique(
+                self.validate_and_normalize_phone(
+                    match.group(0), source_field=source_field
+                )
+            )
 
         # 4. IP Addresses (IPv4 & IPv6)
         for match in IPV4_REGEX.finditer(bounded_text):
-            add_if_unique(self.validate_and_normalize_ip(match.group(0), source_field=source_field))
+            add_if_unique(
+                self.validate_and_normalize_ip(
+                    match.group(0), source_field=source_field
+                )
+            )
         for match in IPV6_REGEX.finditer(bounded_text):
-            add_if_unique(self.validate_and_normalize_ip(match.group(0), source_field=source_field))
+            add_if_unique(
+                self.validate_and_normalize_ip(
+                    match.group(0), source_field=source_field
+                )
+            )
 
         # 5. File Hashes
         for match in HASH_SHA256_REGEX.finditer(bounded_text):
-            add_if_unique(self.validate_and_normalize_hash(match.group(0), source_field=source_field))
+            add_if_unique(
+                self.validate_and_normalize_hash(
+                    match.group(0), source_field=source_field
+                )
+            )
         for match in HASH_SHA1_REGEX.finditer(bounded_text):
-            add_if_unique(self.validate_and_normalize_hash(match.group(0), source_field=source_field))
+            add_if_unique(
+                self.validate_and_normalize_hash(
+                    match.group(0), source_field=source_field
+                )
+            )
         for match in HASH_MD5_REGEX.finditer(bounded_text):
-            add_if_unique(self.validate_and_normalize_hash(match.group(0), source_field=source_field))
+            add_if_unique(
+                self.validate_and_normalize_hash(
+                    match.group(0), source_field=source_field
+                )
+            )
 
         # 6. Domains (skip if already extracted as part of a URL)
         for match in DOMAIN_REGEX.finditer(bounded_text):
             dom_candidate = match.group(0)
             if dom_candidate.lower() not in extracted_url_hosts:
-                add_if_unique(self.validate_and_normalize_domain(dom_candidate, source_field=source_field))
+                add_if_unique(
+                    self.validate_and_normalize_domain(
+                        dom_candidate, source_field=source_field
+                    )
+                )
 
         return results
 
-    def extract_from_event(self, event_data: dict[str, Any]) -> list[ExtractedObservable]:
+    def extract_from_event(
+        self, event_data: dict[str, Any]
+    ) -> list[ExtractedObservable]:
         """
         Deep extraction across structured event fields (source_ip, destination_ip,
         endpoint, path, command_line, raw_log, and parsed_data).
@@ -476,12 +554,16 @@ class ObservableExtractor:
 
         # Direct structured field extraction
         if event_data.get("source_ip"):
-            obs = self.validate_and_normalize_ip(str(event_data["source_ip"]), source_field="source_ip")
+            obs = self.validate_and_normalize_ip(
+                str(event_data["source_ip"]), source_field="source_ip"
+            )
             if obs:
                 add_unique([obs])
 
         if event_data.get("destination_ip"):
-            obs = self.validate_and_normalize_ip(str(event_data["destination_ip"]), source_field="destination_ip")
+            obs = self.validate_and_normalize_ip(
+                str(event_data["destination_ip"]), source_field="destination_ip"
+            )
             if obs:
                 add_unique([obs])
 
@@ -497,6 +579,8 @@ class ObservableExtractor:
         if isinstance(parsed_data, dict):
             for k, v in parsed_data.items():
                 if isinstance(v, str) and v.strip():
-                    add_unique(self.extract_from_text(v, source_field=f"parsed_data.{k}"))
+                    add_unique(
+                        self.extract_from_text(v, source_field=f"parsed_data.{k}")
+                    )
 
         return results
