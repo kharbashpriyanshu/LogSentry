@@ -1,37 +1,38 @@
-import time
-import os
-import sys
 import json
+import os
+import time
 import tracemalloc
 import urllib.parse
 from collections import defaultdict
-from typing import Dict, List, Any
 
-from app.parsers.factory import ParserFactory
 from app.detection.engine import DetectionEngine
+from app.parsers.factory import ParserFactory
 from generate_large_benchmark import generate_large_labeled_dataset
+
 
 def run_large_scale_benchmark(
     log_path: str = "sample_data/large_benchmark_50k.log",
-    labels_path: str = "sample_data/large_benchmark_50k_labels.json"
+    labels_path: str = "sample_data/large_benchmark_50k_labels.json",
 ):
     print("=" * 80)
     print("LOGSENTRY LARGE-SCALE STRESS & ACCURACY BENCHMARK (50,000 RECORDS)")
     print("=" * 80)
 
     if not os.path.exists(log_path) or not os.path.exists(labels_path):
-        generate_large_labeled_dataset(log_path, labels_path, total_records=50000, attack_ratio=0.10)
+        generate_large_labeled_dataset(
+            log_path, labels_path, total_records=50000, attack_ratio=0.10
+        )
 
     # 1. Load data
     file_size_mb = os.path.getsize(log_path) / (1024 * 1024)
-    print(f"\n[Dataset Details]")
+    print("\n[Dataset Details]")
     print(f"  - Dataset Path:        {log_path}")
     print(f"  - File Size:           {file_size_mb:.2f} MB")
-    
-    with open(labels_path, "r", encoding="utf-8") as f:
+
+    with open(labels_path, encoding="utf-8") as f:
         ground_truth = json.load(f)
 
-    with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+    with open(log_path, encoding="utf-8", errors="ignore") as f:
         raw_lines = [l.strip() for l in f if l.strip()]
 
     total_records = len(raw_lines)
@@ -39,8 +40,12 @@ def run_large_scale_benchmark(
     attack_total = sum(1 for g in ground_truth if g["label"] == "ATTACK")
 
     print(f"  - Total Records:       {total_records:,}")
-    print(f"  - Benign Requests:     {benign_total:,} ({(benign_total/total_records)*100:.1f}%)")
-    print(f"  - Malicious Requests:  {attack_total:,} ({(attack_total/total_records)*100:.1f}%)")
+    print(
+        f"  - Benign Requests:     {benign_total:,} ({(benign_total/total_records)*100:.1f}%)"
+    )
+    print(
+        f"  - Malicious Requests:  {attack_total:,} ({(attack_total/total_records)*100:.1f}%)"
+    )
 
     parser = ParserFactory.get_parser("apache")
     engine = DetectionEngine()
@@ -49,7 +54,7 @@ def run_large_scale_benchmark(
     tracemalloc.start()
 
     # Phase 1: High-Speed Parsing
-    print(f"\n[Phase 1] Executing High-Throughput Ingestion & Parsing...")
+    print("\n[Phase 1] Executing High-Throughput Ingestion & Parsing...")
     t0_parse = time.perf_counter()
     parsed_events = []
     parse_errors = 0
@@ -65,7 +70,7 @@ def run_large_scale_benchmark(
     parse_latency_us = (t_parse / total_records) * 1_000_000
 
     # Phase 2: Threat Detection Engine & Real-Time Classification
-    print(f"[Phase 2] Running Detection Engine & Attack Classification...")
+    print("[Phase 2] Running Detection Engine & Attack Classification...")
     tp = 0
     fp = 0
     tn = 0
@@ -99,7 +104,7 @@ def run_large_scale_benchmark(
             else:
                 fn += 1
                 cat_stats[category]["missed"] += 1
-        else: # BENIGN
+        else:  # BENIGN
             if has_alert:
                 fp += 1
                 cat_stats[category]["missed"] += 1
@@ -122,48 +127,66 @@ def run_large_scale_benchmark(
     accuracy = (tp + tn) / total_records if total_records > 0 else 0
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    f1 = (
+        2 * (precision * recall) / (precision + recall)
+        if (precision + recall) > 0
+        else 0
+    )
     specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
 
     print("\n" + "=" * 80)
     print("BENCHMARK RESULTS & PERFORMANCE REPORT")
     print("=" * 80)
 
-    print(f"\n1. TIMING & THROUGHPUT PERFORMANCE:")
+    print("\n1. TIMING & THROUGHPUT PERFORMANCE:")
     print(f"  ├─ Parsing Time:              {t_parse:.4f} seconds")
     print(f"  │  ├─ Parsing Throughput:     {parse_eps:,.1f} logs/sec")
-    print(f"  │  └─ Avg Parse Latency:      {parse_latency_us:.2f} µs/event ({parse_latency_us/1000:.4f} ms)")
+    print(
+        f"  │  └─ Avg Parse Latency:      {parse_latency_us:.2f} µs/event ({parse_latency_us/1000:.4f} ms)"
+    )
     print(f"  ├─ Detection Time:            {t_detect:.4f} seconds")
     print(f"  │  ├─ Detection Throughput:   {detect_eps:,.1f} logs/sec")
-    print(f"  │  └─ Avg Detection Latency:  {detect_latency_us:.2f} µs/event ({detect_latency_us/1000:.4f} ms)")
-    print(f"  ├─ TOTAL PIPELINE TIME:       {total_time:.4f} seconds ({total_time*1000:.1f} ms)")
+    print(
+        f"  │  └─ Avg Detection Latency:  {detect_latency_us:.2f} µs/event ({detect_latency_us/1000:.4f} ms)"
+    )
+    print(
+        f"  ├─ TOTAL PIPELINE TIME:       {total_time:.4f} seconds ({total_time*1000:.1f} ms)"
+    )
     print(f"  ├─ OVERALL THROUGHPUT:        {total_eps:,.1f} logs/sec")
-    print(f"  ├─ End-to-End Latency:        {total_latency_us:.2f} µs/event ({total_latency_us/1000:.4f} ms)")
+    print(
+        f"  ├─ End-to-End Latency:        {total_latency_us:.2f} µs/event ({total_latency_us/1000:.4f} ms)"
+    )
     print(f"  └─ Peak Memory Usage:         {peak_mem / (1024 * 1024):.2f} MB")
 
-    print(f"\n2. CONFUSION MATRIX:")
-    print(f"       ┌──────────────────────────────┬──────────────────────────────┐")
+    print("\n2. CONFUSION MATRIX:")
+    print("       ┌──────────────────────────────┬──────────────────────────────┐")
     print(f"       │  True Positives (TP): {tp:6,d} │ False Positives (FP): {fp:6,d} │")
-    print(f"       ├──────────────────────────────┼──────────────────────────────┤")
+    print("       ├──────────────────────────────┼──────────────────────────────┤")
     print(f"       │ False Negatives (FN): {fn:6,d} │  True Negatives (TN): {tn:6,d} │")
-    print(f"       └──────────────────────────────┴──────────────────────────────┘")
+    print("       └──────────────────────────────┴──────────────────────────────┘")
 
-    print(f"\n3. SCIENTIFIC ACCURACY METRICS:")
+    print("\n3. SCIENTIFIC ACCURACY METRICS:")
     print(f"  ├─ Accuracy:                  {accuracy * 100:.2f}%")
-    print(f"  ├─ Precision:                 {precision * 100:.2f}% (0 False Positives on normal traffic)")
-    print(f"  ├─ Specificity:               {specificity * 100:.2f}% (Rate of correctly classified benign traffic)")
+    print(
+        f"  ├─ Precision:                 {precision * 100:.2f}% (0 False Positives on normal traffic)"
+    )
+    print(
+        f"  ├─ Specificity:               {specificity * 100:.2f}% (Rate of correctly classified benign traffic)"
+    )
     print(f"  ├─ Recall (Detection Rate):   {recall * 100:.2f}%")
     print(f"  ├─ F1-Score:                  {f1 * 100:.2f}%")
     print(f"  └─ Total Alerts Flagged:      {total_alerts_generated:,}")
 
-    print(f"\n4. CATEGORY BREAKDOWN:")
-    print(f"  {'Category':<22} {'Total':<10} {'Detected':<12} {'Detection Rate':<16} {'Rule Behavior'}")
+    print("\n4. CATEGORY BREAKDOWN:")
+    print(
+        f"  {'Category':<22} {'Total':<10} {'Detected':<12} {'Detection Rate':<16} {'Rule Behavior'}"
+    )
     print(f"  {'-'*22} {'-'*10} {'-'*12} {'-'*16} {'-'*20}")
     for cat, stats in cat_stats.items():
         rate = (stats["detected"] / stats["total"]) * 100 if stats["total"] > 0 else 0
         if cat == "BENIGN":
             behavior = "Clean (0 False Alarms)"
-            rate_str = f"100.0% Clean"
+            rate_str = "100.0% Clean"
         elif cat == "dir_enum":
             behavior = "Stateful (Consolidated sweeps)"
             rate_str = f"{rate:.1f}% ({stats['detected']} alerts)"
@@ -173,11 +196,14 @@ def run_large_scale_benchmark(
         else:
             behavior = "Stateless Regex"
             rate_str = f"{rate:.1f}%"
-        print(f"  {cat:<22} {stats['total']:<10,d} {stats['detected']:<12,d} {rate_str:<16} {behavior}")
+        print(
+            f"  {cat:<22} {stats['total']:<10,d} {stats['detected']:<12,d} {rate_str:<16} {behavior}"
+        )
 
     print("\n" + "=" * 80)
     print("BENCHMARK COMPLETED SUCCESSFULLY")
     print("=" * 80)
+
 
 if __name__ == "__main__":
     run_large_scale_benchmark()

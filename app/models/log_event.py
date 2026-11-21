@@ -1,8 +1,11 @@
-from sqlalchemy import Column, String, DateTime, JSON, Text
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
 import uuid
+from datetime import UTC, datetime
+
+from sqlalchemy import JSON, Column, DateTime, String, Text
+from sqlalchemy.orm import relationship
+
 from app.database.base import Base
+
 
 class LogEventModel(Base):
     __tablename__ = "log_events"
@@ -18,6 +21,6 @@ class LogEventModel(Base):
     http_method = Column(String, nullable=True)
     path = Column(String, nullable=True)
     status_code = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     alerts = relationship("AlertModel", back_populates="log_event")

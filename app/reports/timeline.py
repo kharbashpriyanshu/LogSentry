@@ -12,13 +12,12 @@ Design decisions:
     when all pipeline stages run within a single second.
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional
+from datetime import UTC, datetime, timedelta
 
+from app.ai.models import AIAnalysisResponse
+from app.enrichment.models import ThreatEnrichment
 from app.reports.models import TimelineEntry
 from app.schemas.detection_alert import DetectionAlert
-from app.enrichment.models import ThreatEnrichment
-from app.ai.models import AIAnalysisResponse
 
 
 class TimelineEngine:
@@ -39,10 +38,10 @@ class TimelineEngine:
     def build(
         self,
         alert: DetectionAlert,
-        enrichments: List[ThreatEnrichment],
-        ai: Optional[AIAnalysisResponse],
-        report_generated_at: Optional[datetime] = None,
-    ) -> List[TimelineEntry]:
+        enrichments: list[ThreatEnrichment],
+        ai: AIAnalysisResponse | None,
+        report_generated_at: datetime | None = None,
+    ) -> list[TimelineEntry]:
         """
         Generate the full incident timeline.
 
@@ -56,9 +55,9 @@ class TimelineEngine:
             Ordered list of TimelineEntry objects.
         """
         base_ts = alert.timestamp
-        report_ts = report_generated_at or datetime.now(timezone.utc)
+        report_ts = report_generated_at or datetime.now(UTC)
 
-        entries: List[TimelineEntry] = [
+        entries: list[TimelineEntry] = [
             self._log_received(base_ts, alert),
             self._log_parsed(base_ts, alert),
             self._detection_triggered(base_ts, alert),
@@ -82,7 +81,10 @@ class TimelineEngine:
                 f"Reference: {alert.raw_log_reference!r}."
             ),
             timestamp=base + timedelta(microseconds=self._STAGE_OFFSETS_US[0]),
-            metadata={"source_ip": alert.source_ip, "destination_ip": alert.destination_ip},
+            metadata={
+                "source_ip": alert.source_ip,
+                "destination_ip": alert.destination_ip,
+            },
         )
 
     def _log_parsed(self, base: datetime, alert: DetectionAlert) -> TimelineEntry:
@@ -97,7 +99,9 @@ class TimelineEngine:
             metadata={"attack_type": alert.attack_type},
         )
 
-    def _detection_triggered(self, base: datetime, alert: DetectionAlert) -> TimelineEntry:
+    def _detection_triggered(
+        self, base: datetime, alert: DetectionAlert
+    ) -> TimelineEntry:
         return TimelineEntry(
             sequence=3,
             event="Detection Triggered",
@@ -119,7 +123,7 @@ class TimelineEngine:
         )
 
     def _threat_intel_enriched(
-        self, base: datetime, enrichments: List[ThreatEnrichment]
+        self, base: datetime, enrichments: list[ThreatEnrichment]
     ) -> TimelineEntry:
         provider_names = [e.provider for e in enrichments] if enrichments else ["none"]
         reputations = {e.provider: e.reputation for e in enrichments if e.reputation}
@@ -136,7 +140,7 @@ class TimelineEngine:
         )
 
     def _ai_analysis_completed(
-        self, base: datetime, ai: Optional[AIAnalysisResponse]
+        self, base: datetime, ai: AIAnalysisResponse | None
     ) -> TimelineEntry:
         if not ai:
             return TimelineEntry(

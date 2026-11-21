@@ -1,23 +1,27 @@
-import httpx
 import logging
-from typing import Optional
-from app.enrichment.providers.base_provider import BaseThreatProvider
-from app.schemas.detection_alert import DetectionAlert
-from app.enrichment.models import ThreatEnrichment
+
+import httpx
+
 from app.config.settings import settings
 from app.enrichment.exceptions import (
-    ProviderUnavailableError, ProviderTimeoutError, 
-    ProviderRateLimitError, MalformedResponseError
+    MalformedResponseError,
+    ProviderRateLimitError,
+    ProviderTimeoutError,
+    ProviderUnavailableError,
 )
+from app.enrichment.models import ThreatEnrichment
+from app.enrichment.providers.base_provider import BaseThreatProvider
+from app.schemas.detection_alert import DetectionAlert
 
 logger = logging.getLogger(__name__)
+
 
 class AbuseIPDBProvider(BaseThreatProvider):
     def __init__(self):
         self.api_key = settings.ABUSEIPDB_API_KEY
         self.base_url = "https://api.abuseipdb.com/api/v2"
         self.timeout = settings.ENRICHMENT_REQUEST_TIMEOUT
-        
+
     @property
     def provider_name(self) -> str:
         return "abuseipdb"
@@ -25,56 +29,68 @@ class AbuseIPDBProvider(BaseThreatProvider):
     def health(self) -> bool:
         return bool(self.api_key) and settings.ENABLE_ABUSEIPDB
 
-    def enrich(self, alert: DetectionAlert) -> Optional[ThreatEnrichment]:
+    def enrich(self, alert: DetectionAlert) -> ThreatEnrichment | None:
         if not alert.source_ip:
             return None
         return self.enrich_ioc(alert.source_ip)
-        
+
     def _is_valid_public_ip(self, ip_str: str) -> bool:
         import ipaddress
+
         try:
             ip = ipaddress.ip_address(ip_str)
-            return not ip.is_private and not ip.is_loopback and not ip.is_multicast and not ip.is_reserved
+            return (
+                not ip.is_private
+                and not ip.is_loopback
+                and not ip.is_multicast
+                and not ip.is_reserved
+            )
         except ValueError:
             return False
 
-    def enrich_ioc(self, observable: str) -> Optional[ThreatEnrichment]:
+    def enrich_ioc(self, observable: str) -> ThreatEnrichment | None:
         if not self.health():
             return None
-            
+
         if not self._is_valid_public_ip(observable):
             return None
-            
+
         try:
             with httpx.Client(timeout=self.timeout) as client:
                 response = client.get(
                     f"{self.base_url}/check",
                     headers={"Key": self.api_key, "Accept": "application/json"},
-                    params={"ipAddress": observable, "maxAgeInDays": 90}
+                    params={"ipAddress": observable, "maxAgeInDays": 90},
                 )
-                
+
             if response.status_code == 429:
                 raise ProviderRateLimitError("AbuseIPDB rate limit exceeded")
             elif response.status_code == 401 or response.status_code == 403:
                 raise ProviderUnavailableError("AbuseIPDB authentication failed")
             elif response.status_code != 200:
-                logger.error(f"AbuseIPDB returned {response.status_code}: {response.text}")
-                raise ProviderUnavailableError(f"AbuseIPDB returned {response.status_code}")
-                
+                logger.error(
+                    f"AbuseIPDB returned {response.status_code}: {response.text}"
+                )
+                raise ProviderUnavailableError(
+                    f"AbuseIPDB returned {response.status_code}"
+                )
+
             data = response.json().get("data", {})
             score = data.get("abuseConfidenceScore", 0)
-            
-            reputation = "malicious" if score > 50 else "suspicious" if score > 0 else "clean"
-            
+
+            reputation = (
+                "malicious" if score > 50 else "suspicious" if score > 0 else "clean"
+            )
+
             return ThreatEnrichment(
                 provider=self.provider_name,
                 reputation=reputation,
                 confidence=float(score) / 100.0,
                 country=data.get("countryCode"),
                 isp=data.get("isp"),
-                ioc_tags=[data.get("domain")] if data.get("domain") else []
+                ioc_tags=[data.get("domain")] if data.get("domain") else [],
             )
-            
+
         except httpx.TimeoutException:
             raise ProviderTimeoutError("AbuseIPDB request timed out")
         except httpx.RequestError as e:

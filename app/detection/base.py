@@ -1,28 +1,33 @@
-from abc import ABC, abstractmethod
-from typing import Optional
 import re
 import urllib.parse
-from app.schemas.log_event import LogEvent
-from app.schemas.detection_alert import DetectionAlert
-from app.schemas.severity import Severity
+from abc import ABC, abstractmethod
+
 from app.config.settings import settings
+from app.schemas.detection_alert import DetectionAlert
+from app.schemas.log_event import LogEvent
+from app.schemas.severity import Severity
+
 
 class BaseRule(ABC):
     @property
     @abstractmethod
-    def rule_name(self) -> str: pass
-    
+    def rule_name(self) -> str:
+        pass
+
     @property
     @abstractmethod
-    def rule_version(self) -> str: pass
-    
+    def rule_version(self) -> str:
+        pass
+
     @property
     @abstractmethod
-    def description(self) -> str: pass
-    
+    def description(self) -> str:
+        pass
+
     @property
     @abstractmethod
-    def severity(self) -> Severity: pass
+    def severity(self) -> Severity:
+        pass
 
     @property
     def title(self) -> str:
@@ -52,42 +57,50 @@ class BaseRule(ABC):
     def match(self, event: LogEvent) -> bool:
         """Returns True if the event matches the rule."""
         pass
-        
+
     @abstractmethod
     def generate_alert(self, event: LogEvent) -> DetectionAlert:
         """Generates an alert from the matched event."""
         pass
 
+
 class RegexDetectionRule(BaseRule):
     """Base class for detection rules that rely on Regular Expressions against the endpoint."""
-    
-    @property
-    @abstractmethod
-    def pattern(self) -> re.Pattern: pass
-    
-    @property
-    @abstractmethod
-    def attack_type(self) -> str: pass
-    
-    @property
-    @abstractmethod
-    def mitre_technique(self) -> str: pass
-    
-    @property
-    @abstractmethod
-    def mitre_tactic(self) -> str: pass
 
     @property
     @abstractmethod
-    def recommendation(self) -> str: pass
-    
-    @property
-    @abstractmethod
-    def risk_score(self) -> float: pass
+    def pattern(self) -> re.Pattern:
+        pass
 
     @property
     @abstractmethod
-    def title(self) -> str: pass
+    def attack_type(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def mitre_technique(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def mitre_tactic(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def recommendation(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def risk_score(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def title(self) -> str:
+        pass
 
     def match(self, event: LogEvent) -> bool:
         if not event.endpoint:
@@ -101,7 +114,7 @@ class RegexDetectionRule(BaseRule):
             except Exception:
                 pass
         return False
-        
+
     def generate_alert(self, event: LogEvent) -> DetectionAlert:
         return DetectionAlert(
             rule_name=self.rule_name,
@@ -118,5 +131,5 @@ class RegexDetectionRule(BaseRule):
             mitre_tactic=self.mitre_tactic,
             recommendation=self.recommendation,
             evidence={"endpoint": event.endpoint, "method": event.method},
-            raw_log_reference=event.raw_log
+            raw_log_reference=event.raw_log,
         )

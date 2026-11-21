@@ -15,31 +15,33 @@ Router design:
 """
 
 import io
-import zipfile
 import logging
-from typing import List, Optional
+import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 
-from app.reports.service import ReportingService
-from app.reports.pdf_generator import PDFGenerator
-from app.reports.csv_generator import CSVGenerator
-from app.reports.json_generator import JSONGenerator
-from app.reports.models import (
-    ExecutiveReport, TechnicalReport, IncidentReport, ReportType,
-)
-from app.reports.exceptions import (
-    InvalidReportTypeError,
-    MissingReportDataError,
-    PDFGenerationError,
-    CSVExportError,
-    JSONSerializationError,
-)
-from app.schemas.detection_alert import DetectionAlert
-from app.enrichment.models import ThreatEnrichment
 from app.ai.models import AIAnalysisResponse
 from app.api.dependencies import get_reporting_service
+from app.enrichment.models import ThreatEnrichment
+from app.reports.csv_generator import CSVGenerator
+from app.reports.exceptions import (
+    CSVExportError,
+    InvalidReportTypeError,
+    JSONSerializationError,
+    MissingReportDataError,
+    PDFGenerationError,
+)
+from app.reports.json_generator import JSONGenerator
+from app.reports.models import (
+    ExecutiveReport,
+    IncidentReport,
+    ReportType,
+    TechnicalReport,
+)
+from app.reports.pdf_generator import PDFGenerator
+from app.reports.service import ReportingService
+from app.schemas.detection_alert import DetectionAlert
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -49,26 +51,27 @@ router = APIRouter()
 # Request / Response Schemas
 # ---------------------------------------------------------------------------
 
-from typing import List, Optional
 from pydantic import BaseModel
+
 
 class GenerateReportRequest(BaseModel):
     report_type: str
     alert: DetectionAlert
-    enrichments: List[ThreatEnrichment] = []
-    ai_analysis: Optional[AIAnalysisResponse] = None
+    enrichments: list[ThreatEnrichment] = []
+    ai_analysis: AIAnalysisResponse | None = None
 
 
 # ---------------------------------------------------------------------------
 # In-Process Report Cache (last generated report per process)
 # ---------------------------------------------------------------------------
 
-_last_report: Optional[ExecutiveReport | TechnicalReport | IncidentReport] = None  # type: ignore[assignment]
+_last_report: ExecutiveReport | TechnicalReport | IncidentReport | None = None  # type: ignore[assignment]
 
 
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/generate", summary="Generate a structured incident report")
 def generate_report(
@@ -204,6 +207,6 @@ def list_report_types():
         "descriptions": {
             "executive": "High-level summary for management and compliance.",
             "technical": "Full forensic detail for SOC analysts.",
-            "incident":  "Comprehensive report combining executive, technical, timeline, and IOCs.",
+            "incident": "Comprehensive report combining executive, technical, timeline, and IOCs.",
         },
     }

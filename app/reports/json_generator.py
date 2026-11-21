@@ -13,11 +13,10 @@ Design decisions:
 
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Union
+from datetime import UTC, datetime
 
-from app.reports.models import ExecutiveReport, TechnicalReport, IncidentReport
 from app.reports.exceptions import JSONSerializationError
+from app.reports.models import ExecutiveReport, IncidentReport, TechnicalReport
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class JSONGenerator:
 
     def generate(
         self,
-        report: Union[ExecutiveReport, TechnicalReport, IncidentReport],
+        report: ExecutiveReport | TechnicalReport | IncidentReport,
     ) -> bytes:
         """
         Serialise the report to indented JSON bytes.
@@ -47,10 +46,13 @@ class JSONGenerator:
         Raises:
             JSONSerializationError: on any serialisation failure.
         """
-        start = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
         logger.info(
             "JSON export started",
-            extra={"report_type": report.report_type.value, "report_id": report.report_id},
+            extra={
+                "report_type": report.report_type.value,
+                "report_id": report.report_id,
+            },
         )
         try:
             # model_dump(mode="json") converts datetime → ISO string, enums → values
@@ -58,7 +60,7 @@ class JSONGenerator:
             output = json.dumps(payload, indent=2, ensure_ascii=False)
             encoded = output.encode("utf-8")
 
-            elapsed = (datetime.now(timezone.utc) - start).total_seconds()
+            elapsed = (datetime.now(UTC) - start).total_seconds()
             logger.info(
                 "JSON export completed",
                 extra={

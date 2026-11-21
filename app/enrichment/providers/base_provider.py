@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Optional
-from app.schemas.detection_alert import DetectionAlert
+
 from app.enrichment.models import ThreatEnrichment
+from app.schemas.detection_alert import DetectionAlert
+
 
 class BaseThreatProvider(ABC):
     @property
@@ -16,14 +17,14 @@ class BaseThreatProvider(ABC):
         pass
 
     @abstractmethod
-    def enrich(self, alert: DetectionAlert) -> Optional[ThreatEnrichment]:
+    def enrich(self, alert: DetectionAlert) -> ThreatEnrichment | None:
         """
         Enriches the alert with threat intelligence.
         Returns a ThreatEnrichment object, or None if no enrichment was possible or applicable.
         """
         pass
 
-    def enrich_ioc(self, observable: str) -> Optional[ThreatEnrichment]:
+    def enrich_ioc(self, observable: str) -> ThreatEnrichment | None:
         """
         Enriches a specific IOC (like IP or domain).
         Default implementation returns None.

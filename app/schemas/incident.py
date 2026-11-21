@@ -1,37 +1,40 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
 from datetime import datetime
-import uuid
+
+from pydantic import BaseModel, Field
+
 
 class IncidentBase(BaseModel):
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     severity: str
-    priority: Optional[str] = None
-    category: Optional[str] = None
-    tags: Optional[str] = None
+    priority: str | None = None
+    category: str | None = None
+    tags: str | None = None
+
 
 class IncidentCreate(IncidentBase):
-    alert_ids: List[str] = Field(default_factory=list)
+    alert_ids: list[str] = Field(default_factory=list)
+
 
 class IncidentUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    severity: Optional[str] = None
-    priority: Optional[str] = None
-    category: Optional[str] = None
-    tags: Optional[str] = None
-    status: Optional[str] = None
-    assignee: Optional[str] = None
-    add_alert_ids: Optional[List[str]] = None
+    title: str | None = None
+    description: str | None = None
+    severity: str | None = None
+    priority: str | None = None
+    category: str | None = None
+    tags: str | None = None
+    status: str | None = None
+    assignee: str | None = None
+    add_alert_ids: list[str] | None = None
+
 
 class IncidentResponse(IncidentBase):
     id: str
     status: str
-    assignee: Optional[str] = None
+    assignee: str | None = None
     created_at: datetime
     updated_at: datetime
-    resolved_at: Optional[datetime] = None
-    alert_ids: List[str] = Field(default_factory=list)
+    resolved_at: datetime | None = None
+    alert_ids: list[str] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}

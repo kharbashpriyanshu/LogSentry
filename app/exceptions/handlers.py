@@ -18,13 +18,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.parsers.exceptions import ParserError, UnsupportedParserError
 from app.ai.exceptions import (
     AIError,
     AIProviderUnavailableError,
     AIRateLimitError,
     AITimeoutError,
 )
+from app.parsers.exceptions import ParserError, UnsupportedParserError
 from app.reports.exceptions import (
     CSVExportError,
     InvalidReportTypeError,
@@ -95,14 +95,18 @@ def add_exception_handlers(app: FastAPI) -> None:  # noqa: C901
     # ------------------------------------------------------------------
 
     @app.exception_handler(InvalidReportTypeError)
-    async def invalid_report_type_handler(request: Request, exc: InvalidReportTypeError):
+    async def invalid_report_type_handler(
+        request: Request, exc: InvalidReportTypeError
+    ):
         return JSONResponse(
             status_code=400,
             content=_error("Invalid Report Type", str(exc), _cid(request)),
         )
 
     @app.exception_handler(MissingReportDataError)
-    async def missing_report_data_handler(request: Request, exc: MissingReportDataError):
+    async def missing_report_data_handler(
+        request: Request, exc: MissingReportDataError
+    ):
         return JSONResponse(
             status_code=422,
             content=_error("Missing Report Data", str(exc), _cid(request)),
@@ -111,7 +115,9 @@ def add_exception_handlers(app: FastAPI) -> None:  # noqa: C901
     @app.exception_handler(PDFGenerationError)
     async def pdf_generation_handler(request: Request, exc: PDFGenerationError):
         cid = _cid(request)
-        logger.error("PDF generation failed", extra={"correlation_id": cid, "reason": exc.reason})
+        logger.error(
+            "PDF generation failed", extra={"correlation_id": cid, "reason": exc.reason}
+        )
         return JSONResponse(
             status_code=500,
             content=_error("PDF Generation Failed", str(exc), cid),
@@ -120,7 +126,9 @@ def add_exception_handlers(app: FastAPI) -> None:  # noqa: C901
     @app.exception_handler(CSVExportError)
     async def csv_export_handler(request: Request, exc: CSVExportError):
         cid = _cid(request)
-        logger.error("CSV export failed", extra={"correlation_id": cid, "reason": exc.reason})
+        logger.error(
+            "CSV export failed", extra={"correlation_id": cid, "reason": exc.reason}
+        )
         return JSONResponse(
             status_code=500,
             content=_error("CSV Export Failed", str(exc), cid),
@@ -129,7 +137,10 @@ def add_exception_handlers(app: FastAPI) -> None:  # noqa: C901
     @app.exception_handler(JSONSerializationError)
     async def json_serialization_handler(request: Request, exc: JSONSerializationError):
         cid = _cid(request)
-        logger.error("JSON serialization failed", extra={"correlation_id": cid, "reason": exc.reason})
+        logger.error(
+            "JSON serialization failed",
+            extra={"correlation_id": cid, "reason": exc.reason},
+        )
         return JSONResponse(
             status_code=500,
             content=_error("JSON Serialization Failed", str(exc), cid),

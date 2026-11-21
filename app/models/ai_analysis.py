@@ -1,7 +1,10 @@
-from sqlalchemy import Column, String, Float, DateTime, JSON
-from datetime import datetime, timezone
 import uuid
+from datetime import UTC, datetime
+
+from sqlalchemy import JSON, Column, DateTime, Float, String
+
 from app.database.base import Base
+
 
 class AIAnalysisModel(Base):
     __tablename__ = "ai_analyses"
@@ -15,4 +18,4 @@ class AIAnalysisModel(Base):
     recommendations = Column(String, nullable=True)
     confidence_score = Column(Float, nullable=True)
     raw_response = Column(JSON, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))

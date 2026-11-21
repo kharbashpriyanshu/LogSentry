@@ -17,9 +17,9 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from logging.handlers import RotatingFileHandler
-from typing import Any, Dict
+from typing import Any
 
 from app.config.settings import settings
 
@@ -57,10 +57,8 @@ class StructuredFormatter(logging.Formatter):
     """
 
     def format(self, record: logging.LogRecord) -> str:
-        log_entry: Dict[str, Any] = {
-            "timestamp": datetime.fromtimestamp(
-                record.created, tz=timezone.utc
-            ).isoformat(),
+        log_entry: dict[str, Any] = {
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -77,11 +75,29 @@ class StructuredFormatter(logging.Formatter):
         # Attach any extra= fields (scrubbed)
         for key, val in record.__dict__.items():
             if key not in {
-                "name", "msg", "args", "levelname", "levelno", "pathname",
-                "filename", "module", "exc_info", "exc_text", "stack_info",
-                "lineno", "funcName", "created", "msecs", "relativeCreated",
-                "thread", "threadName", "processName", "process", "message",
-                "taskName", "correlation_id",
+                "name",
+                "msg",
+                "args",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "message",
+                "taskName",
+                "correlation_id",
             } and not key.startswith("_"):
                 # Scrub if the key itself is sensitive, otherwise scrub nested dicts
                 if key.lower() in _SENSITIVE_KEYS:
@@ -143,4 +159,6 @@ def setup_logging() -> None:
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    logging.info("Structured JSON logging configured", extra={"log_file": settings.LOG_FILE_PATH})
+    logging.info(
+        "Structured JSON logging configured", extra={"log_file": settings.LOG_FILE_PATH}
+    )

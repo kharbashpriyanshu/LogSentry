@@ -14,9 +14,9 @@ The backend must be running at the specified API URL before executing.
 """
 
 import argparse
+import os
 import sys
 import time
-import os
 
 try:
     import requests
@@ -30,8 +30,12 @@ def submit_log(api_url: str, filepath: str, parser_name: str) -> bool:
     if not os.path.exists(filepath):
         print(f"  [SKIP] File not found: {filepath}")
         return False
-    
-    print(f"  [SUBMIT] {os.path.basename(filepath)} -> parser={parser_name} ...", end="", flush=True)
+
+    print(
+        f"  [SUBMIT] {os.path.basename(filepath)} -> parser={parser_name} ...",
+        end="",
+        flush=True,
+    )
     try:
         with open(filepath, "rb") as f:
             response = requests.post(
@@ -43,7 +47,11 @@ def submit_log(api_url: str, filepath: str, parser_name: str) -> bool:
         if response.status_code == 200:
             summary = response.json().get("summary", {})
             n_alerts = response.json().get("alerts", [])
-            alert_count = len(n_alerts) if isinstance(n_alerts, list) else summary.get("alerts_created", "?")
+            alert_count = (
+                len(n_alerts)
+                if isinstance(n_alerts, list)
+                else summary.get("alerts_created", "?")
+            )
             print(f" [OK] {alert_count} alerts created")
             return True
         else:
@@ -63,10 +71,12 @@ def check_backend(api_url: str) -> bool:
         r = requests.get(f"{api_url}/health", timeout=5)
         if r.status_code == 200:
             data = r.json()
-            print(f"  [HEALTH] Backend: {data.get('status', 'ok')} | "
-                  f"version={data.get('version', '?')} | "
-                  f"parsers={data.get('parsers_available', '?')} | "
-                  f"rules={data.get('detection_rules_available', '?')}")
+            print(
+                f"  [HEALTH] Backend: {data.get('status', 'ok')} | "
+                f"version={data.get('version', '?')} | "
+                f"parsers={data.get('parsers_available', '?')} | "
+                f"rules={data.get('detection_rules_available', '?')}"
+            )
             return True
     except requests.ConnectionError:
         pass
@@ -79,18 +89,18 @@ def main():
     parser.add_argument(
         "--api-url",
         default="http://127.0.0.1:8002/api/v1",
-        help="Backend API URL (default: http://127.0.0.1:8002/api/v1)"
+        help="Backend API URL (default: http://127.0.0.1:8002/api/v1)",
     )
     parser.add_argument(
         "--wait",
         type=float,
         default=1.0,
-        help="Seconds to wait between submissions (default: 1.0)"
+        help="Seconds to wait between submissions (default: 1.0)",
     )
     args = parser.parse_args()
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
     print("=" * 60)
     print("  LogSentry v1.0.0 — Demo Data Population")
     print("=" * 60)

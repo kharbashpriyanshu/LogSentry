@@ -28,14 +28,14 @@ Design notes:
     prometheus_client counters in Sprint 9 if Prometheus is adopted.
 """
 
+import logging
 import time
 import uuid
-import logging
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response, JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)

@@ -12,11 +12,10 @@ import re
 import tempfile
 from pathlib import PurePath
 
-from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.dependencies import get_parsing_service
 from app.config.settings import settings
-from app.parsers.exceptions import ParserError, UnsupportedParserError
 from app.schemas.api import ParseFileResponse, ParseLineRequest, ParseResponse
 from app.services.parsing_service import ParsingService
 
@@ -49,7 +48,9 @@ def _sanitise_filename(filename: str) -> str:
     return basename
 
 
-@router.post("/parse-line", response_model=ParseResponse, summary="Parse a single log line")
+@router.post(
+    "/parse-line", response_model=ParseResponse, summary="Parse a single log line"
+)
 def parse_line(
     request: ParseLineRequest,
     parsing_service: ParsingService = Depends(get_parsing_service),
@@ -62,7 +63,11 @@ def parse_line(
         return ParseResponse(success=False, error=str(exc))
 
 
-@router.post("/parse-file", response_model=ParseFileResponse, summary="Parse an uploaded log file")
+@router.post(
+    "/parse-file",
+    response_model=ParseFileResponse,
+    summary="Parse an uploaded log file",
+)
 async def parse_file(
     parser_name: str = Form(...),
     file: UploadFile = File(...),

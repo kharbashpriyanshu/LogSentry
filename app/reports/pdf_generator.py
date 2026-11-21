@@ -17,26 +17,30 @@ Layout:
 
 import io
 import logging
-from datetime import datetime, timezone
-from typing import List, Union
+from datetime import UTC, datetime
 
 try:
     from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import cm
     from reportlab.platypus import (
-        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-        HRFlowable, PageBreak, KeepTogether,
+        HRFlowable,
+        PageBreak,
+        Paragraph,
+        SimpleDocTemplate,
+        Spacer,
+        Table,
+        TableStyle,
     )
-    from reportlab.platypus.flowables import Flowable
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+
     _REPORTLAB_AVAILABLE = True
 except ImportError:
     _REPORTLAB_AVAILABLE = False
 
-from app.reports.models import ExecutiveReport, TechnicalReport, IncidentReport
 from app.reports.exceptions import PDFGenerationError
+from app.reports.models import ExecutiveReport, IncidentReport, TechnicalReport
 
 logger = logging.getLogger(__name__)
 
@@ -45,29 +49,30 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _PALETTE = {
-    "primary":     colors.HexColor("#1E3A5F"),   # Deep navy
-    "accent":      colors.HexColor("#00A8E8"),   # Electric blue
-    "danger":      colors.HexColor("#E63946"),   # Alert red
-    "warning":     colors.HexColor("#F4A261"),   # Amber
-    "success":     colors.HexColor("#2A9D8F"),   # Teal
-    "neutral":     colors.HexColor("#6B7280"),   # Grey
-    "bg_light":    colors.HexColor("#F8FAFC"),   # Near-white
-    "text":        colors.HexColor("#111827"),   # Almost black
-    "white":       colors.white,
+    "primary": colors.HexColor("#1E3A5F"),  # Deep navy
+    "accent": colors.HexColor("#00A8E8"),  # Electric blue
+    "danger": colors.HexColor("#E63946"),  # Alert red
+    "warning": colors.HexColor("#F4A261"),  # Amber
+    "success": colors.HexColor("#2A9D8F"),  # Teal
+    "neutral": colors.HexColor("#6B7280"),  # Grey
+    "bg_light": colors.HexColor("#F8FAFC"),  # Near-white
+    "text": colors.HexColor("#111827"),  # Almost black
+    "white": colors.white,
 }
 
 _SEVERITY_COLORS = {
     "CRITICAL": _PALETTE["danger"],
-    "HIGH":     colors.HexColor("#FF6B35"),
-    "MEDIUM":   _PALETTE["warning"],
-    "LOW":      colors.HexColor("#3B82F6"),
-    "INFO":     _PALETTE["neutral"],
+    "HIGH": colors.HexColor("#FF6B35"),
+    "MEDIUM": _PALETTE["warning"],
+    "LOW": colors.HexColor("#3B82F6"),
+    "INFO": _PALETTE["neutral"],
 }
 
 
 # ---------------------------------------------------------------------------
 # Helper – severity colour lookup
 # ---------------------------------------------------------------------------
+
 
 def _severity_color(severity: str) -> colors.Color:
     return _SEVERITY_COLORS.get(severity.upper(), _PALETTE["neutral"])
@@ -77,6 +82,7 @@ def _severity_color(severity: str) -> colors.Color:
 # PDF Generator
 # ---------------------------------------------------------------------------
 
+
 class PDFGenerator:
     """
     Generates professional PDF reports for all LogSentry report types.
@@ -85,7 +91,7 @@ class PDFGenerator:
 
     def generate(
         self,
-        report: Union[ExecutiveReport, TechnicalReport, IncidentReport],
+        report: ExecutiveReport | TechnicalReport | IncidentReport,
     ) -> bytes:
         """
         Render the report to PDF bytes.
@@ -104,10 +110,13 @@ class PDFGenerator:
                 "reportlab is not installed. Run: pip install reportlab"
             )
 
-        start = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
         logger.info(
             "PDF generation started",
-            extra={"report_type": report.report_type.value, "report_id": report.report_id},
+            extra={
+                "report_type": report.report_type.value,
+                "report_id": report.report_id,
+            },
         )
 
         try:
@@ -124,9 +133,13 @@ class PDFGenerator:
             )
             styles = self._build_styles()
             story = self._build_story(report, styles)
-            doc.build(story, onFirstPage=self._add_page_decorations, onLaterPages=self._add_page_decorations)
+            doc.build(
+                story,
+                onFirstPage=self._add_page_decorations,
+                onLaterPages=self._add_page_decorations,
+            )
 
-            elapsed = (datetime.now(timezone.utc) - start).total_seconds()
+            elapsed = (datetime.now(UTC) - start).total_seconds()
             logger.info(
                 "PDF generation completed",
                 extra={
@@ -233,7 +246,7 @@ class PDFGenerator:
         canvas.drawString(
             2 * cm,
             1.2 * cm,
-            f"LogSentry SIEM  |  Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+            f"LogSentry SIEM  |  Generated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
         )
         canvas.drawRightString(
             page_width - 2 * cm,
@@ -248,7 +261,7 @@ class PDFGenerator:
 
     def _build_story(
         self,
-        report: Union[ExecutiveReport, TechnicalReport, IncidentReport],
+        report: ExecutiveReport | TechnicalReport | IncidentReport,
         styles: dict,
     ) -> list:
         story = []
@@ -278,48 +291,68 @@ class PDFGenerator:
         # Coloured header band via a single-cell table
         header_data = [
             [Paragraph(report.title, styles["title"])],
-            [Paragraph(f"Report Type: {report.report_type.value.upper()}", styles["subtitle"])],
+            [
+                Paragraph(
+                    f"Report Type: {report.report_type.value.upper()}",
+                    styles["subtitle"],
+                )
+            ],
         ]
         header_table = Table(
             header_data,
             colWidths=[page_width - 4 * cm],
             rowHeights=[2 * cm, 1 * cm],
         )
-        header_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), _PALETTE["primary"]),
-            ("TOPPADDING",    (0, 0), (-1, -1), 16),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 16),
-            ("LEFTPADDING",   (0, 0), (-1, -1), 12),
-            ("RIGHTPADDING",  (0, 0), (-1, -1), 12),
-            ("ALIGN",         (0, 0), (-1, -1), "CENTER"),
-        ]))
+        header_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), _PALETTE["primary"]),
+                    ("TOPPADDING", (0, 0), (-1, -1), 16),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 16),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ]
+            )
+        )
         elements.append(header_table)
         elements.append(Spacer(1, 0.5 * cm))
 
         # Severity badge
-        severity_data = [[Paragraph(f"  SEVERITY: {severity}  ", ParagraphStyle(
-            "Badge",
-            fontSize=12,
-            textColor=_PALETTE["white"],
-            fontName="Helvetica-Bold",
-            alignment=TA_CENTER,
-        ))]]
+        severity_data = [
+            [
+                Paragraph(
+                    f"  SEVERITY: {severity}  ",
+                    ParagraphStyle(
+                        "Badge",
+                        fontSize=12,
+                        textColor=_PALETTE["white"],
+                        fontName="Helvetica-Bold",
+                        alignment=TA_CENTER,
+                    ),
+                )
+            ]
+        ]
         severity_table = Table(severity_data, colWidths=[6 * cm])
-        severity_table.setStyle(TableStyle([
-            ("BACKGROUND",    (0, 0), (-1, -1), sev_color),
-            ("TOPPADDING",    (0, 0), (-1, -1), 8),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-            ("ALIGN",         (0, 0), (-1, -1), "CENTER"),
-            ("ROUNDEDCORNERS", [4]),
-        ]))
+        severity_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), sev_color),
+                    ("TOPPADDING", (0, 0), (-1, -1), 8),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("ROUNDEDCORNERS", [4]),
+                ]
+            )
+        )
         elements.append(severity_table)
         elements.append(Spacer(1, 0.5 * cm))
 
         # Metadata table
         meta = report.metadata
         meta_rows = [
-            ["Report ID",   report.report_id],
-            ["Generated",   meta.generated_at.strftime("%Y-%m-%d %H:%M UTC")],
+            ["Report ID", report.report_id],
+            ["Generated", meta.generated_at.strftime("%Y-%m-%d %H:%M UTC")],
             ["Generated By", meta.generated_by],
             ["Engine Version", meta.version],
         ]
@@ -327,18 +360,27 @@ class PDFGenerator:
             meta_rows.insert(0, ["Alert ID", report.alert_id])
 
         meta_table = Table(meta_rows, colWidths=[5 * cm, 10 * cm])
-        meta_table.setStyle(TableStyle([
-            ("FONTNAME",      (0, 0), (0, -1), "Helvetica-Bold"),
-            ("FONTNAME",      (1, 0), (1, -1), "Helvetica"),
-            ("FONTSIZE",      (0, 0), (-1, -1), 9),
-            ("TEXTCOLOR",     (0, 0), (0, -1), _PALETTE["primary"]),
-            ("TEXTCOLOR",     (1, 0), (1, -1), _PALETTE["text"]),
-            ("ROWBACKGROUNDS", (0, 0), (-1, -1), [_PALETTE["bg_light"], _PALETTE["white"]]),
-            ("TOPPADDING",    (0, 0), (-1, -1), 5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-            ("LEFTPADDING",   (0, 0), (-1, -1), 8),
-            ("GRID",          (0, 0), (-1, -1), 0.3, _PALETTE["neutral"]),
-        ]))
+        meta_table.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+                    ("FONTNAME", (1, 0), (1, -1), "Helvetica"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("TEXTCOLOR", (0, 0), (0, -1), _PALETTE["primary"]),
+                    ("TEXTCOLOR", (1, 0), (1, -1), _PALETTE["text"]),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 0),
+                        (-1, -1),
+                        [_PALETTE["bg_light"], _PALETTE["white"]],
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("GRID", (0, 0), (-1, -1), 0.3, _PALETTE["neutral"]),
+                ]
+            )
+        )
         elements.append(meta_table)
         elements.append(Spacer(1, 0.3 * cm))
         elements.append(HRFlowable(width="100%", thickness=1, color=_PALETTE["accent"]))
@@ -359,8 +401,8 @@ class PDFGenerator:
 
         el += self._section("Incident Details", styles)
         details = [
-            ["Attack Type",     report.attack_type],
-            ["Source IP",       report.source_ip or "N/A"],
+            ["Attack Type", report.attack_type],
+            ["Source IP", report.source_ip or "N/A"],
             ["Incident Status", report.incident_status.value.upper()],
         ]
         el.append(self._two_col_table(details))
@@ -379,9 +421,9 @@ class PDFGenerator:
         el = []
         el += self._section("Detection Rule", styles)
         rule_data = [
-            ["Rule Name",    report.detection_rule],
+            ["Rule Name", report.detection_rule],
             ["Rule Version", report.rule_version],
-            ["Confidence",   f"{report.confidence_score:.0%}"],
+            ["Confidence", f"{report.confidence_score:.0%}"],
             ["FP Likelihood", report.false_positive_likelihood],
         ]
         el.append(self._two_col_table(rule_data))
@@ -398,15 +440,17 @@ class PDFGenerator:
             provider = ti.get("provider", "unknown")
             rep = ti.get("reputation", "N/A")
             country = ti.get("country", "N/A")
-            el.append(Paragraph(
-                f"<b>{provider}</b>: reputation={rep}, country={country}",
-                styles["body"],
-            ))
+            el.append(
+                Paragraph(
+                    f"<b>{provider}</b>: reputation={rep}, country={country}",
+                    styles["body"],
+                )
+            )
 
         el += self._section("MITRE ATT&CK Mapping", styles)
         mitre_data = [
             ["Technique", report.mitre_technique or "N/A"],
-            ["Tactic",    report.mitre_tactic or "N/A"],
+            ["Tactic", report.mitre_tactic or "N/A"],
         ]
         el.append(self._two_col_table(mitre_data))
 
@@ -445,7 +489,7 @@ class PDFGenerator:
         el += self._section("MITRE ATT&CK Mapping", styles)
         mitre_data = [
             ["Technique", report.mitre_technique or "N/A"],
-            ["Tactic",    report.mitre_tactic or "N/A"],
+            ["Tactic", report.mitre_tactic or "N/A"],
         ]
         el.append(self._two_col_table(mitre_data))
 
@@ -460,10 +504,12 @@ class PDFGenerator:
         el += self._section("Incident Timeline", styles)
         for entry in report.timeline:
             ts_str = entry.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
-            el.append(Paragraph(
-                f"<b>[{entry.sequence}] {entry.event}</b> — {ts_str}",
-                styles["label"],
-            ))
+            el.append(
+                Paragraph(
+                    f"<b>[{entry.sequence}] {entry.event}</b> — {ts_str}",
+                    styles["label"],
+                )
+            )
             el.append(Paragraph(entry.description, styles["body"]))
             el.append(Spacer(1, 0.15 * cm))
 
@@ -491,16 +537,25 @@ class PDFGenerator:
 
     def _two_col_table(self, rows: list) -> Table:
         t = Table(rows, colWidths=[5 * cm, 11 * cm])
-        t.setStyle(TableStyle([
-            ("FONTNAME",      (0, 0), (0, -1), "Helvetica-Bold"),
-            ("FONTNAME",      (1, 0), (1, -1), "Helvetica"),
-            ("FONTSIZE",      (0, 0), (-1, -1), 9),
-            ("TEXTCOLOR",     (0, 0), (0, -1), _PALETTE["primary"]),
-            ("TEXTCOLOR",     (1, 0), (1, -1), _PALETTE["text"]),
-            ("ROWBACKGROUNDS", (0, 0), (-1, -1), [_PALETTE["bg_light"], _PALETTE["white"]]),
-            ("TOPPADDING",    (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-            ("LEFTPADDING",   (0, 0), (-1, -1), 6),
-            ("GRID",          (0, 0), (-1, -1), 0.25, colors.HexColor("#D1D5DB")),
-        ]))
+        t.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+                    ("FONTNAME", (1, 0), (1, -1), "Helvetica"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("TEXTCOLOR", (0, 0), (0, -1), _PALETTE["primary"]),
+                    ("TEXTCOLOR", (1, 0), (1, -1), _PALETTE["text"]),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 0),
+                        (-1, -1),
+                        [_PALETTE["bg_light"], _PALETTE["white"]],
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#D1D5DB")),
+                ]
+            )
+        )
         return t

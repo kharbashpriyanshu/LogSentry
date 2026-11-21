@@ -9,16 +9,16 @@ Changes from Sprint 7:
 """
 
 import time
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from typing import Dict
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.config.settings import settings
-from app.parsers.factory import ParserFactory
-from app.detection.registry import RuleRegistry
 from app.database.session import get_db
+from app.detection.registry import RuleRegistry
+from app.parsers.factory import ParserFactory
 
 router = APIRouter()
 
@@ -32,7 +32,11 @@ class IntegrationsStatus(BaseModel):
     otx: bool
 
 
-@router.get("/health/integrations", response_model=IntegrationsStatus, summary="Integrations status check")
+@router.get(
+    "/health/integrations",
+    response_model=IntegrationsStatus,
+    summary="Integrations status check",
+)
 def integrations_check() -> IntegrationsStatus:
     """
     Checks if API keys for external services are configured in settings.
@@ -53,10 +57,12 @@ class HealthResponse(BaseModel):
     uptime_seconds: float
     parsers_available: int
     detection_rules_available: int
-    subsystems: Dict[str, bool]
+    subsystems: dict[str, bool]
 
 
-@router.get("/health", response_model=HealthResponse, summary="Application health check")
+@router.get(
+    "/health", response_model=HealthResponse, summary="Application health check"
+)
 def health_check() -> HealthResponse:
     """
     Returns application health status including subsystem availability.
@@ -97,7 +103,7 @@ def readiness(db: Session = Depends(get_db)) -> dict:
     checks = {
         "parsers": len(ParserFactory.get_all_parsers()) > 0,
         "detection_rules": len(RuleRegistry.get_all_rules()) > 0,
-        "database": db_ready
+        "database": db_ready,
     }
     ready = all(checks.values())
     return {"status": "ready" if ready else "not_ready", "checks": checks}

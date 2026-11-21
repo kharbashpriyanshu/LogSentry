@@ -16,51 +16,46 @@ Coverage:
 """
 
 import json
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
-from typing import List
+from datetime import UTC, datetime
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app.ai.models import AIAnalysisResponse
+from app.enrichment.models import ThreatEnrichment
 from app.main import app
-from app.reports.models import (
-    ReportType,
-    ReportStatus,
-    TimelineEntry,
-    ExportMetadata,
-)
-from app.reports.templates import (
-    ExecutiveReportTemplate,
-    TechnicalReportTemplate,
-    IncidentReportTemplate,
-)
-from app.reports.timeline import TimelineEngine
-from app.reports.service import ReportingService
 from app.reports.csv_generator import CSVGenerator
-from app.reports.json_generator import JSONGenerator
 from app.reports.exceptions import (
     InvalidReportTypeError,
     MissingReportDataError,
     PDFGenerationError,
-    CSVExportError,
-    JSONSerializationError,
 )
+from app.reports.json_generator import JSONGenerator
+from app.reports.models import (
+    ReportStatus,
+    ReportType,
+)
+from app.reports.service import ReportingService
+from app.reports.templates import (
+    ExecutiveReportTemplate,
+    IncidentReportTemplate,
+    TechnicalReportTemplate,
+)
+from app.reports.timeline import TimelineEngine
 from app.schemas.detection_alert import DetectionAlert
 from app.schemas.severity import Severity
-from app.enrichment.models import ThreatEnrichment
-from app.ai.models import AIAnalysisResponse
-
 
 # ---------------------------------------------------------------------------
 # Test Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def sample_alert() -> DetectionAlert:
     return DetectionAlert(
         alert_id="test-alert-001",
-        timestamp=datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc),
+        timestamp=datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC),
         rule_name="SQL_INJECTION_DETECTED",
         rule_version="2.1",
         severity=Severity.HIGH,
@@ -81,7 +76,7 @@ def sample_alert() -> DetectionAlert:
 
 
 @pytest.fixture
-def sample_enrichments() -> List[ThreatEnrichment]:
+def sample_enrichments() -> list[ThreatEnrichment]:
     return [
         ThreatEnrichment(
             provider="AbuseIPDB",
@@ -137,23 +132,36 @@ def client() -> TestClient:
 # Report Model Tests
 # ---------------------------------------------------------------------------
 
+
 class TestExecutiveReport:
-    def test_generate_executive_report(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("executive", sample_alert, sample_enrichments, sample_ai)
+    def test_generate_executive_report(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "executive", sample_alert, sample_enrichments, sample_ai
+        )
 
         assert report.report_type == ReportType.EXECUTIVE
         assert "SQL Injection" in report.title
         assert report.executive_summary == sample_ai.executive_summary
         assert report.severity == "HIGH"
-        assert "database" in report.business_impact.lower() or "sql" in report.business_impact.lower() or "risk" in report.business_impact.lower()
+        assert (
+            "database" in report.business_impact.lower()
+            or "sql" in report.business_impact.lower()
+            or "risk" in report.business_impact.lower()
+        )
         assert len(report.high_level_recommendations) > 0
         assert report.incident_status == ReportStatus.OPEN
         assert report.alert_id == sample_alert.alert_id
         assert report.source_ip == sample_alert.source_ip
         assert report.attack_type == sample_alert.attack_type
 
-    def test_executive_report_has_metadata(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("executive", sample_alert, sample_enrichments, sample_ai)
+    def test_executive_report_has_metadata(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "executive", sample_alert, sample_enrichments, sample_ai
+        )
 
         assert report.metadata.report_type == ReportType.EXECUTIVE
         assert report.metadata.generated_by == "LogSentry Reporting Engine"
@@ -161,8 +169,12 @@ class TestExecutiveReport:
 
 
 class TestTechnicalReport:
-    def test_generate_technical_report(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("technical", sample_alert, sample_enrichments, sample_ai)
+    def test_generate_technical_report(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "technical", sample_alert, sample_enrichments, sample_ai
+        )
 
         assert report.report_type == ReportType.TECHNICAL
         assert report.detection_rule == sample_alert.rule_name
@@ -173,15 +185,23 @@ class TestTechnicalReport:
         assert report.mitre_technique == sample_alert.mitre_technique
         assert len(report.threat_intelligence) == 2
 
-    def test_technical_report_evidence(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("technical", sample_alert, sample_enrichments, sample_ai)
+    def test_technical_report_evidence(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "technical", sample_alert, sample_enrichments, sample_ai
+        )
         assert "payload" in report.evidence
         assert report.evidence["payload"] == "' OR 1=1 --"
 
 
 class TestIncidentReport:
-    def test_generate_incident_report(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("incident", sample_alert, sample_enrichments, sample_ai)
+    def test_generate_incident_report(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "incident", sample_alert, sample_enrichments, sample_ai
+        )
 
         assert report.report_type == ReportType.INCIDENT
         assert len(report.timeline) == 6
@@ -189,8 +209,12 @@ class TestIncidentReport:
         assert len(report.recommendations) > 0
         assert report.mitre_mapping["technique"] == "T1190"
 
-    def test_incident_report_iocs(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("incident", sample_alert, sample_enrichments, sample_ai)
+    def test_incident_report_iocs(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "incident", sample_alert, sample_enrichments, sample_ai
+        )
         ioc_str = " ".join(report.indicators_of_compromise)
         assert "198.51.100.42" in ioc_str
         assert "sql-injection" in ioc_str or "sql" in ioc_str.lower()
@@ -200,26 +224,33 @@ class TestIncidentReport:
 # Timeline Engine Tests
 # ---------------------------------------------------------------------------
 
+
 class TestTimelineEngine:
     def test_timeline_has_six_stages(self, sample_alert, sample_enrichments, sample_ai):
         engine = TimelineEngine()
         entries = engine.build(sample_alert, sample_enrichments, sample_ai)
         assert len(entries) == 6
 
-    def test_timeline_sequence_is_ordered(self, sample_alert, sample_enrichments, sample_ai):
+    def test_timeline_sequence_is_ordered(
+        self, sample_alert, sample_enrichments, sample_ai
+    ):
         engine = TimelineEngine()
         entries = engine.build(sample_alert, sample_enrichments, sample_ai)
         sequences = [e.sequence for e in entries]
         assert sequences == sorted(sequences)
         assert sequences == [1, 2, 3, 4, 5, 6]
 
-    def test_timeline_timestamps_are_ordered(self, sample_alert, sample_enrichments, sample_ai):
+    def test_timeline_timestamps_are_ordered(
+        self, sample_alert, sample_enrichments, sample_ai
+    ):
         engine = TimelineEngine()
         entries = engine.build(sample_alert, sample_enrichments, sample_ai)
         timestamps = [e.timestamp for e in entries]
         assert timestamps == sorted(timestamps)
 
-    def test_timeline_events_named_correctly(self, sample_alert, sample_enrichments, sample_ai):
+    def test_timeline_events_named_correctly(
+        self, sample_alert, sample_enrichments, sample_ai
+    ):
         engine = TimelineEngine()
         entries = engine.build(sample_alert, sample_enrichments, sample_ai)
         event_names = [e.event for e in entries]
@@ -230,7 +261,9 @@ class TestTimelineEngine:
         assert "AI Analysis Completed" in event_names
         assert "Report Generated" in event_names
 
-    def test_timeline_entries_have_metadata(self, sample_alert, sample_enrichments, sample_ai):
+    def test_timeline_entries_have_metadata(
+        self, sample_alert, sample_enrichments, sample_ai
+    ):
         engine = TimelineEngine()
         entries = engine.build(sample_alert, sample_enrichments, sample_ai)
         detection_entry = next(e for e in entries if e.event == "Detection Triggered")
@@ -247,16 +280,25 @@ class TestTimelineEngine:
 # CSV Generator Tests
 # ---------------------------------------------------------------------------
 
+
 class TestCSVGenerator:
-    def test_executive_csv_has_alert_sheet(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("executive", sample_alert, sample_enrichments, sample_ai)
+    def test_executive_csv_has_alert_sheet(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "executive", sample_alert, sample_enrichments, sample_ai
+        )
         generator = CSVGenerator()
         sheets = generator.generate(report)
         assert "alert_data" in sheets
         assert "threat_intelligence" in sheets
 
-    def test_technical_csv_sheets(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("technical", sample_alert, sample_enrichments, sample_ai)
+    def test_technical_csv_sheets(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "technical", sample_alert, sample_enrichments, sample_ai
+        )
         generator = CSVGenerator()
         sheets = generator.generate(report)
         assert "alert_data" in sheets
@@ -264,8 +306,12 @@ class TestCSVGenerator:
         # Technical reports do NOT have timeline/ioc sheets
         assert "timeline" not in sheets
 
-    def test_incident_csv_has_all_sheets(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("incident", sample_alert, sample_enrichments, sample_ai)
+    def test_incident_csv_has_all_sheets(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "incident", sample_alert, sample_enrichments, sample_ai
+        )
         generator = CSVGenerator()
         sheets = generator.generate(report)
         assert "alert_data" in sheets
@@ -273,24 +319,36 @@ class TestCSVGenerator:
         assert "timeline" in sheets
         assert "ioc" in sheets
 
-    def test_csv_bytes_are_decodable(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("executive", sample_alert, sample_enrichments, sample_ai)
+    def test_csv_bytes_are_decodable(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "executive", sample_alert, sample_enrichments, sample_ai
+        )
         generator = CSVGenerator()
         sheets = generator.generate(report)
         decoded = sheets["alert_data"].decode("utf-8")
         assert "report_id" in decoded
         assert "HIGH" in decoded
 
-    def test_threat_intel_csv_contains_providers(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("technical", sample_alert, sample_enrichments, sample_ai)
+    def test_threat_intel_csv_contains_providers(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "technical", sample_alert, sample_enrichments, sample_ai
+        )
         generator = CSVGenerator()
         sheets = generator.generate(report)
         decoded = sheets["threat_intelligence"].decode("utf-8")
         assert "AbuseIPDB" in decoded
         assert "OTX" in decoded
 
-    def test_timeline_csv_has_six_rows(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("incident", sample_alert, sample_enrichments, sample_ai)
+    def test_timeline_csv_has_six_rows(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "incident", sample_alert, sample_enrichments, sample_ai
+        )
         generator = CSVGenerator()
         sheets = generator.generate(report)
         rows = sheets["timeline"].decode("utf-8").strip().split("\n")
@@ -302,17 +360,26 @@ class TestCSVGenerator:
 # JSON Generator Tests
 # ---------------------------------------------------------------------------
 
+
 class TestJSONGenerator:
-    def test_json_output_is_valid(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("executive", sample_alert, sample_enrichments, sample_ai)
+    def test_json_output_is_valid(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "executive", sample_alert, sample_enrichments, sample_ai
+        )
         generator = JSONGenerator()
         json_bytes = generator.generate(report)
         parsed = json.loads(json_bytes)
         assert "report_id" in parsed
         assert "report_type" in parsed
 
-    def test_json_preserves_nested_structures(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("incident", sample_alert, sample_enrichments, sample_ai)
+    def test_json_preserves_nested_structures(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "incident", sample_alert, sample_enrichments, sample_ai
+        )
         generator = JSONGenerator()
         json_bytes = generator.generate(report)
         parsed = json.loads(json_bytes)
@@ -322,16 +389,24 @@ class TestJSONGenerator:
         assert "threat_intelligence" in parsed
         assert isinstance(parsed["threat_intelligence"], list)
 
-    def test_json_metadata_present(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("technical", sample_alert, sample_enrichments, sample_ai)
+    def test_json_metadata_present(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "technical", sample_alert, sample_enrichments, sample_ai
+        )
         generator = JSONGenerator()
         json_bytes = generator.generate(report)
         parsed = json.loads(json_bytes)
         assert "metadata" in parsed
         assert parsed["metadata"]["generated_by"] == "LogSentry Reporting Engine"
 
-    def test_json_technical_report_fields(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("technical", sample_alert, sample_enrichments, sample_ai)
+    def test_json_technical_report_fields(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "technical", sample_alert, sample_enrichments, sample_ai
+        )
         generator = JSONGenerator()
         parsed = json.loads(generator.generate(report))
         assert parsed["detection_rule"] == "SQL_INJECTION_DETECTED"
@@ -342,16 +417,25 @@ class TestJSONGenerator:
 # ReportingService Error Handling Tests
 # ---------------------------------------------------------------------------
 
-class TestReportingServiceErrors:
-    def test_invalid_report_type_raises(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        with pytest.raises(InvalidReportTypeError):
-            reporting_service.generate("quarterly", sample_alert, sample_enrichments, sample_ai)
 
-    def test_empty_report_type_raises_missing_data(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
+class TestReportingServiceErrors:
+    def test_invalid_report_type_raises(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        with pytest.raises(InvalidReportTypeError):
+            reporting_service.generate(
+                "quarterly", sample_alert, sample_enrichments, sample_ai
+            )
+
+    def test_empty_report_type_raises_missing_data(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
         with pytest.raises(MissingReportDataError):
             reporting_service.generate("", sample_alert, sample_enrichments, sample_ai)
 
-    def test_empty_enrichments_still_generates(self, reporting_service, sample_alert, sample_ai):
+    def test_empty_enrichments_still_generates(
+        self, reporting_service, sample_alert, sample_ai
+    ):
         report = reporting_service.generate("executive", sample_alert, [], sample_ai)
         assert report is not None
         assert report.report_type == ReportType.EXECUTIVE
@@ -361,24 +445,35 @@ class TestReportingServiceErrors:
 # PDF Generator Tests
 # ---------------------------------------------------------------------------
 
+
 class TestPDFGenerator:
-    def test_pdf_generation_raises_if_no_reportlab(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
-        report = reporting_service.generate("executive", sample_alert, sample_enrichments, sample_ai)
+    def test_pdf_generation_raises_if_no_reportlab(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
+        report = reporting_service.generate(
+            "executive", sample_alert, sample_enrichments, sample_ai
+        )
         with patch("app.reports.pdf_generator._REPORTLAB_AVAILABLE", False):
             from app.reports.pdf_generator import PDFGenerator
+
             generator = PDFGenerator()
             with pytest.raises(PDFGenerationError) as exc_info:
                 generator.generate(report)
             assert "reportlab" in str(exc_info.value).lower()
 
-    def test_pdf_generation_success_when_reportlab_available(self, reporting_service, sample_alert, sample_enrichments, sample_ai):
+    def test_pdf_generation_success_when_reportlab_available(
+        self, reporting_service, sample_alert, sample_enrichments, sample_ai
+    ):
         try:
             import reportlab  # noqa: F401
         except ImportError:
             pytest.skip("reportlab not installed — skipping PDF generation test")
 
         from app.reports.pdf_generator import PDFGenerator
-        report = reporting_service.generate("incident", sample_alert, sample_enrichments, sample_ai)
+
+        report = reporting_service.generate(
+            "incident", sample_alert, sample_enrichments, sample_ai
+        )
         generator = PDFGenerator()
         pdf_bytes = generator.generate(report)
         # PDF magic bytes
@@ -389,6 +484,7 @@ class TestPDFGenerator:
 # API Endpoint Tests
 # ---------------------------------------------------------------------------
 
+
 class TestReportsAPI:
     def _payload(self, report_type: str, alert, enrichments, ai) -> dict:
         return {
@@ -398,21 +494,31 @@ class TestReportsAPI:
             "ai_analysis": ai.model_dump(mode="json"),
         }
 
-    def test_generate_executive_via_api(self, client, sample_alert, sample_enrichments, sample_ai):
-        payload = self._payload("executive", sample_alert, sample_enrichments, sample_ai)
+    def test_generate_executive_via_api(
+        self, client, sample_alert, sample_enrichments, sample_ai
+    ):
+        payload = self._payload(
+            "executive", sample_alert, sample_enrichments, sample_ai
+        )
         response = client.post("/api/v1/reports/generate", json=payload)
         assert response.status_code == 200
         data = response.json()
         assert data["report_type"] == "executive"
 
-    def test_generate_technical_via_api(self, client, sample_alert, sample_enrichments, sample_ai):
-        payload = self._payload("technical", sample_alert, sample_enrichments, sample_ai)
+    def test_generate_technical_via_api(
+        self, client, sample_alert, sample_enrichments, sample_ai
+    ):
+        payload = self._payload(
+            "technical", sample_alert, sample_enrichments, sample_ai
+        )
         response = client.post("/api/v1/reports/generate", json=payload)
         assert response.status_code == 200
         data = response.json()
         assert data["report_type"] == "technical"
 
-    def test_generate_incident_via_api(self, client, sample_alert, sample_enrichments, sample_ai):
+    def test_generate_incident_via_api(
+        self, client, sample_alert, sample_enrichments, sample_ai
+    ):
         payload = self._payload("incident", sample_alert, sample_enrichments, sample_ai)
         response = client.post("/api/v1/reports/generate", json=payload)
         assert response.status_code == 200
@@ -421,12 +527,18 @@ class TestReportsAPI:
         assert "timeline" in data
         assert len(data["timeline"]) == 6
 
-    def test_invalid_report_type_returns_400(self, client, sample_alert, sample_enrichments, sample_ai):
-        payload = self._payload("quarterly", sample_alert, sample_enrichments, sample_ai)
+    def test_invalid_report_type_returns_400(
+        self, client, sample_alert, sample_enrichments, sample_ai
+    ):
+        payload = self._payload(
+            "quarterly", sample_alert, sample_enrichments, sample_ai
+        )
         response = client.post("/api/v1/reports/generate", json=payload)
         assert response.status_code == 400
 
-    def test_export_json_returns_200(self, client, sample_alert, sample_enrichments, sample_ai):
+    def test_export_json_returns_200(
+        self, client, sample_alert, sample_enrichments, sample_ai
+    ):
         # First generate a report
         payload = self._payload("incident", sample_alert, sample_enrichments, sample_ai)
         client.post("/api/v1/reports/generate", json=payload)
@@ -434,7 +546,9 @@ class TestReportsAPI:
         response = client.get("/api/v1/reports/export/json")
         assert response.status_code == 200
 
-    def test_export_csv_returns_200(self, client, sample_alert, sample_enrichments, sample_ai):
+    def test_export_csv_returns_200(
+        self, client, sample_alert, sample_enrichments, sample_ai
+    ):
         payload = self._payload("incident", sample_alert, sample_enrichments, sample_ai)
         client.post("/api/v1/reports/generate", json=payload)
         response = client.get("/api/v1/reports/export/csv")

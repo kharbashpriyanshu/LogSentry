@@ -1,30 +1,31 @@
-import time
-import os
-import sys
 import json
+import os
+import time
 import urllib.parse
-from typing import Dict, List, Any
 from collections import defaultdict
 
-from app.parsers.factory import ParserFactory
 from app.detection.engine import DetectionEngine
+from app.parsers.factory import ParserFactory
 from benchmark_dataset_generator import create_labeled_dataset
 
-def benchmark_realworld_production_dataset(file_path: str = "sample_data/elastic_apache_10k.log"):
+
+def benchmark_realworld_production_dataset(
+    file_path: str = "sample_data/elastic_apache_10k.log",
+):
     print("=" * 70)
     print("BENCHMARK 1: High-Volume Production Dataset (Elastic 10k Apache Logs)")
     print("=" * 70)
-    
+
     if not os.path.exists(file_path):
         print(f"File not found: {file_path}")
         return {}
 
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+    with open(file_path, encoding="utf-8", errors="ignore") as f:
         raw_lines = [l.strip() for l in f if l.strip()]
 
     total_lines = len(raw_lines)
     print(f"Total Log Records to Process: {total_lines:,}")
-    
+
     parser = ParserFactory.get_parser("apache")
     engine = DetectionEngine()
 
@@ -39,15 +40,17 @@ def benchmark_realworld_production_dataset(file_path: str = "sample_data/elastic
         else:
             parse_failures += 1
     t_parse = time.perf_counter() - t0
-    
+
     parse_eps = total_lines / t_parse if t_parse > 0 else 0
     avg_parse_latency_us = (t_parse / total_lines) * 1_000_000
 
-    print(f"\n[1] Parsing Performance:")
+    print("\n[1] Parsing Performance:")
     print(f"    - Parse Time:               {t_parse:.4f} s")
     print(f"    - Parse Throughput:         {parse_eps:,.1f} events/sec")
     print(f"    - Avg Parse Latency:        {avg_parse_latency_us:.2f} µs/event")
-    print(f"    - Successfully Parsed:      {len(parsed_events):,}/{total_lines:,} ({(len(parsed_events)/total_lines)*100:.2f}%)")
+    print(
+        f"    - Successfully Parsed:      {len(parsed_events):,}/{total_lines:,} ({(len(parsed_events)/total_lines)*100:.2f}%)"
+    )
     print(f"    - Parse Failures:           {parse_failures:,}")
 
     # Step 2: Detection Engine Benchmark
@@ -62,7 +65,7 @@ def benchmark_realworld_production_dataset(file_path: str = "sample_data/elastic
     detect_eps = len(parsed_events) / t_detect if t_detect > 0 else 0
     avg_detect_latency_us = (t_detect / len(parsed_events)) * 1_000_000
 
-    print(f"\n[2] Threat Detection Engine Performance:")
+    print("\n[2] Threat Detection Engine Performance:")
     print(f"    - Detection Engine Time:    {t_detect:.4f} s")
     print(f"    - Detection Throughput:     {detect_eps:,.1f} events/sec")
     print(f"    - Avg Detection Latency:    {avg_detect_latency_us:.2f} µs/event")
@@ -73,10 +76,12 @@ def benchmark_realworld_production_dataset(file_path: str = "sample_data/elastic
     total_eps = total_lines / t_total if t_total > 0 else 0
     avg_total_latency_us = (t_total / total_lines) * 1_000_000
 
-    print(f"\n[3] Combined Ingestion + Detection Pipeline:")
+    print("\n[3] Combined Ingestion + Detection Pipeline:")
     print(f"    - Total Time Elapsed:       {t_total:.4f} s")
     print(f"    - Overall Throughput:       {total_eps:,.1f} events/sec")
-    print(f"    - End-to-End Latency:       {avg_total_latency_us:.2f} µs/event ({avg_total_latency_us/1000:.4f} ms)")
+    print(
+        f"    - End-to-End Latency:       {avg_total_latency_us:.2f} µs/event ({avg_total_latency_us/1000:.4f} ms)"
+    )
 
     return {
         "dataset": "Elastic 10k Production Apache Logs",
@@ -85,24 +90,25 @@ def benchmark_realworld_production_dataset(file_path: str = "sample_data/elastic
         "total_time_seconds": t_total,
         "throughput_eps": total_eps,
         "avg_latency_microseconds": avg_total_latency_us,
-        "alerts_flagged": len(alerts_triggered)
+        "alerts_flagged": len(alerts_triggered),
     }
+
 
 def benchmark_labeled_accuracy_dataset():
     print("\n" + "=" * 70)
     print("BENCHMARK 2: Labeled Ground-Truth Evaluation (Accuracy & Confusion Matrix)")
     print("=" * 70)
-    
+
     labeled_file = "sample_data/labeled_benchmark.json"
     if not os.path.exists(labeled_file):
         create_labeled_dataset(labeled_file)
 
-    with open(labeled_file, "r", encoding="utf-8") as f:
+    with open(labeled_file, encoding="utf-8") as f:
         data = json.load(f)
 
     total_events = len(data)
     print(f"Total Labeled Events: {total_events}")
-    
+
     benign_count = sum(1 for d in data if d["label"] == "BENIGN")
     attack_count = sum(1 for d in data if d["label"] == "ATTACK")
     print(f"    - Benign Events: {benign_count}")
@@ -145,7 +151,7 @@ def benchmark_labeled_accuracy_dataset():
             else:
                 fn += 1
                 category_stats[category]["missed"] += 1
-        else: # BENIGN
+        else:  # BENIGN
             if has_alert:
                 fp += 1
                 category_stats[category]["missed"] += 1  # false positive
@@ -159,35 +165,43 @@ def benchmark_labeled_accuracy_dataset():
     accuracy = (tp + tn) / total_events if total_events > 0 else 0
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    f1 = (
+        2 * (precision * recall) / (precision + recall)
+        if (precision + recall) > 0
+        else 0
+    )
     throughput = total_events / t_eval if t_eval > 0 else 0
     avg_latency_us = (t_eval / total_events) * 1_000_000
 
-    print(f"\n[1] Performance & Timing:")
+    print("\n[1] Performance & Timing:")
     print(f"    - Total Evaluation Time:    {t_eval:.4f} s")
     print(f"    - Evaluation Throughput:    {throughput:,.1f} events/sec")
-    print(f"    - Avg Latency per Event:    {avg_latency_us:.2f} µs ({avg_latency_us/1000:.4f} ms)")
+    print(
+        f"    - Avg Latency per Event:    {avg_latency_us:.2f} µs ({avg_latency_us/1000:.4f} ms)"
+    )
 
-    print(f"\n[2] Confusion Matrix:")
-    print(f"    ┌─────────────────────────┬─────────────────────────┐")
+    print("\n[2] Confusion Matrix:")
+    print("    ┌─────────────────────────┬─────────────────────────┐")
     print(f"    │  True Positives (TP): {tp:3d}│ False Positives (FP): {fp:3d}│")
-    print(f"    ├─────────────────────────┼─────────────────────────┤")
+    print("    ├─────────────────────────┼─────────────────────────┤")
     print(f"    │ False Negatives (FN): {fn:3d}│  True Negatives (TN): {tn:3d}│")
-    print(f"    └─────────────────────────┴─────────────────────────┘")
+    print("    └─────────────────────────┴─────────────────────────┘")
 
-    print(f"\n[3] Core Accuracy Metrics:")
+    print("\n[3] Core Accuracy Metrics:")
     print(f"    - Accuracy:                 {accuracy * 100:.2f}%")
     print(f"    - Precision:                {precision * 100:.2f}%")
     print(f"    - Recall (Detection Rate):  {recall * 100:.2f}%")
     print(f"    - F1-Score:                 {f1 * 100:.2f}%")
 
-    print(f"\n[4] Attack Class Breakdown:")
+    print("\n[4] Attack Class Breakdown:")
     print(f"    {'Category':<20} {'Total':<8} {'Detected':<10} {'Detection Rate'}")
     print(f"    {'-'*20} {'-'*8} {'-'*10} {'-'*14}")
     for cat, stats in category_stats.items():
         rate = (stats["detected"] / stats["total"]) * 100 if stats["total"] > 0 else 0
         status_label = "Clean (TN)" if cat == "BENIGN" else f"{rate:.1f}%"
-        print(f"    {cat:<20} {stats['total']:<8} {stats['detected']:<10} {status_label}")
+        print(
+            f"    {cat:<20} {stats['total']:<8} {stats['detected']:<10} {status_label}"
+        )
 
     return {
         "accuracy": accuracy,
@@ -200,8 +214,9 @@ def benchmark_labeled_accuracy_dataset():
         "fn": fn,
         "throughput_eps": throughput,
         "avg_latency_us": avg_latency_us,
-        "total_time_seconds": t_eval
+        "total_time_seconds": t_eval,
     }
+
 
 if __name__ == "__main__":
     benchmark_realworld_production_dataset()

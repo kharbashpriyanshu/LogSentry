@@ -13,26 +13,23 @@ Future templates to add here (do NOT schedule):
   - MonthlyExecutiveSummaryTemplate
 """
 
-from datetime import datetime, timezone
-from typing import List, Optional
-
+from app.ai.models import AIAnalysisResponse
+from app.enrichment.models import ThreatEnrichment
 from app.reports.models import (
     ExecutiveReport,
-    TechnicalReport,
-    IncidentReport,
-    TimelineEntry,
     ExportMetadata,
-    ReportType,
+    IncidentReport,
     ReportStatus,
+    ReportType,
+    TechnicalReport,
+    TimelineEntry,
 )
 from app.schemas.detection_alert import DetectionAlert
-from app.enrichment.models import ThreatEnrichment
-from app.ai.models import AIAnalysisResponse
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _derive_business_impact(severity: str, attack_type: str) -> str:
     """
@@ -50,9 +47,11 @@ def _derive_business_impact(severity: str, attack_type: str) -> str:
     return f"{base} Attack vector identified: {attack_type}."
 
 
-def _derive_recommendations(alert: DetectionAlert, ai: Optional[AIAnalysisResponse]) -> List[str]:
+def _derive_recommendations(
+    alert: DetectionAlert, ai: AIAnalysisResponse | None
+) -> list[str]:
     """Combine alert recommendation with AI recommended actions into a clean list."""
-    recommendations: List[str] = []
+    recommendations: list[str] = []
     if alert.recommendation:
         recommendations.append(alert.recommendation)
     if ai and ai.recommended_actions:
@@ -64,9 +63,11 @@ def _derive_recommendations(alert: DetectionAlert, ai: Optional[AIAnalysisRespon
     return recommendations
 
 
-def _derive_iocs(alert: DetectionAlert, enrichments: List[ThreatEnrichment]) -> List[str]:
+def _derive_iocs(
+    alert: DetectionAlert, enrichments: list[ThreatEnrichment]
+) -> list[str]:
     """Collect all indicators of compromise from alert and enrichment data."""
-    iocs: List[str] = []
+    iocs: list[str] = []
     if alert.source_ip:
         iocs.append(f"Source IP: {alert.source_ip}")
     if alert.destination_ip:
@@ -89,13 +90,14 @@ def _export_metadata(report_type: ReportType, export_format: str) -> ExportMetad
     return ExportMetadata(report_type=report_type, export_format=export_format)
 
 
-def _enrichments_to_dicts(enrichments: List[ThreatEnrichment]) -> List[dict]:
+def _enrichments_to_dicts(enrichments: list[ThreatEnrichment]) -> list[dict]:
     return [e.model_dump(mode="json") for e in enrichments]
 
 
 # ---------------------------------------------------------------------------
 # Executive Report Template
 # ---------------------------------------------------------------------------
+
 
 class ExecutiveReportTemplate:
     """
@@ -106,15 +108,19 @@ class ExecutiveReportTemplate:
     def build(
         self,
         alert: DetectionAlert,
-        enrichments: List[ThreatEnrichment],
-        ai: Optional[AIAnalysisResponse],
+        enrichments: list[ThreatEnrichment],
+        ai: AIAnalysisResponse | None,
         export_format: str = "json",
     ) -> ExecutiveReport:
         return ExecutiveReport(
             title=f"Executive Security Report – {alert.title}",
-            executive_summary=ai.executive_summary if ai else "AI Analysis not available.",
+            executive_summary=(
+                ai.executive_summary if ai else "AI Analysis not available."
+            ),
             severity=alert.severity.value,
-            business_impact=_derive_business_impact(alert.severity.value, alert.attack_type),
+            business_impact=_derive_business_impact(
+                alert.severity.value, alert.attack_type
+            ),
             high_level_recommendations=_derive_recommendations(alert, ai),
             incident_status=ReportStatus.OPEN,
             alert_id=alert.alert_id,
@@ -128,6 +134,7 @@ class ExecutiveReportTemplate:
 # Technical Report Template
 # ---------------------------------------------------------------------------
 
+
 class TechnicalReportTemplate:
     """
     Builds a TechnicalReport from core domain objects.
@@ -137,8 +144,8 @@ class TechnicalReportTemplate:
     def build(
         self,
         alert: DetectionAlert,
-        enrichments: List[ThreatEnrichment],
-        ai: Optional[AIAnalysisResponse],
+        enrichments: list[ThreatEnrichment],
+        ai: AIAnalysisResponse | None,
         export_format: str = "json",
     ) -> TechnicalReport:
         return TechnicalReport(
@@ -148,10 +155,15 @@ class TechnicalReportTemplate:
             rule_version=alert.rule_version,
             evidence=alert.evidence,
             threat_intelligence=_enrichments_to_dicts(enrichments),
-            mitre_technique=alert.mitre_technique or (ai.mitre_technique if ai else None),
+            mitre_technique=alert.mitre_technique
+            or (ai.mitre_technique if ai else None),
             mitre_tactic=alert.mitre_tactic,
-            ai_technical_analysis=ai.technical_explanation if ai else "AI Analysis not available.",
-            recommended_actions=ai.recommended_actions if ai else "Consult incident response playbooks.",
+            ai_technical_analysis=(
+                ai.technical_explanation if ai else "AI Analysis not available."
+            ),
+            recommended_actions=(
+                ai.recommended_actions if ai else "Consult incident response playbooks."
+            ),
             confidence_score=ai.confidence_score if ai else alert.confidence,
             false_positive_likelihood=ai.false_positive_likelihood if ai else "Unknown",
             metadata=_export_metadata(ReportType.TECHNICAL, export_format),
@@ -162,6 +174,7 @@ class TechnicalReportTemplate:
 # Incident Report Template
 # ---------------------------------------------------------------------------
 
+
 class IncidentReportTemplate:
     """
     Builds a comprehensive IncidentReport combining executive and technical layers.
@@ -171,9 +184,9 @@ class IncidentReportTemplate:
     def build(
         self,
         alert: DetectionAlert,
-        enrichments: List[ThreatEnrichment],
-        ai: Optional[AIAnalysisResponse],
-        timeline: List[TimelineEntry],
+        enrichments: list[ThreatEnrichment],
+        ai: AIAnalysisResponse | None,
+        timeline: list[TimelineEntry],
         export_format: str = "json",
     ) -> IncidentReport:
         mitre_mapping = {
@@ -182,20 +195,29 @@ class IncidentReportTemplate:
         }
         return IncidentReport(
             title=f"Security Incident Report – {alert.title}",
-            executive_summary=ai.executive_summary if ai else "AI Analysis not available.",
+            executive_summary=(
+                ai.executive_summary if ai else "AI Analysis not available."
+            ),
             severity=alert.severity.value,
-            business_impact=_derive_business_impact(alert.severity.value, alert.attack_type),
+            business_impact=_derive_business_impact(
+                alert.severity.value, alert.attack_type
+            ),
             incident_status=ReportStatus.OPEN,
-            technical_details=ai.technical_explanation if ai else "AI Analysis not available.",
+            technical_details=(
+                ai.technical_explanation if ai else "AI Analysis not available."
+            ),
             original_log=alert.raw_log_reference,
             detection_rule=alert.rule_name,
             evidence=alert.evidence,
             threat_intelligence=_enrichments_to_dicts(enrichments),
             ai_findings=ai.likely_attack_goal if ai else "AI Analysis not available.",
-            analyst_notes=ai.analyst_notes if ai else "Generated without AI assistance.",
+            analyst_notes=(
+                ai.analyst_notes if ai else "Generated without AI assistance."
+            ),
             false_positive_likelihood=ai.false_positive_likelihood if ai else "Unknown",
             confidence_score=ai.confidence_score if ai else alert.confidence,
-            mitre_technique=alert.mitre_technique or (ai.mitre_technique if ai else None),
+            mitre_technique=alert.mitre_technique
+            or (ai.mitre_technique if ai else None),
             mitre_tactic=alert.mitre_tactic,
             mitre_mapping=mitre_mapping,
             timeline=timeline,

@@ -23,25 +23,24 @@ SOLID compliance:
 """
 
 import logging
-from datetime import datetime, timezone
-from typing import List, Union, Optional
+from datetime import UTC, datetime
 
+from app.ai.models import AIAnalysisResponse
+from app.enrichment.models import ThreatEnrichment
+from app.reports.exceptions import InvalidReportTypeError, MissingReportDataError
 from app.reports.models import (
     ExecutiveReport,
-    TechnicalReport,
     IncidentReport,
     ReportType,
+    TechnicalReport,
 )
 from app.reports.templates import (
     ExecutiveReportTemplate,
-    TechnicalReportTemplate,
     IncidentReportTemplate,
+    TechnicalReportTemplate,
 )
 from app.reports.timeline import TimelineEngine
-from app.reports.exceptions import InvalidReportTypeError, MissingReportDataError
 from app.schemas.detection_alert import DetectionAlert
-from app.enrichment.models import ThreatEnrichment
-from app.ai.models import AIAnalysisResponse
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +76,9 @@ class ReportingService:
         self,
         report_type: str,
         alert: DetectionAlert,
-        enrichments: List[ThreatEnrichment],
-        ai: Optional[AIAnalysisResponse] = None,
-    ) -> Union[ExecutiveReport, TechnicalReport, IncidentReport]:
+        enrichments: list[ThreatEnrichment],
+        ai: AIAnalysisResponse | None = None,
+    ) -> ExecutiveReport | TechnicalReport | IncidentReport:
         """
         Generate a structured report of the requested type.
 
@@ -96,7 +95,7 @@ class ReportingService:
             InvalidReportTypeError: If report_type is not supported.
             MissingReportDataError: If required fields are absent.
         """
-        start = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
         self._validate_inputs(report_type, alert, ai)
 
         try:
@@ -115,7 +114,7 @@ class ReportingService:
 
         report = self._dispatch(report_type_enum, alert, enrichments, ai)
 
-        elapsed = (datetime.now(timezone.utc) - start).total_seconds()
+        elapsed = (datetime.now(UTC) - start).total_seconds()
         logger.info(
             "Report generation completed",
             extra={
@@ -134,7 +133,7 @@ class ReportingService:
         self,
         report_type: str,
         alert: DetectionAlert,
-        ai: Optional[AIAnalysisResponse],
+        ai: AIAnalysisResponse | None,
     ) -> None:
         if not report_type or not report_type.strip():
             raise MissingReportDataError("report_type")
@@ -147,9 +146,9 @@ class ReportingService:
         self,
         report_type: ReportType,
         alert: DetectionAlert,
-        enrichments: List[ThreatEnrichment],
-        ai: Optional[AIAnalysisResponse],
-    ) -> Union[ExecutiveReport, TechnicalReport, IncidentReport]:
+        enrichments: list[ThreatEnrichment],
+        ai: AIAnalysisResponse | None,
+    ) -> ExecutiveReport | TechnicalReport | IncidentReport:
         if report_type == ReportType.EXECUTIVE:
             return self._executive.build(alert, enrichments, ai)
 

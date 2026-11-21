@@ -11,7 +11,6 @@ Changes from Sprint 7:
 
 import logging
 import os
-from typing import List, Tuple
 
 from fastapi import UploadFile
 
@@ -49,7 +48,7 @@ class ParsingService:
 
     def parse_uploaded(
         self, parser_name: str, file_path: str
-    ) -> Tuple[int, int, int, List[LogEvent]]:
+    ) -> tuple[int, int, int, list[LogEvent]]:
         """
         Parse a log file at the given path.
 
@@ -68,7 +67,7 @@ class ParsingService:
 
         # Count non-empty lines to calculate failed parses
         try:
-            with open(file_path, "r", encoding="utf-8", errors="replace") as fh:
+            with open(file_path, encoding="utf-8", errors="replace") as fh:
                 total_lines = sum(1 for line in fh if line.strip())
         except OSError as exc:
             logger.warning("Could not count lines in %s: %s", file_path, exc)
@@ -85,7 +84,7 @@ class ParsingService:
 
     async def parse_file(
         self, parser_name: str, file: UploadFile
-    ) -> Tuple[int, int, int, List[LogEvent]]:
+    ) -> tuple[int, int, int, list[LogEvent]]:
         """
         Legacy method: accepts an UploadFile, writes to a temp path, then parses.
 

@@ -1,17 +1,18 @@
-from datetime import datetime
-from typing import Dict, List, Tuple
-from app.detection.base import BaseRule
-from app.schemas.log_event import LogEvent
-from app.schemas.detection_alert import DetectionAlert
-from app.schemas.severity import Severity
-from app.config.settings import settings
 import logging
 import re
+from datetime import datetime
+
+from app.config.settings import settings
+from app.detection.base import BaseRule
+from app.schemas.detection_alert import DetectionAlert
+from app.schemas.log_event import LogEvent
+from app.schemas.severity import Severity
 
 logger = logging.getLogger(__name__)
 
 # Preserved for backward compatibility
-DIR_ENUM_PATTERN = re.compile(r'(?i)(/admin|/login|/\.git|/backup|/config|/phpmyadmin)')
+DIR_ENUM_PATTERN = re.compile(r"(?i)(/admin|/login|/\.git|/backup|/config|/phpmyadmin)")
+
 
 class DirectoryEnumerationRule(BaseRule):
     """
@@ -19,21 +20,29 @@ class DirectoryEnumerationRule(BaseRule):
     Detects when the same source IP probes multiple distinct unusual or administrative
     paths within a configurable time window.
     """
+
     def __init__(self):
         # Maps source_ip -> List of (timestamp, endpoint, raw_log)
-        self._state: Dict[str, List[Tuple[datetime, str, str]]] = {}
+        self._state: dict[str, list[tuple[datetime, str, str]]] = {}
         self.threshold = getattr(settings, "DETECTION_DIR_ENUM_THRESHOLD", 3)
         self.window_seconds = getattr(settings, "DETECTION_DIR_ENUM_WINDOW_SECONDS", 60)
         self._cleanup_counter = 0
 
     @property
-    def rule_name(self) -> str: return "dir_enum"
+    def rule_name(self) -> str:
+        return "dir_enum"
+
     @property
-    def rule_version(self) -> str: return "2.0.0"
+    def rule_version(self) -> str:
+        return "2.0.0"
+
     @property
-    def description(self) -> str: return "Detects directory enumeration or sensitive file reconnaissance."
+    def description(self) -> str:
+        return "Detects directory enumeration or sensitive file reconnaissance."
+
     @property
-    def severity(self) -> Severity: return Severity.LOW
+    def severity(self) -> Severity:
+        return Severity.LOW
 
     def _is_benign_path(self, endpoint: str) -> bool:
         """
@@ -76,11 +85,36 @@ class DirectoryEnumerationRule(BaseRule):
             return True
 
         # Static assets directories
-        if path.startswith(("/css/", "/js/", "/assets/", "/images/", "/fonts/", "/static/", "/public/", "/media/")):
+        if path.startswith(
+            (
+                "/css/",
+                "/js/",
+                "/assets/",
+                "/images/",
+                "/fonts/",
+                "/static/",
+                "/public/",
+                "/media/",
+            )
+        ):
             return True
 
         # Common static file extensions
-        benign_exts = (".css", ".js", ".png", ".jpg", ".jpeg", ".svg", ".ico", ".woff", ".woff2", ".map", ".gif", ".html", ".htm")
+        benign_exts = (
+            ".css",
+            ".js",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".svg",
+            ".ico",
+            ".woff",
+            ".woff2",
+            ".map",
+            ".gif",
+            ".html",
+            ".htm",
+        )
         if path.endswith(benign_exts):
             return True
 
@@ -90,12 +124,16 @@ class DirectoryEnumerationRule(BaseRule):
         """Prevents memory leaks by aggressively removing stale IP records."""
         stale_ips = []
         for ip, records in self._state.items():
-            valid_records = [r for r in records if (current_time - r[0]).total_seconds() <= self.window_seconds]
+            valid_records = [
+                r
+                for r in records
+                if (current_time - r[0]).total_seconds() <= self.window_seconds
+            ]
             if not valid_records:
                 stale_ips.append(ip)
             else:
                 self._state[ip] = valid_records
-                
+
         for ip in stale_ips:
             del self._state[ip]
 
@@ -122,7 +160,8 @@ class DirectoryEnumerationRule(BaseRule):
 
         # Prune events outside the time window
         self._state[ip] = [
-            r for r in self._state[ip]
+            r
+            for r in self._state[ip]
             if (current_time - r[0]).total_seconds() <= self.window_seconds
         ]
 
@@ -134,14 +173,23 @@ class DirectoryEnumerationRule(BaseRule):
         # But if part of a reconnaissance sequence with other distinct paths, it contributes.
         non_robots_paths = [p for p in unique_paths if p.lower() != "/robots.txt"]
 
-        if len(unique_paths) >= self.threshold and len(non_robots_paths) >= 1 and (len(unique_paths) > 1 or "/robots.txt" not in [p.lower() for p in unique_paths]):
+        if (
+            len(unique_paths) >= self.threshold
+            and len(non_robots_paths) >= 1
+            and (
+                len(unique_paths) > 1
+                or "/robots.txt" not in [p.lower() for p in unique_paths]
+            )
+        ):
             return True
 
         return False
 
     def generate_alert(self, event: LogEvent) -> DetectionAlert:
         ip = event.source_ip or "unknown"
-        records = self._state.get(ip, [(event.timestamp, event.endpoint, event.raw_log or "")])
+        records = self._state.get(
+            ip, [(event.timestamp, event.endpoint, event.raw_log or "")]
+        )
 
         unique_paths = list(dict.fromkeys(r[1] for r in records))
         sample_paths = unique_paths[:15]  # provide up to 15 sample paths
@@ -157,7 +205,9 @@ class DirectoryEnumerationRule(BaseRule):
             f"within {window} seconds, consistent with web directory reconnaissance."
         )
 
-        combined_raw_logs = "\n".join(r[2] for r in records if r[2]) or (event.raw_log or "")
+        combined_raw_logs = "\n".join(r[2] for r in records if r[2]) or (
+            event.raw_log or ""
+        )
 
         evidence = {
             "unique_paths_probed": len(unique_paths),

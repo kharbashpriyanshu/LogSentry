@@ -1,15 +1,19 @@
-import httpx
 import json
 import logging
-from app.ai.providers.base_provider import BaseAIProvider
-from app.schemas.detection_alert import DetectionAlert
+
+import httpx
+
+from app.ai.exceptions import (
+    AIInvalidResponseError,
+    AIProviderUnavailableError,
+    AIRateLimitError,
+    AITimeoutError,
+)
 from app.ai.models import AIAnalysisResponse
 from app.ai.prompts import SOC_ANALYST_SYSTEM_PROMPT, SOC_ANALYST_USER_PROMPT_TEMPLATE
+from app.ai.providers.base_provider import BaseAIProvider
 from app.config.settings import settings
-from app.ai.exceptions import (
-    AIProviderUnavailableError, AITimeoutError,
-    AIRateLimitError, AIInvalidResponseError
-)
+from app.schemas.detection_alert import DetectionAlert
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +39,7 @@ class GeminiProvider(BaseAIProvider):
         try:
             with httpx.Client(timeout=5.0) as client:
                 res = client.get(
-                    f"{GEMINI_BASE_URL}/models",
-                    params={"key": self.api_key}
+                    f"{GEMINI_BASE_URL}/models", params={"key": self.api_key}
                 )
                 return res.status_code == 200
         except Exception:
@@ -56,25 +59,18 @@ class GeminiProvider(BaseAIProvider):
             severity=alert.severity.value,
             source_ip=alert.source_ip,
             endpoint=alert.endpoint,
-            evidence=json.dumps(alert.evidence)
+            evidence=json.dumps(alert.evidence),
         )
 
         # Gemini uses a single "contents" array; system instruction is separate
         payload = {
-            "system_instruction": {
-                "parts": [{"text": SOC_ANALYST_SYSTEM_PROMPT}]
-            },
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [{"text": user_prompt}]
-                }
-            ],
+            "system_instruction": {"parts": [{"text": SOC_ANALYST_SYSTEM_PROMPT}]},
+            "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
             "generationConfig": {
                 "temperature": self.temperature,
                 "maxOutputTokens": self.max_tokens,
                 "responseMimeType": "application/json",
-            }
+            },
         }
 
         url = f"{GEMINI_BASE_URL}/models/{GEMINI_MODEL}:generateContent"
@@ -85,18 +81,22 @@ class GeminiProvider(BaseAIProvider):
                     url,
                     params={"key": self.api_key},
                     json=payload,
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
             if response.status_code == 429:
-                raise AIRateLimitError("Gemini rate limit exceeded. Retry after a moment.")
+                raise AIRateLimitError(
+                    "Gemini rate limit exceeded. Retry after a moment."
+                )
             elif response.status_code == 401 or response.status_code == 403:
                 raise AIProviderUnavailableError(
                     f"Gemini authentication failed (HTTP {response.status_code}). "
                     "Verify GEMINI_API_KEY."
                 )
             elif response.status_code != 200:
-                logger.error(f"Gemini error {response.status_code}: {response.text[:500]}")
+                logger.error(
+                    f"Gemini error {response.status_code}: {response.text[:500]}"
+                )
                 raise AIProviderUnavailableError(
                     f"Gemini API returned HTTP {response.status_code}."
                 )
@@ -121,20 +121,23 @@ class GeminiProvider(BaseAIProvider):
             try:
                 return AIAnalysisResponse.model_validate_json(content)
             except Exception as parse_err:
-                logger.error(f"Failed to parse Gemini JSON response: {parse_err}\nContent: {content[:500]}")
+                logger.error(
+                    f"Failed to parse Gemini JSON response: {parse_err}\nContent: {content[:500]}"
+                )
                 raise AIInvalidResponseError(
                     f"Gemini returned valid JSON but it did not match the expected schema: {parse_err}"
                 )
 
         except httpx.TimeoutException:
-            raise AITimeoutError(
-                f"Gemini API request timed out after {self.timeout}s."
-            )
+            raise AITimeoutError(f"Gemini API request timed out after {self.timeout}s.")
         except httpx.RequestError as e:
-            raise AIProviderUnavailableError(
-                f"Network error connecting to Gemini: {e}"
-            )
-        except (AIRateLimitError, AIProviderUnavailableError, AITimeoutError, AIInvalidResponseError):
+            raise AIProviderUnavailableError(f"Network error connecting to Gemini: {e}")
+        except (
+            AIRateLimitError,
+            AIProviderUnavailableError,
+            AITimeoutError,
+            AIInvalidResponseError,
+        ):
             raise
         except Exception as e:
             raise AIInvalidResponseError(f"Unexpected error in Gemini provider: {e}")

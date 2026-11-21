@@ -6,6 +6,7 @@ Follows the established exception hierarchy of LogSentry.
 
 class ReportingError(Exception):
     """Base exception for all reporting errors."""
+
     pass
 
 
@@ -14,7 +15,9 @@ class InvalidReportTypeError(ReportingError):
 
     def __init__(self, report_type: str) -> None:
         self.report_type = report_type
-        super().__init__(f"Invalid report type: '{report_type}'. Supported types: executive, technical, incident.")
+        super().__init__(
+            f"Invalid report type: '{report_type}'. Supported types: executive, technical, incident."
+        )
 
 
 class MissingReportDataError(ReportingError):

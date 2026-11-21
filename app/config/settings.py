@@ -1,7 +1,7 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator, model_validator
-from typing import Optional, List
 import logging
+
+from pydantic import field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     # Maximum file upload size in bytes (10 MB)
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024
     # Allowed CORS origins — empty list = deny all (override in production)
-    CORS_ALLOWED_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    CORS_ALLOWED_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
     # API rate limit: requests per minute per IP (0 = disabled)
     RATE_LIMIT_RPM: int = 0
 
@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "logsentry_db"
     POSTGRES_PORT: str = "5432"
-    DATABASE_URI: Optional[str] = None
+    DATABASE_URI: str | None = None
 
     # ---------------------------------------------------------------------------
     # Logging
@@ -62,8 +62,13 @@ class Settings(BaseSettings):
     DETECTION_BRUTE_FORCE_WINDOW_SECONDS: int = 60
     DETECTION_DIR_ENUM_THRESHOLD: int = 3
     DETECTION_DIR_ENUM_WINDOW_SECONDS: int = 60
-    DETECTION_ENABLED_RULES: List[str] = [
-        "sqli", "xss", "path_traversal", "cmd_injection", "dir_enum", "brute_force"
+    DETECTION_ENABLED_RULES: list[str] = [
+        "sqli",
+        "xss",
+        "path_traversal",
+        "cmd_injection",
+        "dir_enum",
+        "brute_force",
     ]
     DETECTION_DEFAULT_CONFIDENCE: float = 0.8
 
@@ -71,8 +76,8 @@ class Settings(BaseSettings):
     # AI
     # ---------------------------------------------------------------------------
     AI_PROVIDER: str = "openai"
-    OPENAI_API_KEY: Optional[str] = None
-    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
     OLLAMA_URL: str = "http://localhost:11434"
     AI_MODEL_NAME: str = "gpt-4-turbo"
     AI_REQUEST_TIMEOUT: int = 30
@@ -82,8 +87,8 @@ class Settings(BaseSettings):
     # ---------------------------------------------------------------------------
     # Enrichment
     # ---------------------------------------------------------------------------
-    ABUSEIPDB_API_KEY: Optional[str] = None
-    OTX_API_KEY: Optional[str] = None
+    ABUSEIPDB_API_KEY: str | None = None
+    OTX_API_KEY: str | None = None
     ENRICHMENT_CACHE_TTL: int = 3600
     ENABLE_ABUSEIPDB: bool = True
     ENABLE_OTX: bool = True
@@ -121,7 +126,9 @@ class Settings(BaseSettings):
     @classmethod
     def validate_confidence(cls, v: float) -> float:
         if not 0.0 <= v <= 1.0:
-            raise ValueError(f"DETECTION_DEFAULT_CONFIDENCE must be in [0.0, 1.0], got {v}")
+            raise ValueError(
+                f"DETECTION_DEFAULT_CONFIDENCE must be in [0.0, 1.0], got {v}"
+            )
         return v
 
     @field_validator("AI_TEMPERATURE")

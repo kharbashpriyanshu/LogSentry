@@ -1,13 +1,14 @@
-from abc import ABC, abstractmethod
-from typing import Optional, List
-from app.schemas.log_event import LogEvent
 import logging
+from abc import ABC, abstractmethod
+
+from app.schemas.log_event import LogEvent
 
 logger = logging.getLogger(__name__)
 
+
 class BaseParser(ABC):
     """Abstract base class for all log parsers."""
-    
+
     @property
     @abstractmethod
     def parser_name(self) -> str:
@@ -19,34 +20,34 @@ class BaseParser(ABC):
     def parser_version(self) -> str:
         """Version of the parser."""
         pass
-        
+
     @property
     @abstractmethod
-    def supported_formats(self) -> List[str]:
+    def supported_formats(self) -> list[str]:
         """List of log formats supported by this parser."""
         pass
-        
+
     @property
     @abstractmethod
     def description(self) -> str:
         """Description of what this parser handles."""
         pass
-    
+
     @abstractmethod
     def validate(self, log_line: str) -> bool:
         """Validate if a log line matches the expected format for this parser."""
         pass
-        
+
     @abstractmethod
-    def parse_line(self, log_line: str) -> Optional[LogEvent]:
+    def parse_line(self, log_line: str) -> LogEvent | None:
         """Parse a single log line into a LogEvent object."""
         pass
-        
-    def parse_file(self, file_path: str) -> List[LogEvent]:
+
+    def parse_file(self, file_path: str) -> list[LogEvent]:
         """Parse an entire file of logs, gracefully skipping invalid lines."""
         events = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+            with open(file_path, encoding="utf-8", errors="replace") as f:
                 for line in f:
                     line = line.strip()
                     if not line:

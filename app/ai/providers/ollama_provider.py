@@ -1,10 +1,12 @@
 import logging
+
+from app.ai.exceptions import AIProviderUnavailableError
+from app.ai.models import AIAnalysisResponse
 from app.ai.providers.base_provider import BaseAIProvider
 from app.schemas.detection_alert import DetectionAlert
-from app.ai.models import AIAnalysisResponse
-from app.ai.exceptions import AIProviderUnavailableError
 
 logger = logging.getLogger(__name__)
+
 
 class OllamaProvider(BaseAIProvider):
     @property
@@ -15,4 +17,6 @@ class OllamaProvider(BaseAIProvider):
         return False
 
     def analyze_alert(self, alert: DetectionAlert) -> AIAnalysisResponse:
-        raise AIProviderUnavailableError("Ollama provider is not yet fully implemented.")
+        raise AIProviderUnavailableError(
+            "Ollama provider is not yet fully implemented."
+        )

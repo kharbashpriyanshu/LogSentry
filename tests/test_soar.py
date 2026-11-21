@@ -1,7 +1,7 @@
-import pytest
-from app.services.soar_service import SOARService
 from app.schemas.detection_alert import DetectionAlert
 from app.schemas.severity import Severity
+from app.services.soar_service import SOARService
+
 
 def test_soar_quarantine_and_release():
     ip = "198.51.100.44"
@@ -10,7 +10,7 @@ def test_soar_quarantine_and_release():
         reason="Automated Brute Force Containment",
         duration_seconds=3600,
         severity="HIGH",
-        analyst="TEST_RUNNER"
+        analyst="TEST_RUNNER",
     )
     assert record["ip"] == ip
     assert SOARService.is_ip_quarantined(ip) is True
@@ -23,6 +23,7 @@ def test_soar_quarantine_and_release():
     released = SOARService.release_ip(ip, analyst="admin", reason="Test completed")
     assert released is True
     assert SOARService.is_ip_quarantined(ip) is False
+
 
 def test_soar_auto_containment_critical():
     alert = DetectionAlert(
@@ -40,7 +41,7 @@ def test_soar_auto_containment_critical():
         mitre_tactic="Execution",
         recommendation="Isolate IP",
         evidence={},
-        raw_log_reference="dummy"
+        raw_log_reference="dummy",
     )
     res = SOARService.evaluate_auto_containment(alert)
     assert res is not None

@@ -1,17 +1,18 @@
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel
 
+
 class LogEvent(BaseModel):
-    timestamp: Optional[datetime] = None
-    source_ip: Optional[str] = None
-    destination_ip: Optional[str] = None
-    method: Optional[str] = None
-    endpoint: Optional[str] = None
-    protocol: Optional[str] = None
-    status_code: Optional[int] = None
-    response_size: Optional[int] = None
-    user_agent: Optional[str] = None
-    hostname: Optional[str] = None
+    timestamp: datetime | None = None
+    source_ip: str | None = None
+    destination_ip: str | None = None
+    method: str | None = None
+    endpoint: str | None = None
+    protocol: str | None = None
+    status_code: int | None = None
+    response_size: int | None = None
+    user_agent: str | None = None
+    hostname: str | None = None
     raw_log: str
     parser_name: str

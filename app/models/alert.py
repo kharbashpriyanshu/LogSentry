@@ -1,20 +1,22 @@
-from sqlalchemy import Column, String, Float, DateTime, JSON, ForeignKey, Table
+from datetime import UTC, datetime
+
+from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, String, Table
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
-import uuid
+
 from app.database.base import Base
 
 incident_alert_association = Table(
-    'incident_alert',
+    "incident_alert",
     Base.metadata,
-    Column('incident_id', String, ForeignKey('incidents.id'), primary_key=True),
-    Column('alert_id', String, ForeignKey('alerts.id'), primary_key=True)
+    Column("incident_id", String, ForeignKey("incidents.id"), primary_key=True),
+    Column("alert_id", String, ForeignKey("alerts.id"), primary_key=True),
 )
+
 
 class AlertModel(Base):
     __tablename__ = "alerts"
 
-    id = Column(String, primary_key=True) # Map to alert_id in Pydantic schema
+    id = Column(String, primary_key=True)  # Map to alert_id in Pydantic schema
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     severity = Column(String, nullable=False)
@@ -40,8 +42,16 @@ class AlertModel(Base):
     resolution_type = Column(String, nullable=True)
     resolution_note = Column(String, nullable=True)
     false_positive_reason = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
     log_event = relationship("LogEventModel", back_populates="alerts")
-    incidents = relationship("IncidentModel", secondary=incident_alert_association, back_populates="alerts")
+    incidents = relationship(
+        "IncidentModel", secondary=incident_alert_association, back_populates="alerts"
+    )

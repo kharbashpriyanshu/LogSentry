@@ -22,16 +22,15 @@ import logging
 import threading
 import time
 from io import BytesIO
-from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from app.main import app
-from app.enrichment.cache import InMemoryCache
-from app.core.logging import StructuredFormatter
 from app.config.settings import Settings
+from app.core.logging import StructuredFormatter
+from app.enrichment.cache import InMemoryCache
+from app.main import app
 
 
 @pytest.fixture
@@ -89,6 +88,7 @@ class TestSecurityHeaders:
         cid = response.headers["X-Correlation-ID"]
         # Must be a valid UUID4
         import uuid
+
         uuid.UUID(cid, version=4)  # raises ValueError if invalid
 
     def test_process_time_header(self, client: TestClient):
@@ -189,7 +189,13 @@ class TestRequestSizeLimit:
 
 
 class TestFileUploadSecurity:
-    def _upload(self, client: TestClient, filename: str, content: bytes = b"test log", content_type: str = "text/plain"):
+    def _upload(
+        self,
+        client: TestClient,
+        filename: str,
+        content: bytes = b"test log",
+        content_type: str = "text/plain",
+    ):
         return client.post(
             "/api/v1/parser/parse-file",
             data={"parser_name": "apache"},
@@ -199,7 +205,10 @@ class TestFileUploadSecurity:
     def test_normal_filename_accepted(self, client: TestClient):
         response = self._upload(client, "access.log")
         # Any response other than 400/415 for filename means it passed validation
-        assert response.status_code not in (400, 415) or "filename" not in response.text.lower()
+        assert (
+            response.status_code not in (400, 415)
+            or "filename" not in response.text.lower()
+        )
 
     def test_path_traversal_blocked(self, client: TestClient):
         """
@@ -271,7 +280,7 @@ class TestInMemoryCache:
     def test_stats(self):
         cache = InMemoryCache(ttl_seconds=60)
         cache.set("k", "v")
-        cache.get("k")   # hit
+        cache.get("k")  # hit
         cache.get("miss")  # miss
         stats = cache.stats()
         assert stats["hits"] == 1
@@ -365,10 +374,15 @@ class TestStructuredFormatter:
             raise ValueError("test error")
         except ValueError:
             import sys
+
             record = logging.LogRecord(
-                name="test", level=logging.ERROR,
-                pathname="", lineno=0, msg="err",
-                args=(), exc_info=sys.exc_info()
+                name="test",
+                level=logging.ERROR,
+                pathname="",
+                lineno=0,
+                msg="err",
+                args=(),
+                exc_info=sys.exc_info(),
             )
         output = formatter.format(record)
         parsed = json.loads(output)

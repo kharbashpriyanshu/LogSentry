@@ -1,9 +1,12 @@
+from datetime import UTC
+
 import pytest
-from app.parsers.factory import ParserFactory
+
 from app.parsers.apache import ApacheParser
+from app.parsers.exceptions import UnsupportedParserError
+from app.parsers.factory import ParserFactory
 from app.parsers.nginx import NginxParser
-from app.parsers.exceptions import UnsupportedParserError, ParserValidationError
-from datetime import datetime, timezone
+
 
 def test_apache_parser_valid_line():
     parser = ApacheParser()
@@ -17,12 +20,13 @@ def test_apache_parser_valid_line():
     assert event.status_code == 200
     assert event.response_size == 2326
     assert event.parser_name == "apache"
-    
+
     # Check timestamp normalization
     assert event.timestamp is not None
     assert event.timestamp.year == 2000
     assert event.timestamp.month == 10
-    assert event.timestamp.tzinfo == timezone.utc
+    assert event.timestamp.tzinfo == UTC
+
 
 def test_apache_parser_invalid_line():
     parser = ApacheParser()
@@ -31,6 +35,7 @@ def test_apache_parser_invalid_line():
     event = parser.parse_line(line)
     assert event is None
 
+
 def test_apache_parser_malformed_timestamp():
     parser = ApacheParser()
     line = '127.0.0.1 - frank [Invalid/Time:Stamp] "GET / HTTP/1.0" 200 2326 "-" "-"'
@@ -38,6 +43,7 @@ def test_apache_parser_malformed_timestamp():
     event = parser.parse_line(line)
     assert event is not None
     assert event.timestamp is None  # Handled gracefully
+
 
 def test_nginx_parser_valid_line():
     parser = NginxParser()
@@ -50,20 +56,23 @@ def test_nginx_parser_valid_line():
     assert event.status_code == 200
     assert event.response_size == 512
 
+
 def test_factory_get_parser():
     parser = ParserFactory.get_parser("apache")
     assert isinstance(parser, ApacheParser)
-    
+
     with pytest.raises(UnsupportedParserError):
         ParserFactory.get_parser("unknown")
+
 
 def test_factory_guess_parser():
     apache_line = '127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "-" "-"'
     parser = ParserFactory.guess_parser(apache_line)
     assert isinstance(parser, (ApacheParser, NginxParser))
-    
+
     with pytest.raises(UnsupportedParserError):
         ParserFactory.guess_parser("invalid line")
+
 
 def test_parse_file():
     parser = ApacheParser()
@@ -73,6 +82,7 @@ def test_parse_file():
     events_malformed = parser.parse_file("sample_logs/apache/malformed.log")
     assert len(events_malformed) == 0
 
+
 def test_parser_metadata():
     parser = ApacheParser()
     assert parser.parser_name == "apache"
@@ -80,16 +90,19 @@ def test_parser_metadata():
     assert "combined" in parser.supported_formats
     assert "Apache" in parser.description
 
+
 def test_parse_empty_file():
     parser = ApacheParser()
     events = parser.parse_file("sample_logs/apache/empty.log")
     assert len(events) == 0
+
 
 def test_parse_mixed_file():
     parser = ApacheParser()
     events = parser.parse_file("sample_logs/apache/mixed.log")
     # mixed.log has 2 valid, 2 invalid
     assert len(events) == 2
+
 
 def test_parse_extremely_long_line():
     parser = ApacheParser()
@@ -99,6 +112,7 @@ def test_parse_extremely_long_line():
     event = parser.parse_line(line)
     assert event is not None
     assert event.user_agent == long_ua
+
 
 def test_parse_invalid_utf8():
     parser = ApacheParser()

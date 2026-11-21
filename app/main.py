@@ -14,30 +14,30 @@ Changes from Sprint 7:
 """
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from app.config.settings import settings
-from app.core.logging import setup_logging
-from app.middleware.core import CoreMiddleware, RequestSizeLimitMiddleware, get_metrics
-from app.exceptions.handlers import add_exception_handlers
+from app.api.v1.routers.ai import router as ai_router
+from app.api.v1.routers.alerts import router as alerts_router
+from app.api.v1.routers.dashboard import router as dashboard_router
+from app.api.v1.routers.detection import router as detection_router
+from app.api.v1.routers.enrichment import router as enrichment_router
 
 # Routers
 from app.api.v1.routers.health import router as health_router
-from app.api.v1.routers.parser import router as parser_router
-from app.api.v1.routers.detection import router as detection_router
-from app.api.v1.routers.alerts import router as alerts_router
-from app.api.v1.routers.ai import router as ai_router
-from app.api.v1.routers.enrichment import router as enrichment_router
-from app.api.v1.routers.reports import router as reports_router
 from app.api.v1.routers.incidents import router as incidents_router
-from app.api.v1.routers.dashboard import router as dashboard_router
+from app.api.v1.routers.parser import router as parser_router
+from app.api.v1.routers.reports import router as reports_router
 from app.api.v1.routers.soar import router as soar_router
 from app.api.v1.routers.syslog import router as syslog_router
+from app.config.settings import settings
+from app.core.logging import setup_logging
+from app.exceptions.handlers import add_exception_handlers
+from app.middleware.core import CoreMiddleware, RequestSizeLimitMiddleware, get_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -123,16 +123,28 @@ def create_app() -> FastAPI:
     # ------------------------------------------------------------------
     prefix = settings.API_V1_STR
     app.include_router(health_router, prefix=prefix, tags=["Health"])
-    app.include_router(dashboard_router, prefix=f"{prefix}/dashboard", tags=["Dashboard"])
+    app.include_router(
+        dashboard_router, prefix=f"{prefix}/dashboard", tags=["Dashboard"]
+    )
     app.include_router(parser_router, prefix=f"{prefix}/parser", tags=["Parser"])
-    app.include_router(detection_router, prefix=f"{prefix}/detection", tags=["Detection"])
+    app.include_router(
+        detection_router, prefix=f"{prefix}/detection", tags=["Detection"]
+    )
     app.include_router(alerts_router, prefix=f"{prefix}/alerts", tags=["Alerts"])
-    app.include_router(incidents_router, prefix=f"{prefix}/incidents", tags=["Incidents"])
+    app.include_router(
+        incidents_router, prefix=f"{prefix}/incidents", tags=["Incidents"]
+    )
     app.include_router(ai_router, prefix=f"{prefix}/ai", tags=["AI SOC Analyst"])
-    app.include_router(enrichment_router, prefix=f"{prefix}/enrichment", tags=["Threat Intelligence"])
+    app.include_router(
+        enrichment_router, prefix=f"{prefix}/enrichment", tags=["Threat Intelligence"]
+    )
     app.include_router(reports_router, prefix=f"{prefix}/reports", tags=["Reporting"])
-    app.include_router(soar_router, prefix=f"{prefix}/soar", tags=["SOAR & Active Defense"])
-    app.include_router(syslog_router, prefix=f"{prefix}/syslog", tags=["Syslog Ingestion"])
+    app.include_router(
+        soar_router, prefix=f"{prefix}/soar", tags=["SOAR & Active Defense"]
+    )
+    app.include_router(
+        syslog_router, prefix=f"{prefix}/syslog", tags=["Syslog Ingestion"]
+    )
 
     # ------------------------------------------------------------------
     # Observability endpoints (mounted directly on app, not versioned)
@@ -154,8 +166,9 @@ def create_app() -> FastAPI:
         Kubernetes readiness probe — checks that core subsystems are operational.
         Returns 200 when ready to accept traffic, 503 when warming up.
         """
-        from app.parsers.factory import ParserFactory
         from app.detection.registry import RuleRegistry
+        from app.parsers.factory import ParserFactory
+
         checks = {
             "parsers": len(ParserFactory.get_all_parsers()) > 0,
             "detection_rules": len(RuleRegistry.get_all_rules()) > 0,

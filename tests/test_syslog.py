@@ -1,6 +1,7 @@
-import pytest
 import asyncio
-from app.services.syslog_service import SyslogService, SyslogProtocol
+
+from app.services.syslog_service import SyslogProtocol, SyslogService
+
 
 def test_syslog_service_lifecycle():
     async def _run():

@@ -15,11 +15,10 @@ import csv
 import io
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Dict, Union
+from datetime import UTC, datetime
 
-from app.reports.models import ExecutiveReport, TechnicalReport, IncidentReport
 from app.reports.exceptions import CSVExportError
+from app.reports.models import ExecutiveReport, IncidentReport, TechnicalReport
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +38,8 @@ class CSVGenerator:
 
     def generate(
         self,
-        report: Union[ExecutiveReport, TechnicalReport, IncidentReport],
-    ) -> Dict[str, bytes]:
+        report: ExecutiveReport | TechnicalReport | IncidentReport,
+    ) -> dict[str, bytes]:
         """
         Export the report to one or more CSV byte streams.
 
@@ -50,13 +49,16 @@ class CSVGenerator:
         Raises:
             CSVExportError: on any serialisation failure.
         """
-        start = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
         logger.info(
             "CSV export started",
-            extra={"report_type": report.report_type.value, "report_id": report.report_id},
+            extra={
+                "report_type": report.report_type.value,
+                "report_id": report.report_id,
+            },
         )
         try:
-            sheets: Dict[str, bytes] = {}
+            sheets: dict[str, bytes] = {}
             report_type = report.report_type.value
 
             sheets["alert_data"] = self._alert_sheet(report)
@@ -64,9 +66,9 @@ class CSVGenerator:
 
             if report_type == "incident":
                 sheets["timeline"] = self._timeline_sheet(report)  # type: ignore[arg-type]
-                sheets["ioc"] = self._ioc_sheet(report)              # type: ignore[arg-type]
+                sheets["ioc"] = self._ioc_sheet(report)  # type: ignore[arg-type]
 
-            elapsed = (datetime.now(timezone.utc) - start).total_seconds()
+            elapsed = (datetime.now(UTC) - start).total_seconds()
             logger.info(
                 "CSV export completed",
                 extra={
@@ -88,14 +90,16 @@ class CSVGenerator:
     # Sheet Builders
     # ------------------------------------------------------------------
 
-    def _alert_sheet(self, report: Union[ExecutiveReport, TechnicalReport, IncidentReport]) -> bytes:
+    def _alert_sheet(
+        self, report: ExecutiveReport | TechnicalReport | IncidentReport
+    ) -> bytes:
         """Flatten top-level alert / report fields into a single-row CSV."""
         buf = io.StringIO()
-        row: Dict[str, str] = {
-            "report_id":    report.report_id,
-            "report_type":  report.report_type.value,
+        row: dict[str, str] = {
+            "report_id": report.report_id,
+            "report_type": report.report_type.value,
             "generated_at": report.generated_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
-            "title":        report.title,
+            "title": report.title,
         }
 
         # Add fields that exist on the model (vary by report type)
@@ -129,23 +133,46 @@ class CSVGenerator:
         writer.writerow(row)
         return buf.getvalue().encode("utf-8")
 
-    def _threat_intel_sheet(self, report: Union[ExecutiveReport, TechnicalReport, IncidentReport]) -> bytes:
+    def _threat_intel_sheet(
+        self, report: ExecutiveReport | TechnicalReport | IncidentReport
+    ) -> bytes:
         """Export threat intelligence list as flat CSV rows."""
         buf = io.StringIO()
 
         threat_list = getattr(report, "threat_intelligence", [])
         if not threat_list:
             # Write empty sheet with headers only
-            writer = csv.DictWriter(buf, fieldnames=["provider", "reputation", "country", "isp",
-                                                      "confidence", "pulse_count", "mitre_technique",
-                                                      "mitre_tactic", "ioc_tags", "references", "timestamp"])
+            writer = csv.DictWriter(
+                buf,
+                fieldnames=[
+                    "provider",
+                    "reputation",
+                    "country",
+                    "isp",
+                    "confidence",
+                    "pulse_count",
+                    "mitre_technique",
+                    "mitre_tactic",
+                    "ioc_tags",
+                    "references",
+                    "timestamp",
+                ],
+            )
             writer.writeheader()
             return buf.getvalue().encode("utf-8")
 
         fieldnames = [
-            "provider", "reputation", "country", "isp",
-            "confidence", "pulse_count", "mitre_technique",
-            "mitre_tactic", "ioc_tags", "references", "timestamp",
+            "provider",
+            "reputation",
+            "country",
+            "isp",
+            "confidence",
+            "pulse_count",
+            "mitre_technique",
+            "mitre_tactic",
+            "ioc_tags",
+            "references",
+            "timestamp",
         ]
         writer = csv.DictWriter(buf, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
@@ -165,13 +192,15 @@ class CSVGenerator:
         writer = csv.DictWriter(buf, fieldnames=fieldnames)
         writer.writeheader()
         for entry in report.timeline:
-            writer.writerow({
-                "sequence":    entry.sequence,
-                "event":       entry.event,
-                "description": entry.description,
-                "timestamp":   entry.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "metadata":    json.dumps(entry.metadata),
-            })
+            writer.writerow(
+                {
+                    "sequence": entry.sequence,
+                    "event": entry.event,
+                    "description": entry.description,
+                    "timestamp": entry.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
+                    "metadata": json.dumps(entry.metadata),
+                }
+            )
         return buf.getvalue().encode("utf-8")
 
     def _ioc_sheet(self, report: IncidentReport) -> bytes:

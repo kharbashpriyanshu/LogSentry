@@ -1,13 +1,16 @@
-import time
-import httpx
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any
+import time
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
+import httpx
+
+from app.config.settings import settings
 from app.schemas.detection_alert import DetectionAlert
 from app.schemas.severity import Severity
-from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
+
 
 class QuarantinedHost:
     def __init__(
@@ -16,25 +19,25 @@ class QuarantinedHost:
         reason: str,
         duration_seconds: int = 3600,
         severity: str = "HIGH",
-        analyst: str = "SYSTEM_AUTOMATION"
+        analyst: str = "SYSTEM_AUTOMATION",
     ):
         self.ip = ip
         self.reason = reason
-        self.quarantined_at = datetime.now(timezone.utc)
+        self.quarantined_at = datetime.now(UTC)
         self.duration_seconds = duration_seconds
         self.expires_at = self.quarantined_at + timedelta(seconds=duration_seconds)
         self.severity = severity
         self.analyst = analyst
-        self.status = "ACTIVE" # ACTIVE | RELEASED | EXPIRED
+        self.status = "ACTIVE"  # ACTIVE | RELEASED | EXPIRED
 
     @property
     def is_expired(self) -> bool:
         if self.status != "ACTIVE":
             return True
-        return datetime.now(timezone.utc) >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
-    def to_dict(self) -> Dict[str, Any]:
-        remaining = max(0, int((self.expires_at - datetime.now(timezone.utc)).total_seconds()))
+    def to_dict(self) -> dict[str, Any]:
+        remaining = max(0, int((self.expires_at - datetime.now(UTC)).total_seconds()))
         return {
             "ip": self.ip,
             "reason": self.reason,
@@ -44,7 +47,7 @@ class QuarantinedHost:
             "remaining_seconds": remaining,
             "severity": self.severity,
             "analyst": self.analyst,
-            "status": "EXPIRED" if self.is_expired else self.status
+            "status": "EXPIRED" if self.is_expired else self.status,
         }
 
 
@@ -54,8 +57,8 @@ class SOARService:
     Handles automated webhook alerting, active containment, and IP quarantine.
     """
 
-    _quarantine_store: Dict[str, QuarantinedHost] = {}
-    _action_history: List[Dict[str, Any]] = []
+    _quarantine_store: dict[str, QuarantinedHost] = {}
+    _action_history: list[dict[str, Any]] = []
 
     @classmethod
     def quarantine_ip(
@@ -64,8 +67,8 @@ class SOARService:
         reason: str,
         duration_seconds: int = 3600,
         severity: str = "HIGH",
-        analyst: str = "SYSTEM_AUTOMATION"
-    ) -> Dict[str, Any]:
+        analyst: str = "SYSTEM_AUTOMATION",
+    ) -> dict[str, Any]:
         """Place an attacking IP into automated quarantine / firewall block."""
         if not ip:
             raise ValueError("IP address is required for quarantine.")
@@ -75,34 +78,40 @@ class SOARService:
             reason=reason,
             duration_seconds=duration_seconds,
             severity=severity,
-            analyst=analyst
+            analyst=analyst,
         )
         cls._quarantine_store[ip] = record
 
         action = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "action": "QUARANTINE_IP",
             "ip": ip,
             "reason": reason,
             "duration_seconds": duration_seconds,
-            "analyst": analyst
+            "analyst": analyst,
         }
         cls._action_history.append(action)
-        logger.warning(f"SOAR Active Response: Quarantined IP {ip} for {duration_seconds}s. Reason: {reason}")
+        logger.warning(
+            f"SOAR Active Response: Quarantined IP {ip} for {duration_seconds}s. Reason: {reason}"
+        )
         return record.to_dict()
 
     @classmethod
-    def release_ip(cls, ip: str, analyst: str = "admin", reason: str = "Manual SOC Analyst Release") -> bool:
+    def release_ip(
+        cls, ip: str, analyst: str = "admin", reason: str = "Manual SOC Analyst Release"
+    ) -> bool:
         """Release an IP from quarantine."""
         if ip in cls._quarantine_store:
             cls._quarantine_store[ip].status = "RELEASED"
-            cls._action_history.append({
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "action": "RELEASE_IP",
-                "ip": ip,
-                "analyst": analyst,
-                "reason": reason
-            })
+            cls._action_history.append(
+                {
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "action": "RELEASE_IP",
+                    "ip": ip,
+                    "analyst": analyst,
+                    "reason": reason,
+                }
+            )
             del cls._quarantine_store[ip]
             logger.info(f"SOAR Active Response: Released IP {ip} by {analyst}.")
             return True
@@ -120,7 +129,7 @@ class SOARService:
         return False
 
     @classmethod
-    def get_active_quarantines(cls) -> List[Dict[str, Any]]:
+    def get_active_quarantines(cls) -> list[dict[str, Any]]:
         """List all currently quarantined IPs with remaining cooldown time."""
         active = []
         expired_keys = []
@@ -136,15 +145,13 @@ class SOARService:
         return active
 
     @classmethod
-    def get_action_history(cls, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_action_history(cls, limit: int = 50) -> list[dict[str, Any]]:
         """Return history of automated and manual SOAR containment actions."""
         return cls._action_history[-limit:]
 
     @classmethod
     async def dispatch_webhook_alert(
-        cls,
-        alert: DetectionAlert,
-        webhook_url: Optional[str] = None
+        cls, alert: DetectionAlert, webhook_url: str | None = None
     ) -> bool:
         """
         Dispatches a rich JSON incident payload to configured Slack, Teams, or SOC webhook.
@@ -157,37 +164,63 @@ class SOARService:
             "text": f"🚨 *LogSentry SIEM Alert [{alert.severity.value}]*: {alert.title}",
             "attachments": [
                 {
-                    "color": "#ef4444" if alert.severity == Severity.CRITICAL else "#f97316",
+                    "color": (
+                        "#ef4444" if alert.severity == Severity.CRITICAL else "#f97316"
+                    ),
                     "title": alert.title,
                     "fields": [
-                        {"title": "Severity", "value": alert.severity.value, "short": True},
-                        {"title": "Attack Type", "value": alert.attack_type, "short": True},
+                        {
+                            "title": "Severity",
+                            "value": alert.severity.value,
+                            "short": True,
+                        },
+                        {
+                            "title": "Attack Type",
+                            "value": alert.attack_type,
+                            "short": True,
+                        },
                         {"title": "Source IP", "value": alert.source_ip, "short": True},
-                        {"title": "Target Endpoint", "value": alert.endpoint, "short": True},
-                        {"title": "MITRE ATT&CK", "value": f"{alert.mitre_tactic} ({alert.mitre_technique})", "short": True},
-                        {"title": "Confidence", "value": f"{alert.confidence * 100:.0f}%", "short": True}
+                        {
+                            "title": "Target Endpoint",
+                            "value": alert.endpoint,
+                            "short": True,
+                        },
+                        {
+                            "title": "MITRE ATT&CK",
+                            "value": f"{alert.mitre_tactic} ({alert.mitre_technique})",
+                            "short": True,
+                        },
+                        {
+                            "title": "Confidence",
+                            "value": f"{alert.confidence * 100:.0f}%",
+                            "short": True,
+                        },
                     ],
                     "footer": f"LogSentry SIEM v{settings.VERSION} • Automated SOC Alert",
-                    "ts": int(time.time())
+                    "ts": int(time.time()),
                 }
-            ]
+            ],
         }
 
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 res = await client.post(target_url, json=payload)
                 if res.status_code in (200, 204):
-                    logger.info(f"Successfully dispatched SOAR webhook for alert: {alert.title}")
+                    logger.info(
+                        f"Successfully dispatched SOAR webhook for alert: {alert.title}"
+                    )
                     return True
                 else:
-                    logger.warning(f"SOAR webhook returned status {res.status_code}: {res.text}")
+                    logger.warning(
+                        f"SOAR webhook returned status {res.status_code}: {res.text}"
+                    )
                     return False
         except Exception as e:
             logger.error(f"Failed to dispatch SOAR webhook: {e}")
             return False
 
     @classmethod
-    def evaluate_auto_containment(cls, alert: DetectionAlert) -> Optional[Dict[str, Any]]:
+    def evaluate_auto_containment(cls, alert: DetectionAlert) -> dict[str, Any] | None:
         """
         Evaluates policy-based automatic containment.
         If a critical attack is detected with high confidence, triggers immediate IP quarantine.
@@ -198,8 +231,8 @@ class SOARService:
             return cls.quarantine_ip(
                 ip=alert.source_ip,
                 reason=reason,
-                duration_seconds=7200, # 2 hours
+                duration_seconds=7200,  # 2 hours
                 severity="CRITICAL",
-                analyst="SOAR_POLICY_ENGINE"
+                analyst="SOAR_POLICY_ENGINE",
             )
         return None

@@ -13,7 +13,7 @@ import logging
 import threading
 import time
 from collections import OrderedDict
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +37,12 @@ class InMemoryCache:
         self.ttl_seconds = ttl_seconds
         self.max_entries = max_entries
         # OrderedDict preserves insertion order for LRU eviction
-        self._cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+        self._cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
         self._lock = threading.Lock()
         self._hits = 0
         self._misses = 0
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Return cached value if present and not expired, else None."""
         with self._lock:
             if key not in self._cache:
@@ -87,7 +87,7 @@ class InMemoryCache:
             self._hits = 0
             self._misses = 0
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return cache statistics for the /metrics endpoint."""
         with self._lock:
             total = self._hits + self._misses

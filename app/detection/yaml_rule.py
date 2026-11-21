@@ -1,16 +1,19 @@
+import logging
 import os
 import re
+from typing import Any
+
 import yaml
-import logging
-from typing import Dict, Any, List, Optional
-from app.detection.base import BaseRule
-from app.schemas.log_event import LogEvent
-from app.schemas.detection_alert import DetectionAlert
-from app.schemas.severity import Severity
+
 from app.config.settings import settings
+from app.detection.base import BaseRule
 from app.detection.registry import RuleRegistry
+from app.schemas.detection_alert import DetectionAlert
+from app.schemas.log_event import LogEvent
+from app.schemas.severity import Severity
 
 logger = logging.getLogger(__name__)
+
 
 class YamlDetectionRule(BaseRule):
     """
@@ -18,14 +21,18 @@ class YamlDetectionRule(BaseRule):
     Enables SOC teams to author and update rules on the fly without changing Python code.
     """
 
-    def __init__(self, data: Dict[str, Any], file_path: Optional[str] = None):
+    def __init__(self, data: dict[str, Any], file_path: str | None = None):
         self._raw_data = data
         self._file_path = file_path
 
         self._title = data.get("title", "Untitled Sigma Rule")
-        self._name = data.get("name") or data.get("id") or self._title.lower().replace(" ", "_")
+        self._name = (
+            data.get("name") or data.get("id") or self._title.lower().replace(" ", "_")
+        )
         self._version = str(data.get("version", "1.0.0"))
-        self._description = data.get("description", "Dynamic YAML / Sigma Detection Rule")
+        self._description = data.get(
+            "description", "Dynamic YAML / Sigma Detection Rule"
+        )
 
         # Map severity
         sev_str = str(data.get("severity") or data.get("level", "medium")).upper()
@@ -41,12 +48,14 @@ class YamlDetectionRule(BaseRule):
         self._attack_type = data.get("attack_type", data.get("category", "Web Attack"))
         self._mitre_technique = data.get("mitre_technique", "T1190")
         self._mitre_tactic = data.get("mitre_tactic", "Initial Access")
-        self._recommendation = data.get("recommendation", "Review request logs and block offending source IP.")
+        self._recommendation = data.get(
+            "recommendation", "Review request logs and block offending source IP."
+        )
         self._risk_score = float(data.get("risk_score", 70.0))
 
         # Parse detection logic
         self._detection = data.get("detection", {})
-        self._compiled_regexes: Dict[str, re.Pattern] = {}
+        self._compiled_regexes: dict[str, re.Pattern] = {}
         self._init_detection()
 
     def _init_detection(self):
@@ -56,7 +65,9 @@ class YamlDetectionRule(BaseRule):
                 attr, modifier = field.split("|", 1)
                 if modifier in ("re", "regex"):
                     try:
-                        self._compiled_regexes[field] = re.compile(str(condition), re.IGNORECASE)
+                        self._compiled_regexes[field] = re.compile(
+                            str(condition), re.IGNORECASE
+                        )
                     except Exception as e:
                         logger.error(f"Failed to compile regex for field {field}: {e}")
 
@@ -168,9 +179,9 @@ class YamlDetectionRule(BaseRule):
                 "method": event.method,
                 "status_code": event.status_code,
                 "user_agent": event.user_agent,
-                "rule_format": "sigma/yaml"
+                "rule_format": "sigma/yaml",
             },
-            raw_log_reference=event.raw_log
+            raw_log_reference=event.raw_log,
         )
 
 
@@ -178,9 +189,9 @@ class YamlRuleLoader:
     """Discovers, parses, and registers dynamic YAML/Sigma rules."""
 
     @staticmethod
-    def load_from_file(file_path: str) -> Optional[YamlDetectionRule]:
+    def load_from_file(file_path: str) -> YamlDetectionRule | None:
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
             if not isinstance(data, dict):
                 return None
@@ -192,7 +203,7 @@ class YamlRuleLoader:
             return None
 
     @staticmethod
-    def load_directory(directory: str = "rules") -> List[YamlDetectionRule]:
+    def load_directory(directory: str = "rules") -> list[YamlDetectionRule]:
         loaded_rules = []
         if not os.path.exists(directory):
             return loaded_rules
@@ -205,5 +216,7 @@ class YamlRuleLoader:
                     if rule:
                         loaded_rules.append(rule)
 
-        logger.info(f"Loaded {len(loaded_rules)} dynamic YAML/Sigma rules from '{directory}'.")
+        logger.info(
+            f"Loaded {len(loaded_rules)} dynamic YAML/Sigma rules from '{directory}'."
+        )
         return loaded_rules

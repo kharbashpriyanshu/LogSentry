@@ -1,20 +1,28 @@
 from sqlalchemy.orm import Session
+
+from app.core.events import event_bus
 from app.models.alert import AlertModel
 from app.schemas.detection_alert import DetectionAlert
 from app.schemas.severity import Severity
-from app.core.events import event_bus
-from typing import List, Optional
+
 
 class AlertRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_alerts(self, page: int = 1, limit: int = 50, severity: Optional[str] = None) -> List[DetectionAlert]:
+    def get_alerts(
+        self, page: int = 1, limit: int = 50, severity: str | None = None
+    ) -> list[DetectionAlert]:
         query = self.db.query(AlertModel)
         if severity:
             query = query.filter(AlertModel.severity == severity)
-        
-        models = query.order_by(AlertModel.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+        models = (
+            query.order_by(AlertModel.created_at.desc())
+            .offset((page - 1) * limit)
+            .limit(limit)
+            .all()
+        )
         return [self._to_schema(m) for m in models]
 
     def create_alert(self, alert: DetectionAlert) -> DetectionAlert:
@@ -22,7 +30,11 @@ class AlertRepository:
             id=alert.alert_id,
             title=alert.title,
             description=alert.description,
-            severity=alert.severity.value if isinstance(alert.severity, Severity) else alert.severity,
+            severity=(
+                alert.severity.value
+                if isinstance(alert.severity, Severity)
+                else alert.severity
+            ),
             rule_name=alert.rule_name,
             attack_type=alert.attack_type,
             source_ip=alert.source_ip,
@@ -35,35 +47,49 @@ class AlertRepository:
             evidence=alert.evidence,
             raw_log_reference=alert.raw_log_reference,
             endpoint=alert.endpoint,
-            hostname=alert.endpoint, # using endpoint for hostname fallback if needed
+            hostname=alert.endpoint,  # using endpoint for hostname fallback if needed
             rule_version=alert.rule_version,
-            created_at=alert.timestamp
+            created_at=alert.timestamp,
         )
         self.db.add(model)
         self.db.commit()
         self.db.refresh(model)
-        
+
         schema = self._to_schema(model)
-        event_bus.publish("alert.created", {"id": schema.alert_id, "title": schema.title, "severity": schema.severity.value})
-        
+        event_bus.publish(
+            "alert.created",
+            {
+                "id": schema.alert_id,
+                "title": schema.title,
+                "severity": schema.severity.value,
+            },
+        )
+
         return schema
-        
-    def get_alert_by_id(self, alert_id: str) -> Optional[AlertModel]:
+
+    def get_alert_by_id(self, alert_id: str) -> AlertModel | None:
         return self.db.query(AlertModel).filter(AlertModel.id == alert_id).first()
 
-    def update_alert(self, alert_id: str, updates: dict) -> Optional[AlertModel]:
+    def update_alert(self, alert_id: str, updates: dict) -> AlertModel | None:
         model = self.get_alert_by_id(alert_id)
         if not model:
             return None
-        
+
         for key, value in updates.items():
             if hasattr(model, key):
                 setattr(model, key, value)
-        
+
         self.db.commit()
         self.db.refresh(model)
-        
-        event_bus.publish("alert.updated", {"id": model.id, "status": model.status, "assignee": model.assigned_analyst})
+
+        event_bus.publish(
+            "alert.updated",
+            {
+                "id": model.id,
+                "status": model.status,
+                "assignee": model.assigned_analyst,
+            },
+        )
         return model
 
     def _to_schema(self, model: AlertModel) -> DetectionAlert:
@@ -93,5 +119,5 @@ class AlertRepository:
             resolution_type=model.resolution_type,
             resolution_note=model.resolution_note,
             false_positive_reason=model.false_positive_reason,
-            hostname=model.hostname
+            hostname=model.hostname,
         )
