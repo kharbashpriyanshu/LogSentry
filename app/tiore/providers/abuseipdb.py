@@ -5,6 +5,7 @@ Checks IPv4 and IPv6 reputation against the AbuseIPDB REST API v2.
 """
 
 from typing import Any
+
 import httpx
 
 from app.config.settings import settings

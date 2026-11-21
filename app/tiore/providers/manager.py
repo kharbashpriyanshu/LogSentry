@@ -6,10 +6,9 @@ aggregates feed responses, updates source health states, and
 persists findings to the threat database repository.
 """
 
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
-import logging
-from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -67,10 +66,7 @@ class ProviderManager:
         results: list[ProviderLookupResult] = []
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_adapter = {
-                executor.submit(adapter.lookup, observable): adapter
-                for adapter in eligible
-            }
+            future_to_adapter = {executor.submit(adapter.lookup, observable): adapter for adapter in eligible}
 
             try:
                 for future in as_completed(future_to_adapter, timeout=overall_timeout_sec):

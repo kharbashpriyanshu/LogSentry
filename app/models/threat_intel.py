@@ -21,6 +21,7 @@ class ObservableModel(Base):
     Public indicators use standard SHA-256 fingerprints; PII indicators (emails, phones)
     use keyed HMAC-SHA256 to prevent dictionary inversion attacks.
     """
+
     __tablename__ = "threat_observables"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -45,6 +46,7 @@ class ThreatIntelSourceModel(Base):
     Threat intelligence provider and local feed registry.
     Tracks provider capabilities, health, reliability tiers, and API quota state.
     """
+
     __tablename__ = "threat_sources"
 
     id = Column(String(64), primary_key=True)  # e.g. 'abuseipdb', 'otx', 'urlhaus', 'local_curated'
@@ -65,10 +67,13 @@ class ThreatIntelRecordModel(Base):
     Individual threat intelligence assertion/record for an observable from a specific source.
     Stores classification, confidence, threat categories, and detailed provider evidence.
     """
+
     __tablename__ = "threat_records"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    observable_id = Column(String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True)
+    observable_id = Column(
+        String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     source_id = Column(String(64), ForeignKey("threat_sources.id", ondelete="CASCADE"), nullable=False, index=True)
     classification = Column(String(32), nullable=False, index=True)  # MALICIOUS, SUSPICIOUS, EXPOSED, BENIGN, UNKNOWN
     confidence = Column(Float, nullable=False, default=0.0)
@@ -89,11 +94,14 @@ class EventObservableModel(Base):
     Relational association linking log events to extracted observables.
     Strictly scoped by tenant_id to prevent cross-tenant telemetry exposure.
     """
+
     __tablename__ = "event_observables"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     event_id = Column(String, ForeignKey("log_events.id", ondelete="CASCADE"), nullable=False, index=True)
-    observable_id = Column(String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True)
+    observable_id = Column(
+        String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     field_name = Column(String(64), nullable=False)
     tenant_id = Column(String(64), nullable=False, default="default", index=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
@@ -106,10 +114,13 @@ class ThreatIntelMatchModel(Base):
     Correlated match record generated when an event observable matches known threat intelligence.
     Enriched with final consensus verdict, confidence, alert/incident associations, and analyst triage workflow.
     """
+
     __tablename__ = "threat_matches"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    observable_id = Column(String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True)
+    observable_id = Column(
+        String(36), ForeignKey("threat_observables.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     event_id = Column(String, ForeignKey("log_events.id", ondelete="SET NULL"), nullable=True, index=True)
     alert_id = Column(String, ForeignKey("alerts.id", ondelete="SET NULL"), nullable=True, index=True)
     incident_id = Column(String, ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -130,6 +141,7 @@ class ThreatIntelAuditModel(Base):
     Security audit log capturing every manual or automated observable lookup,
     especially sensitive PII inquiries, recording whether external network disclosure occurred.
     """
+
     __tablename__ = "threat_intel_audits"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

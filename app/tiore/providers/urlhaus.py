@@ -5,6 +5,7 @@ Checks URLs and hostnames against abuse.ch URLhaus malware repository.
 """
 
 from typing import Any
+
 import httpx
 
 from app.tiore.models import ExtractedObservable, ObservableType, ThreatClassification

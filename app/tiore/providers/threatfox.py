@@ -5,6 +5,7 @@ Checks indicators of compromise against abuse.ch ThreatFox IOC platform.
 """
 
 from typing import Any
+
 import httpx
 
 from app.tiore.models import ExtractedObservable, ObservableType, ThreatClassification

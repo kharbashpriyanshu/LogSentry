@@ -6,12 +6,12 @@ incorporating circuit breakers, rate limiting, strict privacy gating,
 and latency boundaries (< 3.0s timeout).
 """
 
+import threading
+import time
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum
-import threading
-import time
 from typing import Any
 
 from app.tiore.models import (
@@ -23,8 +23,8 @@ from app.tiore.models import (
 
 
 class CircuitState(str, Enum):
-    CLOSED = "closed"        # Healthy, normal operation
-    OPEN = "open"            # Failing, requests blocked
+    CLOSED = "closed"  # Healthy, normal operation
+    OPEN = "open"  # Failing, requests blocked
     HALF_OPEN = "half_open"  # Probing single request for recovery
 
 
@@ -36,7 +36,9 @@ class ProviderLookupResult:
     threat_types: list[str] = field(default_factory=list)
     evidence: dict[str, Any] = field(default_factory=dict)
     raw_payload: dict[str, Any] = field(default_factory=dict)
-    status: str = "success"  # "success", "not_found", "rate_limited", "circuit_open", "error", "skipped", "unconfigured"
+    status: str = (
+        "success"  # "success", "not_found", "rate_limited", "circuit_open", "error", "skipped", "unconfigured"
+    )
     error_message: str | None = None
     duration_ms: float = 0.0
     retrieved_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())

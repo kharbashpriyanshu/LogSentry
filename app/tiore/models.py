@@ -46,6 +46,7 @@ class ExtractedObservable(BaseModel):
     Standardized extracted observable representation across LogSentry.
     Ensures strict privacy tracking, normalized representation, and source provenance.
     """
+
     observable_type: ObservableType
     raw_value: str
     normalized_value: str

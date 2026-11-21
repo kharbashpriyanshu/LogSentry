@@ -6,6 +6,7 @@ and database persistence with mocked network fixtures.
 """
 
 from unittest.mock import MagicMock, patch
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -253,6 +254,7 @@ def test_hibp_k_anonymity_privacy_and_lookup():
 
     # Calculate SHA1 for breached_user@example.com
     import hashlib
+
     sha1_hex = hashlib.sha1(email.encode("utf-8")).hexdigest().upper()
     prefix = sha1_hex[:5]
     suffix = sha1_hex[5:]

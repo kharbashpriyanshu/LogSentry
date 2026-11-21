@@ -5,6 +5,7 @@ Checks multi-indicator reputation against AlienVault Open Threat Exchange (OTX).
 """
 
 from typing import Any
+
 import httpx
 
 from app.config.settings import settings

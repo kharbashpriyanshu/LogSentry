@@ -6,6 +6,7 @@ Checks files, domains, IPs, and URLs against VirusTotal v3 REST API.
 
 import base64
 from typing import Any
+
 import httpx
 
 from app.config.settings import settings

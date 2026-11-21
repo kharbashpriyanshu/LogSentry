@@ -25,42 +25,55 @@ logger = logging.getLogger(__name__)
 
 # Sensitive query parameters stripped from URLs prior to reputation hashing
 SENSITIVE_URL_PARAMS = {
-    "token", "access_token", "auth", "authorization", "key", "api_key",
-    "apikey", "secret", "password", "pass", "pwd", "session", "session_id",
-    "sess", "sig", "signature", "client_secret", "refresh_token",
+    "token",
+    "access_token",
+    "auth",
+    "authorization",
+    "key",
+    "api_key",
+    "apikey",
+    "secret",
+    "password",
+    "pass",
+    "pwd",
+    "session",
+    "session_id",
+    "sess",
+    "sig",
+    "signature",
+    "client_secret",
+    "refresh_token",
 }
 
 # Internal TLDs and suffix reservations
 INTERNAL_TLDS = {
-    "local", "internal", "lan", "corp", "home", "home.arpa",
-    "test", "localhost", "invalid", "example",
+    "local",
+    "internal",
+    "lan",
+    "corp",
+    "home",
+    "home.arpa",
+    "test",
+    "localhost",
+    "invalid",
+    "example",
 }
 
 # Regex patterns for fast extraction
-IPV4_REGEX = re.compile(
-    r"\b(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b"
-)
+IPV4_REGEX = re.compile(r"\b(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b")
 IPV6_REGEX = re.compile(
     r"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b|"
     r"\b(?:[0-9a-fA-F]{1,4}:){1,7}:|"
     r"\b:(?::[0-9a-fA-F]{1,4}){1,7}\b|"
     r"\b(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}\b"
 )
-URL_REGEX = re.compile(
-    r"https?://[^\s<>\"'{}|\\^`\[\]]+"
-)
-DOMAIN_REGEX = re.compile(
-    r"\b(?=.{4,253}\b)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}\b"
-)
+URL_REGEX = re.compile(r"https?://[^\s<>\"'{}|\\^`\[\]]+")
+DOMAIN_REGEX = re.compile(r"\b(?=.{4,253}\b)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}\b")
 HASH_SHA256_REGEX = re.compile(r"\b[a-fA-F0-9]{64}\b")
 HASH_SHA1_REGEX = re.compile(r"\b[a-fA-F0-9]{40}\b")
 HASH_MD5_REGEX = re.compile(r"\b[a-fA-F0-9]{32}\b")
-EMAIL_REGEX = re.compile(
-    r"\b[a-zA-Z0-9_.+-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,63}\b"
-)
-PHONE_E164_REGEX = re.compile(
-    r"(?:\+)[1-9]\d{0,2}[-.\s]?(?:\(?\d{1,4}\)?[-.\s]?)?\d{1,4}[-.\s]?\d{1,9}\b"
-)
+EMAIL_REGEX = re.compile(r"\b[a-zA-Z0-9_.+-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,63}\b")
+PHONE_E164_REGEX = re.compile(r"(?:\+)[1-9]\d{0,2}[-.\s]?(?:\(?\d{1,4}\)?[-.\s]?)?\d{1,4}[-.\s]?\d{1,9}\b")
 
 
 class ObservableExtractor:
@@ -82,12 +95,10 @@ class ObservableExtractor:
         if obs_type in (ObservableType.EMAIL, ObservableType.PHONE):
             return hmac.new(
                 self._hmac_key,
-                f"{obs_type.value}:{normalized_value}".encode("utf-8"),
+                f"{obs_type.value}:{normalized_value}".encode(),
                 hashlib.sha256,
             ).hexdigest()
-        return hashlib.sha256(
-            f"{obs_type.value}:{normalized_value}".encode("utf-8")
-        ).hexdigest()
+        return hashlib.sha256(f"{obs_type.value}:{normalized_value}".encode()).hexdigest()
 
     def _mask_value(self, obs_type: ObservableType, val: str) -> str:
         """Masks sensitive values for analyst display."""
@@ -118,9 +129,7 @@ class ObservableExtractor:
     # Individual Type Parsers & Validators
     # -------------------------------------------------------------------------
 
-    def validate_and_normalize_ip(
-        self, raw_ip: str, source_field: str = "generic"
-    ) -> ExtractedObservable | None:
+    def validate_and_normalize_ip(self, raw_ip: str, source_field: str = "generic") -> ExtractedObservable | None:
         clean = raw_ip.strip()
         try:
             ip_obj = ipaddress.ip_address(clean)
@@ -204,9 +213,8 @@ class ObservableExtractor:
 
         parts = ascii_domain.split(".")
         tld = parts[-1]
-        is_internal = (
-            tld in INTERNAL_TLDS
-            or any(part in ("localhost", "internal", "lan", "corp", "corpnet") for part in parts)
+        is_internal = tld in INTERNAL_TLDS or any(
+            part in ("localhost", "internal", "lan", "corp", "corpnet") for part in parts
         )
 
         privacy = PrivacyClassification.INTERNAL_DOMAIN if is_internal else PrivacyClassification.PUBLIC_ROUTABLE
@@ -228,9 +236,7 @@ class ObservableExtractor:
             },
         )
 
-    def validate_and_normalize_url(
-        self, raw_url: str, source_field: str = "generic"
-    ) -> ExtractedObservable | None:
+    def validate_and_normalize_url(self, raw_url: str, source_field: str = "generic") -> ExtractedObservable | None:
         clean = raw_url.strip()
         if len(clean) > 2048:
             return None
@@ -284,13 +290,15 @@ class ObservableExtractor:
         if port and not ((parsed.scheme == "http" and port == 80) or (parsed.scheme == "https" and port == 443)):
             netloc = f"{hostname}:{port}"
 
-        normalized_url = urlunsplit((
-            parsed.scheme.lower(),
-            netloc,
-            parsed.path or "/",
-            sanitized_query,
-            "",  # Strip fragment
-        ))
+        normalized_url = urlunsplit(
+            (
+                parsed.scheme.lower(),
+                netloc,
+                parsed.path or "/",
+                sanitized_query,
+                "",  # Strip fragment
+            )
+        )
 
         return ExtractedObservable(
             observable_type=ObservableType.URL,
@@ -310,9 +318,7 @@ class ObservableExtractor:
             },
         )
 
-    def validate_and_normalize_hash(
-        self, raw_hash: str, source_field: str = "generic"
-    ) -> ExtractedObservable | None:
+    def validate_and_normalize_hash(self, raw_hash: str, source_field: str = "generic") -> ExtractedObservable | None:
         clean = raw_hash.strip().lower()
         length = len(clean)
 
@@ -338,9 +344,7 @@ class ObservableExtractor:
             metadata={"algorithm": obs_type.value, "length": length},
         )
 
-    def validate_and_normalize_email(
-        self, raw_email: str, source_field: str = "generic"
-    ) -> ExtractedObservable | None:
+    def validate_and_normalize_email(self, raw_email: str, source_field: str = "generic") -> ExtractedObservable | None:
         clean = raw_email.strip().lower()
         if not clean or len(clean) > 254:
             return None
@@ -368,9 +372,7 @@ class ObservableExtractor:
             },
         )
 
-    def validate_and_normalize_phone(
-        self, raw_phone: str, source_field: str = "generic"
-    ) -> ExtractedObservable | None:
+    def validate_and_normalize_phone(self, raw_phone: str, source_field: str = "generic") -> ExtractedObservable | None:
         clean = raw_phone.strip()
         # Require international prefix '+' to avoid ambiguous guessing of local area codes
         if not clean.startswith("+"):
@@ -400,9 +402,7 @@ class ObservableExtractor:
     # Comprehensive Event & Unstructured Text Extraction
     # -------------------------------------------------------------------------
 
-    def extract_from_text(
-        self, text: str, source_field: str = "raw_log"
-    ) -> list[ExtractedObservable]:
+    def extract_from_text(self, text: str, source_field: str = "raw_log") -> list[ExtractedObservable]:
         """
         Extracts all recognized observables from arbitrary text with deduplication.
         Safely enforces maximum text scan size (64 KB) to prevent regex DoS.

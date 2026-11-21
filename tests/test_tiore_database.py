@@ -54,6 +54,7 @@ def extractor():
 # 1. Observable Canonical Persistence & Idempotency
 # ==============================================================================
 
+
 def test_get_or_create_observable_idempotency(repo, extractor):
     extracted = extractor.validate_and_normalize_ip("198.51.100.42", source_field="source_ip")
     assert extracted is not None
@@ -88,6 +89,7 @@ def test_get_observable_queries(repo, extractor):
 # ==============================================================================
 # 2. Threat Sources & Records
 # ==============================================================================
+
 
 def test_threat_source_and_record_retention(repo, extractor):
     # Setup source
@@ -128,6 +130,7 @@ def test_threat_source_and_record_retention(repo, extractor):
 # ==============================================================================
 # 3. Multi-Tenant Event Linking & Match Isolation
 # ==============================================================================
+
 
 def test_event_observable_linking(repo, extractor, db_session):
     # Create fake log event
@@ -202,6 +205,7 @@ def test_multi_tenant_match_isolation(repo, extractor):
 # 4. Multi-Tenant Audit Log Isolation
 # ==============================================================================
 
+
 def test_multi_tenant_audit_isolation(repo):
     repo.record_audit(
         actor_id="user-1",
@@ -243,6 +247,7 @@ def test_multi_tenant_audit_isolation(repo):
 # ==============================================================================
 # 5. Cascade Deletion Integrity
 # ==============================================================================
+
 
 def test_observable_cascade_deletion(repo, extractor, db_session):
     obs = repo.get_or_create_observable(extractor.validate_and_normalize_ip("198.51.100.99"))

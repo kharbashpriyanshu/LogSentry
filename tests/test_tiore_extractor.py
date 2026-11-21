@@ -20,6 +20,7 @@ def extractor():
 # 1. IP Address Validation & Privacy Bounds
 # ==============================================================================
 
+
 def test_extract_public_ipv4(extractor):
     obs = extractor.validate_and_normalize_ip("185.220.101.5", source_field="source_ip")
     assert obs is not None
@@ -77,6 +78,7 @@ def test_invalid_ips_rejected(extractor):
 # 2. Domain Normalization & Internal Scoping
 # ==============================================================================
 
+
 def test_extract_public_domain(extractor):
     obs = extractor.validate_and_normalize_domain("EVIL-C2.NET.")
     assert obs is not None
@@ -106,6 +108,7 @@ def test_domain_rejects_ip_or_invalid(extractor):
 # ==============================================================================
 # 3. URL Normalization & Parameter Sanitization
 # ==============================================================================
+
 
 def test_extract_url_with_sensitive_param_stripping(extractor):
     raw = "https://evil-c2.net:443/beacon/gate.php?token=SECRET_SESSION_TOKEN_123&client=win10&api_key=XYZ987"
@@ -137,6 +140,7 @@ def test_internal_url_ineligible_for_external_lookup(extractor):
 # ==============================================================================
 # 4. Hash Extraction (MD5, SHA-1, SHA-256)
 # ==============================================================================
+
 
 def test_extract_hashes(extractor):
     md5 = "e4d909c290d0fb1ca068ffaddf22cbd0"
@@ -170,6 +174,7 @@ def test_invalid_hash_rejected(extractor):
 # 5. Email & Phone PII Protection (Keyed HMAC & Zero External Disclosure)
 # ==============================================================================
 
+
 def test_extract_email_pii_shielding(extractor):
     email = "SecOps-Analyst@Corp-Security.org"
     obs = extractor.validate_and_normalize_email(email)
@@ -184,7 +189,8 @@ def test_extract_email_pii_shielding(extractor):
 
     # Keyed HMAC fingerprint differs from simple SHA-256
     import hashlib
-    raw_sha256 = hashlib.sha256(f"email:{obs.normalized_value}".encode("utf-8")).hexdigest()
+
+    raw_sha256 = hashlib.sha256(f"email:{obs.normalized_value}".encode()).hexdigest()
     assert obs.fingerprint != raw_sha256  # Protected against rainbow table attacks
 
 
@@ -208,11 +214,12 @@ def test_extract_phone_pii_shielding(extractor):
 # 6. Deep Event & Text Extraction with Deduplication
 # ==============================================================================
 
+
 def test_extract_from_text_mixed_payload(extractor):
     raw_log = (
-        'Nov 21 12:00:01 bastion sshd[123]: Failed login from 198.51.100.42 '
-        'user bad-actor@evil-phish.com downloading http://c2.evil-corp.com/payload.exe '
-        'with hash e4d909c290d0fb1ca068ffaddf22cbd0 from +1-555-019-2831'
+        "Nov 21 12:00:01 bastion sshd[123]: Failed login from 198.51.100.42 "
+        "user bad-actor@evil-phish.com downloading http://c2.evil-corp.com/payload.exe "
+        "with hash e4d909c290d0fb1ca068ffaddf22cbd0 from +1-555-019-2831"
     )
     observables = extractor.extract_from_text(raw_log)
     types = {o.observable_type for o in observables}

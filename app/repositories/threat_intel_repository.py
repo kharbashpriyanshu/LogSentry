@@ -9,7 +9,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.threat_intel import (
@@ -33,9 +33,7 @@ class ThreatIntelRepository:
 
     def get_or_create_observable(self, extracted: ExtractedObservable) -> ObservableModel:
         """Finds existing observable by fingerprint or creates a new canonical entry."""
-        obs = self.db.query(ObservableModel).filter(
-            ObservableModel.fingerprint == extracted.fingerprint
-        ).first()
+        obs = self.db.query(ObservableModel).filter(ObservableModel.fingerprint == extracted.fingerprint).first()
 
         now = datetime.now(UTC)
         if obs:
@@ -63,15 +61,17 @@ class ThreatIntelRepository:
         return obs
 
     def get_observable_by_fingerprint(self, fingerprint: str) -> ObservableModel | None:
-        return self.db.query(ObservableModel).filter(
-            ObservableModel.fingerprint == fingerprint
-        ).first()
+        return self.db.query(ObservableModel).filter(ObservableModel.fingerprint == fingerprint).first()
 
     def get_observable_by_value(self, obs_type: str, normalized_val: str) -> ObservableModel | None:
-        return self.db.query(ObservableModel).filter(
-            ObservableModel.type == obs_type,
-            ObservableModel.value == normalized_val,
-        ).first()
+        return (
+            self.db.query(ObservableModel)
+            .filter(
+                ObservableModel.type == obs_type,
+                ObservableModel.value == normalized_val,
+            )
+            .first()
+        )
 
     def get_observables_paginated(
         self,
@@ -106,9 +106,7 @@ class ThreatIntelRepository:
         is_enabled: bool = True,
         supported_types: list[str] | None = None,
     ) -> ThreatIntelSourceModel:
-        source = self.db.query(ThreatIntelSourceModel).filter(
-            ThreatIntelSourceModel.id == source_id
-        ).first()
+        source = self.db.query(ThreatIntelSourceModel).filter(ThreatIntelSourceModel.id == source_id).first()
         if source:
             return source
 
@@ -129,9 +127,7 @@ class ThreatIntelRepository:
     def update_source_health(
         self, source_id: str, health_status: str, rate_limit_state: dict[str, Any] | None = None
     ) -> None:
-        source = self.db.query(ThreatIntelSourceModel).filter(
-            ThreatIntelSourceModel.id == source_id
-        ).first()
+        source = self.db.query(ThreatIntelSourceModel).filter(ThreatIntelSourceModel.id == source_id).first()
         if source:
             source.health_status = health_status
             if rate_limit_state is not None:
@@ -157,10 +153,14 @@ class ThreatIntelRepository:
         expires_at: datetime | None = None,
     ) -> ThreatIntelRecordModel:
         # Check if record from this source already exists for this observable
-        record = self.db.query(ThreatIntelRecordModel).filter(
-            ThreatIntelRecordModel.observable_id == observable_id,
-            ThreatIntelRecordModel.source_id == source_id,
-        ).first()
+        record = (
+            self.db.query(ThreatIntelRecordModel)
+            .filter(
+                ThreatIntelRecordModel.observable_id == observable_id,
+                ThreatIntelRecordModel.source_id == source_id,
+            )
+            .first()
+        )
 
         now = datetime.now(UTC)
         if record:
@@ -197,9 +197,7 @@ class ThreatIntelRepository:
         return record
 
     def get_records_for_observable(self, observable_id: str) -> list[ThreatIntelRecordModel]:
-        return self.db.query(ThreatIntelRecordModel).filter(
-            ThreatIntelRecordModel.observable_id == observable_id
-        ).all()
+        return self.db.query(ThreatIntelRecordModel).filter(ThreatIntelRecordModel.observable_id == observable_id).all()
 
     # -------------------------------------------------------------------------
     # Event-Observable Associations
@@ -209,11 +207,15 @@ class ThreatIntelRepository:
         self, event_id: str, observable_id: str, field_name: str, tenant_id: str
     ) -> EventObservableModel:
         # Check if already linked
-        existing = self.db.query(EventObservableModel).filter(
-            EventObservableModel.event_id == event_id,
-            EventObservableModel.observable_id == observable_id,
-            EventObservableModel.field_name == field_name,
-        ).first()
+        existing = (
+            self.db.query(EventObservableModel)
+            .filter(
+                EventObservableModel.event_id == event_id,
+                EventObservableModel.observable_id == observable_id,
+                EventObservableModel.field_name == field_name,
+            )
+            .first()
+        )
         if existing:
             return existing
 
@@ -279,9 +281,7 @@ class ThreatIntelRepository:
 
         return query.order_by(desc(ThreatIntelMatchModel.matched_at)).limit(limit).all()
 
-    def get_match_by_id(
-        self, match_id: str, tenant_id: str, is_admin: bool = False
-    ) -> ThreatIntelMatchModel | None:
+    def get_match_by_id(self, match_id: str, tenant_id: str, is_admin: bool = False) -> ThreatIntelMatchModel | None:
         query = self.db.query(ThreatIntelMatchModel).filter(ThreatIntelMatchModel.id == match_id)
         if not is_admin:
             query = query.filter(ThreatIntelMatchModel.tenant_id == tenant_id)
@@ -345,9 +345,7 @@ class ThreatIntelRepository:
         self.db.refresh(audit)
         return audit
 
-    def get_audits(
-        self, tenant_id: str, is_admin: bool = False, limit: int = 50
-    ) -> list[ThreatIntelAuditModel]:
+    def get_audits(self, tenant_id: str, is_admin: bool = False, limit: int = 50) -> list[ThreatIntelAuditModel]:
         query = self.db.query(ThreatIntelAuditModel)
         if not is_admin:
             query = query.filter(ThreatIntelAuditModel.tenant_id == tenant_id)

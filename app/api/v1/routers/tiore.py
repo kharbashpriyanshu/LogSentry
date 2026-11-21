@@ -5,7 +5,6 @@ Exposes manual investigation endpoints, observable inventory, match triage,
 feed source telemetry, and audit compliance logs for SOC teams.
 """
 
-from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -20,7 +19,6 @@ from app.core.rbac import (
 from app.database.session import get_db
 from app.repositories.threat_intel_repository import ThreatIntelRepository
 from app.tiore.engine import tiore_engine
-from app.tiore.models import ObservableType, ThreatClassification
 
 router = APIRouter()
 
@@ -103,7 +101,9 @@ def get_threat_matches(
 def review_match(
     match_id: str,
     request: MatchReviewRequest,
-    user: UserContext = Depends(require_role(UserRole.TIER_1_ANALYST, UserRole.TIER_2_ANALYST, UserRole.SOC_MANAGER, UserRole.ADMIN)),
+    user: UserContext = Depends(
+        require_role(UserRole.TIER_1_ANALYST, UserRole.TIER_2_ANALYST, UserRole.SOC_MANAGER, UserRole.ADMIN)
+    ),
     repo: ThreatIntelRepository = Depends(get_threat_intel_repository),
 ):
     """

@@ -6,10 +6,10 @@ Evaluates in-memory thread-safe LRU cache, local threat database records,
 staleness/TTL policies, and privacy gate rules before any external network activity.
 """
 
+import threading
 from collections import OrderedDict
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime, timedelta
-import threading
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -21,7 +21,6 @@ from app.tiore.models import (
     ObservableType,
     PrivacyClassification,
     ThreatClassification,
-    ValidationStatus,
 )
 
 
@@ -280,7 +279,9 @@ class IntelligenceResolver:
                 if expires_at < now:
                     is_stale = True
             elif rec.retrieved_at:
-                retrieved_at = rec.retrieved_at.replace(tzinfo=UTC) if rec.retrieved_at.tzinfo is None else rec.retrieved_at
+                retrieved_at = (
+                    rec.retrieved_at.replace(tzinfo=UTC) if rec.retrieved_at.tzinfo is None else rec.retrieved_at
+                )
                 if now - retrieved_at > timedelta(days=30):
                     is_stale = True
 
@@ -306,7 +307,7 @@ class IntelligenceResolver:
             elif cls_upper == ThreatClassification.EXPOSED.value:
                 has_exposed = True
 
-            for t in (rec.threat_types or []):
+            for t in rec.threat_types or []:
                 all_threat_types.add(t)
 
             evidence = SourceMatchEvidence(
@@ -337,7 +338,7 @@ class IntelligenceResolver:
         elif has_exposed:
             final_class = ThreatClassification.EXPOSED
             is_match = True
-            reason = f"Indicator observed in credible breach/exposure intelligence."
+            reason = "Indicator observed in credible breach/exposure intelligence."
         else:
             final_class = ThreatClassification.BENIGN
             is_match = False
@@ -369,9 +370,21 @@ def seed_curated_threat_intel(db: Session) -> None:
 
     # 1. Sources
     sources_data = [
-        ("internal_soc", "LogSentry SOC Curated Feed", "internal", 1, ["ipv4", "ipv6", "domain", "url", "sha256", "email", "phone"]),
+        (
+            "internal_soc",
+            "LogSentry SOC Curated Feed",
+            "internal",
+            1,
+            ["ipv4", "ipv6", "domain", "url", "sha256", "email", "phone"],
+        ),
         ("abuseipdb", "AbuseIPDB Threat Intelligence", "commercial", 1, ["ipv4", "ipv6"]),
-        ("alienvault_otx", "AlienVault OTX Community Feed", "community", 2, ["ipv4", "ipv6", "domain", "url", "md5", "sha1", "sha256"]),
+        (
+            "alienvault_otx",
+            "AlienVault OTX Community Feed",
+            "community",
+            2,
+            ["ipv4", "ipv6", "domain", "url", "md5", "sha1", "sha256"],
+        ),
         ("urlhaus", "abuse.ch URLhaus Feed", "open_source", 1, ["url", "domain"]),
         ("threatfox", "abuse.ch ThreatFox Feed", "open_source", 1, ["ipv4", "domain", "url", "md5", "sha256"]),
         ("virustotal", "VirusTotal Intelligence", "commercial", 1, ["md5", "sha1", "sha256", "url", "domain", "ipv4"]),

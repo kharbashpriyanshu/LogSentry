@@ -11,6 +11,7 @@ Never discloses raw email addresses or complete hashes to external entities.
 
 import hashlib
 from typing import Any
+
 import httpx
 
 from app.tiore.models import ExtractedObservable, ObservableType, ThreatClassification
@@ -42,7 +43,11 @@ class HIBPPrefixAdapter(BaseObservableAdapter):
 
     def _execute_lookup(self, observable: ExtractedObservable) -> ProviderLookupResult:
         email = observable.normalized_value.lower()
-        sha1_hash = hashlib.sha1(email.encode("utf-8")).hexdigest().upper()
+        sha1_hash = (
+            hashlib.sha1(email.encode("utf-8"), usedforsecurity=False)  # noqa: S324
+            .hexdigest()
+            .upper()
+        )
         prefix = sha1_hash[:5]
         suffix = sha1_hash[5:]
 

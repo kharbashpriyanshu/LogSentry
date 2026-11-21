@@ -5,19 +5,15 @@ Unified orchestration engine combining observable extraction, local resolution,
 privacy gating, provider fan-out, match generation, and audit compliance.
 """
 
-from datetime import UTC, datetime
 import logging
 from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.models.threat_intel import ObservableModel, ThreatIntelMatchModel
 from app.repositories.threat_intel_repository import ThreatIntelRepository
 from app.tiore.extractor import ObservableExtractor
 from app.tiore.models import (
-    ExtractedObservable,
     ObservableType,
-    PrivacyClassification,
     ThreatClassification,
 )
 from app.tiore.providers.manager import ProviderManager
@@ -137,9 +133,7 @@ class TIOREEngine:
 
         # Check if external provider query is requested and permissible
         if force_external:
-            if observable.is_eligible_for_external_lookup or (
-                observable.observable_type == ObservableType.EMAIL
-            ):
+            if observable.is_eligible_for_external_lookup or (observable.observable_type == ObservableType.EMAIL):
                 results = self.provider_manager.query_providers(observable)
                 if results:
                     self.provider_manager.persist_results(observable, results, db=db)
@@ -161,9 +155,7 @@ class TIOREEngine:
         )
 
         # Resolve updated intelligence
-        resolved = self.resolver.resolve(
-            observable, tenant_id=tenant_id, db=db, bypass_cache=force_external
-        )
+        resolved = self.resolver.resolve(observable, tenant_id=tenant_id, db=db, bypass_cache=force_external)
 
         return {
             "status": "success",
