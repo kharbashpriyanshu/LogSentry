@@ -6,7 +6,7 @@ observable deduplication, threat record retention, and audit trails.
 """
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import desc, or_
@@ -602,21 +602,80 @@ class ThreatIntelRepository:
             .all()
         )
 
-    def mark_enrichment_job_processing(self, job_id: str) -> bool:
+    def claim_pending_jobs(
+        self,
+        worker_id: str,
+        limit: int = 10,
+        lease_duration_seconds: int = 60,
+    ) -> list[ThreatEnrichmentJobModel]:
+        """
+        Atomically claims eligible pending jobs and recovers stale/crashed processing jobs.
+        Prevents concurrent duplicate processing across workers by leasing jobs with locked_until.
+        """
+        now = datetime.now(UTC)
+        lease_expiry = now + timedelta(seconds=lease_duration_seconds)
+
+        # 1. Pending jobs ready for execution (either fresh or retry backoff elapsed)
+        pending_cond = (ThreatEnrichmentJobModel.status == "pending") & (
+            (ThreatEnrichmentJobModel.next_retry_at.is_(None))
+            | (ThreatEnrichmentJobModel.next_retry_at <= now)
+        )
+        # 2. Stale/crashed processing jobs whose lease expired
+        stale_cond = (
+            (ThreatEnrichmentJobModel.status == "processing")
+            & (ThreatEnrichmentJobModel.locked_until.is_not(None))
+            & (ThreatEnrichmentJobModel.locked_until < now)
+        )
+
+        jobs = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(or_(pending_cond, stale_cond))
+            .order_by(ThreatEnrichmentJobModel.created_at.asc())
+            .limit(limit)
+            .all()
+        )
+
+        claimed: list[ThreatEnrichmentJobModel] = []
+        for job in jobs:
+            job.status = "processing"
+            job.locked_by = worker_id
+            job.locked_until = lease_expiry
+            job.attempts += 1
+            job.updated_at = now
+            claimed.append(job)
+
+        if claimed:
+            self.db.commit()
+            for job in claimed:
+                self.db.refresh(job)
+
+        return claimed
+
+    def mark_enrichment_job_processing(
+        self,
+        job_id: str,
+        worker_id: str | None = None,
+        lease_duration_seconds: int = 60,
+    ) -> bool:
+        """Marks a job as actively processing with an explicit lease."""
         job = (
             self.db.query(ThreatEnrichmentJobModel)
             .filter(ThreatEnrichmentJobModel.id == job_id)
             .first()
         )
-        if not job or job.status != "pending":
+        if not job or job.status not in ("pending", "processing"):
             return False
+        now = datetime.now(UTC)
         job.status = "processing"
         job.attempts += 1
-        job.updated_at = datetime.now(UTC)
+        job.locked_by = worker_id
+        job.locked_until = now + timedelta(seconds=lease_duration_seconds)
+        job.updated_at = now
         self.db.commit()
         return True
 
     def mark_enrichment_job_completed(self, job_id: str) -> bool:
+        """Marks an enrichment job as successfully completed and releases locks."""
         job = (
             self.db.query(ThreatEnrichmentJobModel)
             .filter(ThreatEnrichmentJobModel.id == job_id)
@@ -624,12 +683,25 @@ class ThreatIntelRepository:
         )
         if not job:
             return False
+        now = datetime.now(UTC)
         job.status = "completed"
-        job.updated_at = datetime.now(UTC)
+        job.locked_until = None
+        job.locked_by = None
+        job.next_retry_at = None
+        job.updated_at = now
         self.db.commit()
         return True
 
-    def mark_enrichment_job_failed(self, job_id: str, error_message: str) -> bool:
+    def mark_enrichment_job_failed(
+        self,
+        job_id: str,
+        error_message: str,
+        base_backoff_seconds: int = 5,
+    ) -> bool:
+        """
+        Marks an enrichment job as failed, scheduling automatic exponential retry backoff
+        if attempts < max_attempts, or permanently failing it once max_attempts is reached.
+        """
         job = (
             self.db.query(ThreatEnrichmentJobModel)
             .filter(ThreatEnrichmentJobModel.id == job_id)
@@ -637,11 +709,64 @@ class ThreatIntelRepository:
         )
         if not job:
             return False
+        now = datetime.now(UTC)
         job.last_error = error_message[:1000]
-        job.updated_at = datetime.now(UTC)
+        job.locked_until = None
+        job.locked_by = None
+        job.updated_at = now
+
         if job.attempts < job.max_attempts:
-            job.status = "pending"  # Retry
+            job.status = "pending"
+            # Exponential backoff: 5s, 10s, 20s, capped at 300s
+            backoff_delay = min(
+                300, base_backoff_seconds * (2 ** max(0, job.attempts - 1))
+            )
+            job.next_retry_at = now + timedelta(seconds=backoff_delay)
         else:
             job.status = "failed"
+            job.next_retry_at = None
+
         self.db.commit()
         return True
+
+    def get_enrichment_queue_metrics(self) -> dict[str, Any]:
+        """Returns comprehensive queue lifecycle and health telemetry."""
+        now = datetime.now(UTC)
+        total = self.db.query(ThreatEnrichmentJobModel).count()
+        pending = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(ThreatEnrichmentJobModel.status == "pending")
+            .count()
+        )
+        processing = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(ThreatEnrichmentJobModel.status == "processing")
+            .count()
+        )
+        completed = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(ThreatEnrichmentJobModel.status == "completed")
+            .count()
+        )
+        failed = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(ThreatEnrichmentJobModel.status == "failed")
+            .count()
+        )
+        stale_recoverable = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(
+                ThreatEnrichmentJobModel.status == "processing",
+                ThreatEnrichmentJobModel.locked_until.is_not(None),
+                ThreatEnrichmentJobModel.locked_until < now,
+            )
+            .count()
+        )
+        return {
+            "total_jobs": total,
+            "pending_jobs": pending,
+            "processing_jobs": processing,
+            "completed_jobs": completed,
+            "failed_jobs": failed,
+            "stale_recoverable_jobs": stale_recoverable,
+        }

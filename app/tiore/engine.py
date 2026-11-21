@@ -214,6 +214,12 @@ class TIOREEngine:
 
         tiore_metrics.record_background_queued()
         try:
+            from app.tiore.worker import tiore_worker
+
+            tiore_worker.trigger()
+        except Exception:
+            pass
+        try:
             self._executor.submit(
                 self._background_enrichment_worker,
                 observable,

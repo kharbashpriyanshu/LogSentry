@@ -250,6 +250,11 @@ class ThreatEnrichmentJobModel(Base):
     """
 
     __tablename__ = "threat_enrichment_jobs"
+    __table_args__ = (
+        Index(
+            "ix_threat_enrichment_jobs_claim", "status", "next_retry_at", "locked_until"
+        ),
+    )
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     observable_id = Column(
@@ -267,6 +272,9 @@ class ThreatEnrichmentJobModel(Base):
     attempts = Column(Integer, nullable=False, default=0)
     max_attempts = Column(Integer, nullable=False, default=3)
     last_error = Column(Text, nullable=True)
+    locked_until = Column(DateTime(timezone=True), nullable=True, index=True)
+    locked_by = Column(String(128), nullable=True)
+    next_retry_at = Column(DateTime(timezone=True), nullable=True, index=True)
     event_id = Column(String, nullable=True, index=True)
     alert_id = Column(String, nullable=True, index=True)
     created_at = Column(

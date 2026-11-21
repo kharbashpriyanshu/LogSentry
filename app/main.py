@@ -57,6 +57,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     setup_logging()
     queue_service.start_worker()
 
+    from app.tiore.worker import tiore_worker
+
+    tiore_worker.start()
+
     # Bootstrap default enterprise tenants, administrator, and curated threat intelligence
     try:
         from app.database.session import SessionLocal
@@ -85,6 +89,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         },
     )
     yield
+    tiore_worker.stop()
     queue_service.stop_worker()
     logger.info("LogSentry shutting down gracefully")
 

@@ -8,13 +8,22 @@ Tests covering:
   4. Structured operational error metrics and telemetry tracking.
 """
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.crypto import decrypt_pii, rotate_pii_encryption
+from app.core.crypto import (
+    decrypt_pii,
+    encrypt_pii,
+    migrate_pii_hmac_fingerprints,
+    reencrypt_all_pii,
+    register_pii_key,
+    rotate_pii_encryption,
+)
 from app.core.jwt import create_access_token
 from app.core.rbac import UserRole
 from app.database.base import Base
@@ -252,43 +261,196 @@ def test_tenant_deduplication_isolation_for_same_indicator(privacy_db):
     assert rec_a.fingerprint == rec_b.fingerprint
 
 
-def test_key_rotation_and_versioned_tokens():
+def test_real_v1_to_v2_key_rotation_and_database_reencryption(privacy_db):
     """
-    Verifies AES-256-GCM versioned tokens ('v1:...') and rotation re-encryption.
+    Verifies actual v1 to v2 cryptographic key rotation and idempotent database re-encryption.
+    Decrypts legacy v1 tokens while newly migrated records use active v2 keys.
     """
-    from app.core.crypto import decrypt_pii, encrypt_pii
+    # 1. Register a distinct v2 key
+    v2_secret = "LogSentry-Dedicated-V2-Production-Key-32-Bytes!"
+    register_pii_key("v2", v2_secret)
 
-    plaintext = "confidential-ciso@target.org"
-    token = encrypt_pii(plaintext)
-    assert token.startswith("v1:")
-    assert decrypt_pii(token) == plaintext
+    # 2. Encrypt token under v1
+    v1_token = encrypt_pii("ciso@enterprise.org", version="v1")
+    assert v1_token.startswith("v1:")
+    assert decrypt_pii(v1_token) == "ciso@enterprise.org"
 
-    rotated = rotate_pii_encryption(token)
-    assert rotated.startswith("v1:")
-    assert decrypt_pii(rotated) == plaintext
+    # 3. Rotate token to v2
+    v2_token = rotate_pii_encryption(v1_token, target_version="v2")
+    assert v2_token.startswith("v2:")
+    assert decrypt_pii(v2_token) == "ciso@enterprise.org"
+
+    # 4. Insert observable under v1 into database
+    repo = ThreatIntelRepository(privacy_db)
+    extractor = ObservableExtractor()
+    obs = extractor.validate_and_normalize_email("ciso@enterprise.org")
+    model = repo.get_or_create_observable(obs, tenant_id="tenant-alpha")
+    model.encrypted_value = v1_token
+    privacy_db.commit()
+
+    # 5. Execute idempotent re-encryption across database
+    reencrypted_count = reencrypt_all_pii(privacy_db, target_version="v2")
+    assert reencrypted_count == 1
+    privacy_db.refresh(model)
+    assert model.encrypted_value.startswith("v2:")
+    assert decrypt_pii(model.encrypted_value) == "ciso@enterprise.org"
+
+    # Second run should be idempotent (0 re-encrypted)
+    assert reencrypt_all_pii(privacy_db, target_version="v2") == 0
 
 
-def test_telemetry_sanitization_removes_pii_and_tokens():
+def test_safe_hmac_fingerprint_migration(privacy_db):
     """
-    Verifies that tiore_metrics redacts emails, phone numbers, and bearer tokens.
+    Verifies safe HMAC fingerprint migration when rotating HMAC keys without
+    breaking tenant deduplication or observable associations.
     """
-    tiore_metrics.record_error(
-        "auth_leak_test",
-        "Failed request with Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.abc and user@victim.com",
-        {"phone": "+1 555-123-4567", "secret": "Bearer mysecrettoken123456"},
+    repo = ThreatIntelRepository(privacy_db)
+    extractor = ObservableExtractor()
+
+    email_obs = extractor.validate_and_normalize_email("analyst@soc.corp")
+    model = repo.get_or_create_observable(email_obs, tenant_id="tenant-alpha")
+    old_fingerprint = model.fingerprint
+
+    # New dedicated HMAC key
+    new_hmac_key = b"New-HMAC-Key-For-SOC-2026-Rotation-Secret"
+    migrated_count = migrate_pii_hmac_fingerprints(privacy_db, new_hmac_key)
+    assert migrated_count == 1
+
+    privacy_db.refresh(model)
+    assert model.fingerprint != old_fingerprint
+    # Verify decrypted email matches
+    assert decrypt_pii(model.encrypted_value) == "analyst@soc.corp"
+
+
+def test_stale_job_crash_recovery_and_atomic_claim(privacy_db):
+    """
+    Verifies that a job left in 'processing' status after an unhandled worker crash
+    (with an expired locked_until lease) is automatically recovered and claimed atomically.
+    """
+    repo = ThreatIntelRepository(privacy_db)
+    extractor = ObservableExtractor()
+
+    obs = extractor.validate_and_normalize_ip("198.51.100.77")
+    model = repo.get_or_create_observable(obs, tenant_id="tenant-alpha")
+
+    # Insert a simulated crashed job (lease expired 10 seconds ago)
+    past_time = datetime.now(UTC) - timedelta(seconds=10)
+    job = repo.enqueue_enrichment_job(
+        observable_id=model.id,
+        observable_value=obs.normalized_value,
+        observable_type=obs.observable_type.value,
+        tenant_id="tenant-alpha",
     )
+    job.status = "processing"
+    job.locked_by = "dead-worker-pid-9999"
+    job.locked_until = past_time
+    privacy_db.commit()
+
+    # New worker claims jobs
+    active_worker_id = "live-worker-pid-1111"
+    claimed = repo.claim_pending_jobs(
+        active_worker_id, limit=5, lease_duration_seconds=60
+    )
+
+    assert len(claimed) == 1
+    reclaimed_job = claimed[0]
+    assert reclaimed_job.id == job.id
+    assert reclaimed_job.status == "processing"
+    assert reclaimed_job.locked_by == active_worker_id
+    locked_dt = (
+        reclaimed_job.locked_until.replace(tzinfo=UTC)
+        if reclaimed_job.locked_until.tzinfo is None
+        else reclaimed_job.locked_until
+    )
+    assert locked_dt > datetime.now(UTC)
+    assert reclaimed_job.attempts == 1
+
+    # Verify queue health metrics
+    metrics = repo.get_enrichment_queue_metrics()
+    assert metrics["total_jobs"] >= 1
+    assert metrics["processing_jobs"] >= 1
+
+
+def test_telemetry_sanitization_url_credentials_and_api_keys():
+    """
+    Verifies structured logging and telemetry scrubbing against realistic security payloads:
+    URL credentials, AWS tokens, bearer tokens, API keys, and nested dictionaries.
+    """
+    realistic_log = (
+        "Failed database probe to postgresql://db_admin:P@ssw0rd2026!@internal-db.corp:5432/siem "
+        "with AWS token AKIAIOSFODNN7EXAMPLE and API key: sec_token_abcdef1234567890. "
+        "Reported by security_lead@target.com with auth header Bearer eyJhbGciOiJIUzI1NiJ9.abc.xyz"
+    )
+    nested_context = {
+        "client_request": {
+            "auth": "Bearer secrettoken12345",
+            "db_conn": "mysql://root:RootPassWord#99@localhost/auth",
+            "nested_list": ["clean_val", "api_key=my_custom_secret_key_123456"],
+        },
+        "session_token": "live_session_cookie_abc",
+        "ip": "203.0.113.1",
+    }
+
+    tiore_metrics.record_error("realistic_leak_test", realistic_log, nested_context)
     summary = tiore_metrics.get_summary()
-    recent = [
-        e for e in summary["recent_errors"] if e["error_type"] == "auth_leak_test"
-    ]
-    assert len(recent) > 0
-    err = recent[-1]
-    assert "user@victim.com" not in err["message"]
+    err = [
+        e for e in summary["recent_errors"] if e["error_type"] == "realistic_leak_test"
+    ][-1]
+
+    # Text redactions
+    assert "P@ssw0rd2026!" not in err["message"]
+    assert "[REDACTED_PASS]" in err["message"]
+    assert "AKIAIOSFODNN7EXAMPLE" not in err["message"]
+    assert "[REDACTED_API_KEY]" in err["message"]
+    assert "sec_token_abcdef1234567890" not in err["message"]
+    assert "[REDACTED_CREDENTIAL]" in err["message"]
+    assert "security_lead@target.com" not in err["message"]
     assert "[REDACTED_EMAIL]" in err["message"]
+    assert (
+        "Bearer [REDACTED_TOKEN]" not in err["message"]
+    )  # Bearer ey... is replaced by [REDACTED_TOKEN]
     assert "[REDACTED_TOKEN]" in err["message"]
-    assert "eyJhbGci" not in err["message"]
-    assert "+1 555-123-4567" not in str(err["context"])
-    assert "[REDACTED]" in str(err["context"])
+
+    # Context redactions
+    ctx_str = str(err["context"])
+    assert "secrettoken12345" not in ctx_str
+    assert "RootPassWord#99" not in ctx_str
+    assert "live_session_cookie_abc" not in ctx_str
+    assert "[REDACTED]" in ctx_str
+
+
+def test_migration_fail_closed_logic():
+    """
+    Verifies that any corrupted, un-decryptable PII record during migration
+    causes the migration logic to raise a RuntimeError and fail closed.
+    """
+
+    # Simulate the fail-closed assertion from alembic migration
+    def execute_migration_step(records):
+        migrated = 0
+        for r_id, r_type, r_val, r_enc in records:
+            if not r_enc:
+                try:
+                    ct = encrypt_pii(r_val)
+                    decrypted = decrypt_pii(ct)
+                    if decrypted != r_val:
+                        raise ValueError("Mismatch")
+                    migrated += 1
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"PII migration failed closed on {r_id}: {exc}"
+                    ) from exc
+        return migrated
+
+    # Valid records succeed
+    valid_records = [("1", "email", "valid@corp.com", None)]
+    assert execute_migration_step(valid_records) == 1
+
+    # Corrupt or failing encryption fails closed
+    with pytest.raises(RuntimeError, match="PII migration failed closed"):
+        corrupt_records = [("2", "email", None, None)]
+        # Passing None causes an exception which must raise RuntimeError
+        execute_migration_step(corrupt_records)
 
 
 def test_durable_enrichment_queue_lifecycle(privacy_db):

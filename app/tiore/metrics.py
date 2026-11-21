@@ -18,33 +18,59 @@ PHONE_REGEX = re.compile(
 TOKEN_REGEX = re.compile(
     r"(?:Bearer\s+[A-Za-z0-9._\-]+|ey[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]+)"
 )
+URL_AUTH_REGEX = re.compile(r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^:\s/@]+):([^@\s/]+)@")
+CREDENTIAL_REGEX = re.compile(
+    r"(?i)\b(?:api[_\-\s]?key|access[_\-\s]?token|secret[_\-\s]?key|auth[_\-\s]?token|client[_\-\s]?secret|private[_\-\s]?key)\b[\s:=]+(['\"]?)[A-Za-z0-9_\-]{8,}\b"
+)
+CLOUD_KEY_REGEX = re.compile(
+    r"\b(?:AKIA[0-9A-Z]{16}|ghp_[0-9a-zA-Z]{36}|github_pat_[0-9a-zA-Z_]{22,})\b"
+)
 
 
 def sanitize_text(text: str) -> str:
-    """Redacts raw PII and auth tokens from telemetry log text."""
+    """Redacts raw PII, auth tokens, URL credentials, and API keys from telemetry log text."""
     if not isinstance(text, str):
         return str(text)
     sanitized = EMAIL_REGEX.sub("[REDACTED_EMAIL]", text)
     sanitized = PHONE_REGEX.sub("[REDACTED_PHONE]", sanitized)
     sanitized = TOKEN_REGEX.sub("[REDACTED_TOKEN]", sanitized)
+    sanitized = URL_AUTH_REGEX.sub(r"\1[REDACTED_USER]:[REDACTED_PASS]@", sanitized)
+    sanitized = CREDENTIAL_REGEX.sub("[REDACTED_CREDENTIAL]", sanitized)
+    sanitized = CLOUD_KEY_REGEX.sub("[REDACTED_API_KEY]", sanitized)
     return sanitized
 
 
-def sanitize_context(ctx: dict[str, Any]) -> dict[str, Any]:
-    """Sanitizes context dictionary against sensitive parameter leakage."""
-    clean: dict[str, Any] = {}
-    for k, v in ctx.items():
-        k_lower = str(k).lower()
-        if any(
-            s in k_lower
-            for s in ("email", "phone", "pass", "token", "secret", "auth", "key")
-        ):
-            clean[k] = "[REDACTED]"
-        elif isinstance(v, str):
-            clean[k] = sanitize_text(v)
-        else:
-            clean[k] = v
-    return clean
+def sanitize_context(ctx: Any) -> Any:
+    """Recursively sanitizes context data structures against sensitive parameter leakage."""
+    if isinstance(ctx, dict):
+        clean_dict: dict[str, Any] = {}
+        for k, v in ctx.items():
+            k_lower = str(k).lower()
+            if any(
+                s in k_lower
+                for s in (
+                    "email",
+                    "phone",
+                    "pass",
+                    "token",
+                    "secret",
+                    "auth",
+                    "key",
+                    "credential",
+                    "cookie",
+                    "session",
+                )
+            ):
+                clean_dict[k] = "[REDACTED]"
+            else:
+                clean_dict[k] = sanitize_context(v)
+        return clean_dict
+    elif isinstance(ctx, (list, tuple, set)):
+        return [sanitize_context(item) for item in ctx]
+    elif isinstance(ctx, str):
+        return sanitize_text(ctx)
+    else:
+        return ctx
 
 
 class TIOREMetricsTracker:
