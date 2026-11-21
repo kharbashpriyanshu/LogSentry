@@ -3,6 +3,16 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.models.log_event import LogEventModel
+from app.services.duckdb_forensics import (
+    ColumnarQueryRequest,
+    ColumnarQueryResult,
+    DuckDBForensicsEngine,
+)
+from app.services.hunting_copilot import (
+    CopilotQueryRequest,
+    CopilotResponse,
+    HuntingCopilot,
+)
 from app.services.hunting_service import (
     HuntingQueryRequest,
     HuntingSearchResult,
@@ -10,6 +20,39 @@ from app.services.hunting_service import (
 )
 
 router = APIRouter(prefix="/hunting", tags=["Threat Hunting"])
+
+
+@router.post("/copilot", response_model=CopilotResponse)
+def copilot_threat_hunt(
+    request: CopilotQueryRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    AI Threat Hunting Copilot: Translates plain English security hypotheses
+    into precision Lucene syntax, executes search, and generates threat attribution.
+    Example questions:
+      - "Find all failed logins targeting root user"
+      - "Show me all PowerShell download cradles"
+      - "Search for SQL injection attacks on public endpoints"
+    """
+    return HuntingCopilot.execute_copilot(db=db, req=request)
+
+
+@router.post("/analytics", response_model=ColumnarQueryResult)
+def run_duckdb_analytics(
+    request: ColumnarQueryRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Sub-second Columnar Forensics Query (DuckDB Engine).
+    Executes vectorized analytical SQL queries across millions of log records in milliseconds.
+    """
+    from fastapi import HTTPException
+
+    try:
+        return DuckDBForensicsEngine.execute_query(db=db, sql_query=request.sql_query)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/search", response_model=HuntingSearchResult)

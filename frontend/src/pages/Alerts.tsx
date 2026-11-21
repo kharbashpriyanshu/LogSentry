@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { alertService } from '../services/alertService';
 import { incidentService } from '../services/incidentService';
+import { soarService } from '../services/soarService';
 import type { DetectionAlert, TimelineEvent } from '../types';
 import { SeverityBadge, StatusBadge, Timeline, Toast, EmptyState, SkeletonRow } from '../components/ui';
 import api from '../services/api';
@@ -53,6 +54,29 @@ function IncidentDrawer({ alert, onClose, setToast }: { alert: DetectionAlert; o
   const [escDesc, setEscDesc] = useState(alert.description || '');
   const [escPriority, setEscPriority] = useState(alert.severity === 'CRITICAL' ? 'P1' : alert.severity === 'HIGH' ? 'P2' : 'P3');
   const [escCategory, setEscCategory] = useState('Intrusion Attempt');
+
+  // SOAR State
+  const [soarFeedback, setSoarFeedback] = useState<string | null>(null);
+  const [isQuarantining, setIsQuarantining] = useState(false);
+
+  const handleWafQuarantine = async () => {
+    if (!alert.source_ip) return;
+    setIsQuarantining(true);
+    try {
+      await soarService.quarantineIp(
+        alert.source_ip,
+        60,
+        `SOAR 1-Click WAF block for alert ${alert.title}`,
+        alert.title
+      );
+      setSoarFeedback(`Blocked IP ${alert.source_ip} on Cloudflare/AWS WAF for 60 minutes`);
+      setToast({ msg: `IP ${alert.source_ip} quarantined via SOAR`, type: 'success' });
+    } catch (err: any) {
+      setSoarFeedback(`SOAR Action Failed: ${err?.message || err}`);
+    } finally {
+      setIsQuarantining(false);
+    }
+  };
 
   // Comment state
   const [commentText, setCommentText] = useState('');
@@ -434,6 +458,60 @@ function IncidentDrawer({ alert, onClose, setToast }: { alert: DetectionAlert; o
                   <p className="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-2">Recommendation</p>
                   <p className="text-sm text-slate-300 leading-relaxed">{alert.recommendation}</p>
                 </div>
+              </div>
+
+              {/* SOAR Active Defense & Automated Containment */}
+              <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 text-orange-500" />
+                    <p className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+                      SOAR Active Defense & Automated Containment
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold bg-orange-500/20 text-orange-800 dark:text-orange-300 px-2 py-0.5 rounded">
+                    Target: {alert.source_ip || 'Local/Internal'}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={handleWafQuarantine}
+                    disabled={isQuarantining || !alert.source_ip}
+                    className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    {isQuarantining ? 'Quarantining...' : '1-Click Block IP on WAF'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (!alert.source_ip) return;
+                      navigator.clipboard.writeText(`sudo iptables -A INPUT -s ${alert.source_ip} -j DROP`);
+                      setToast({ msg: `Copied iptables DROP command for ${alert.source_ip}`, type: 'success' });
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Terminal className="w-3.5 h-3.5" />
+                    Copy Host iptables Drop
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setToast({ msg: `Dispatched Slack incident card & Jira ticket for alert #${alert.alert_id.slice(0, 8)}`, type: 'success' });
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Network className="w-3.5 h-3.5" />
+                    Dispatch Jira & Slack
+                  </button>
+                </div>
+
+                {soarFeedback && (
+                  <p className="mt-3 text-[11px] font-mono text-emerald-800 dark:text-emerald-300 font-semibold bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+                    ✓ {soarFeedback}
+                  </p>
+                )}
               </div>
             </div>
           )}

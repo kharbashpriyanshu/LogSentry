@@ -10,6 +10,8 @@ const Alerts      = lazy(() => import('./pages/Alerts'));
 const Incidents   = lazy(() => import('./pages/Incidents'));
 const ThreatIntel = lazy(() => import('./pages/ThreatIntel'));
 const AIAnalysis  = lazy(() => import('./pages/AIAnalysis'));
+const ThreatHunting = lazy(() => import('./pages/ThreatHunting'));
+const MitreMatrix = lazy(() => import('./pages/MitreMatrix'));
 const Reports     = lazy(() => import('./pages/Reports'));
 const SystemHealth = lazy(() => import('./pages/SystemHealth'));
 const ConnectServer = lazy(() => import('./pages/ConnectServer'));
@@ -37,6 +39,8 @@ function App() {
             <Route path="incidents" element={<Suspense fallback={<PageLoader />}><Incidents /></Suspense>} />
             <Route path="threat-intel" element={<Suspense fallback={<PageLoader />}><ThreatIntel /></Suspense>} />
             <Route path="ai-analysis" element={<Suspense fallback={<PageLoader />}><AIAnalysis /></Suspense>} />
+            <Route path="threat-hunting" element={<Suspense fallback={<PageLoader />}><ThreatHunting /></Suspense>} />
+            <Route path="mitre-matrix" element={<Suspense fallback={<PageLoader />}><MitreMatrix /></Suspense>} />
             <Route path="reports" element={<Suspense fallback={<PageLoader />}><Reports /></Suspense>} />
             <Route path="connect-server" element={<Suspense fallback={<PageLoader />}><ConnectServer /></Suspense>} />
             <Route path="health" element={<Suspense fallback={<PageLoader />}><SystemHealth /></Suspense>} />
