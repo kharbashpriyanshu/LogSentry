@@ -7,6 +7,14 @@ from app.models.log_event import LogEventModel
 from app.models.report import ReportModel
 from app.models.soar_action import SOARActionModel
 from app.models.tenant import TenantModel, UserTenantMembershipModel
+from app.models.threat_intel import (
+    EventObservableModel,
+    ObservableModel,
+    ThreatIntelAuditModel,
+    ThreatIntelMatchModel,
+    ThreatIntelRecordModel,
+    ThreatIntelSourceModel,
+)
 from app.models.timeline import TimelineEventModel
 from app.models.user import UserModel
 
@@ -15,11 +23,17 @@ __all__ = [
     "AIAnalysisModel",
     "AlertModel",
     "EnrichmentModel",
+    "EventObservableModel",
     "IncidentModel",
     "LogEventModel",
+    "ObservableModel",
     "ReportModel",
     "SOARActionModel",
     "TenantModel",
+    "ThreatIntelAuditModel",
+    "ThreatIntelMatchModel",
+    "ThreatIntelRecordModel",
+    "ThreatIntelSourceModel",
     "TimelineEventModel",
     "UserModel",
     "UserTenantMembershipModel",
