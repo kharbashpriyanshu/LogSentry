@@ -110,6 +110,8 @@ class Settings(BaseSettings):
     ABUSEIPDB_API_KEY: str | None = None
     OTX_API_KEY: str | None = None
     VIRUSTOTAL_API_KEY: str | None = None
+    HIBP_API_KEY: str | None = None
+    PII_ENCRYPTION_KEY: str | None = None
     ENRICHMENT_CACHE_TTL: int = 3600
     ENABLE_ABUSEIPDB: bool = True
     ENABLE_OTX: bool = True

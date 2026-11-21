@@ -28,7 +28,7 @@ from app.tiore.providers.base import (
     CircuitState,
     ProviderLookupResult,
 )
-from app.tiore.providers.hibp import HIBPPrefixAdapter
+from app.tiore.providers.hibp import HIBPBreachAdapter, HIBPPrefixAdapter
 from app.tiore.providers.manager import ProviderManager
 from app.tiore.providers.threatfox import ThreatFoxAdapter
 from app.tiore.providers.urlhaus import URLhausAdapter
@@ -247,42 +247,71 @@ def test_virustotal_adapter_lookup():
     assert res.evidence["malicious"] == 65
 
 
-def test_hibp_k_anonymity_privacy_and_lookup():
-    adapter = HIBPPrefixAdapter()
+def test_hibp_breached_account_api():
+    # 1. Unconfigured state skips safely without making unauthorized network calls
+    unconfigured_adapter = HIBPBreachAdapter(api_key=None)
     email = "breached_user@example.com"
     extractor = ObservableExtractor()
     obs = extractor.validate_and_normalize_email(email)
 
     assert obs is not None
-    assert adapter.is_eligible(obs) is True
+    assert unconfigured_adapter.is_eligible(obs) is False
+    skip_res = unconfigured_adapter.lookup(obs)
+    assert skip_res.status == "skipped"
 
-    # Calculate SHA1 for breached_user@example.com
-    import hashlib
-
-    sha1_hex = hashlib.sha1(email.encode("utf-8")).hexdigest().upper()
-    prefix = sha1_hex[:5]
-    suffix = sha1_hex[5:]
+    # 2. Configured state with valid API key
+    configured_adapter = HIBPBreachAdapter(api_key="test-hibp-api-key-12345")
+    assert configured_adapter.is_eligible(obs) is True
 
     mock_resp = MagicMock()
     mock_resp.status_code = 200
-    # Simulate HIBP response containing our suffix with count 42
-    mock_resp.text = f"00000000000000000000000000000000000:1\r\n{suffix}:42\r\nFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:3"
+    mock_resp.json.return_value = [
+        {
+            "Name": "Adobe",
+            "Title": "Adobe Creative Cloud",
+            "Domain": "adobe.com",
+            "BreachDate": "2013-10-04",
+            "DataClasses": ["Email addresses", "Passwords"],
+        },
+        {
+            "Name": "Canva",
+            "Title": "Canva",
+            "Domain": "canva.com",
+            "BreachDate": "2019-05-24",
+            "DataClasses": ["Email addresses", "Names", "Passwords"],
+        },
+    ]
 
     with patch("httpx.Client.get") as mock_get:
         mock_get.return_value = mock_resp
-        res = adapter.lookup(obs)
+        res = configured_adapter.lookup(obs)
 
-        # Verify that the URL requested ONLY has the 5-char prefix, never the email or full hash!
+        # Verify correct v3 endpoint and mandatory auth headers
         called_url = mock_get.call_args[0][0]
-        assert called_url == f"https://api.pwnedpasswords.com/range/{prefix}"
-        assert email not in called_url
-        assert sha1_hex not in called_url
+        called_headers = mock_get.call_args[1]["headers"]
+        assert (
+            "https://haveibeenpwned.com/api/v3/breachedaccount/breached_user@example.com"
+            in called_url
+        )
+        assert called_headers["hibp-api-key"] == "test-hibp-api-key-12345"
+        assert "LogSentry" in called_headers["user-agent"]
 
     assert res.status == "success"
     assert res.classification == ThreatClassification.EXPOSED
     assert res.confidence == 0.95
-    assert res.evidence["exposure_count"] == 42
+    assert res.evidence["breached"] is True
+    assert res.evidence["breach_count"] == 2
     assert "data_breach" in res.threat_types
+
+    # 3. Benign (404 Not Found) state
+    mock_404 = MagicMock()
+    mock_404.status_code = 404
+    with patch("httpx.Client.get") as mock_get:
+        mock_get.return_value = mock_404
+        benign_res = configured_adapter.lookup(obs)
+        assert benign_res.status == "success"
+        assert benign_res.classification == ThreatClassification.BENIGN
+        assert benign_res.evidence["breached"] is False
 
 
 def test_provider_manager_and_persistence(test_db_session):

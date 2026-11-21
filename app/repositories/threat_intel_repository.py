@@ -9,9 +9,10 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
+from app.core.crypto import encrypt_pii
 from app.models.threat_intel import (
     EventObservableModel,
     ObservableModel,
@@ -20,7 +21,7 @@ from app.models.threat_intel import (
     ThreatIntelRecordModel,
     ThreatIntelSourceModel,
 )
-from app.tiore.models import ExtractedObservable
+from app.tiore.models import ExtractedObservable, ObservableType
 
 
 class ThreatIntelRepository:
@@ -32,9 +33,13 @@ class ThreatIntelRepository:
     # -------------------------------------------------------------------------
 
     def get_or_create_observable(
-        self, extracted: ExtractedObservable
+        self,
+        extracted: ExtractedObservable,
+        tenant_id: str | None = None,
+        is_shared: bool = False,
+        commit: bool = True,
     ) -> ObservableModel:
-        """Finds existing observable by fingerprint or creates a new canonical entry."""
+        """Finds existing observable by fingerprint or creates a new canonical entry with PII encryption."""
         obs = (
             self.db.query(ObservableModel)
             .filter(ObservableModel.fingerprint == extracted.fingerprint)
@@ -42,16 +47,42 @@ class ThreatIntelRepository:
         )
 
         now = datetime.now(UTC)
+        is_pii = extracted.observable_type in (
+            ObservableType.EMAIL,
+            ObservableType.PHONE,
+        )
+
         if obs:
             obs.last_seen = now
-            self.db.commit()
-            self.db.refresh(obs)
+            if not obs.encrypted_value and is_pii:
+                obs.encrypted_value = encrypt_pii(extracted.normalized_value)
+                obs.value = extracted.masked_value
+            if tenant_id and not obs.tenant_id:
+                obs.tenant_id = tenant_id
+            if commit:
+                self.db.commit()
+                self.db.refresh(obs)
             return obs
+
+        # If PII, encrypt at rest and store masked representation in primary value column
+        if is_pii:
+            stored_value = extracted.masked_value
+            enc_value = encrypt_pii(extracted.normalized_value)
+            shared_flag = False
+            effective_tenant = tenant_id or "default"
+        else:
+            stored_value = extracted.normalized_value
+            enc_value = None
+            shared_flag = is_shared
+            effective_tenant = None if is_shared else (tenant_id or "default")
 
         obs = ObservableModel(
             id=str(uuid.uuid4()),
+            tenant_id=effective_tenant,
+            is_shared=shared_flag,
             type=extracted.observable_type.value,
-            value=extracted.normalized_value,
+            value=stored_value,
+            encrypted_value=enc_value,
             raw_masked=extracted.masked_value,
             fingerprint=extracted.fingerprint,
             validation_status=extracted.validation_status.value,
@@ -62,36 +93,89 @@ class ThreatIntelRepository:
             last_seen=now,
         )
         self.db.add(obs)
-        self.db.commit()
-        self.db.refresh(obs)
+        if commit:
+            self.db.commit()
+            self.db.refresh(obs)
         return obs
 
-    def get_observable_by_fingerprint(self, fingerprint: str) -> ObservableModel | None:
-        return (
-            self.db.query(ObservableModel)
-            .filter(ObservableModel.fingerprint == fingerprint)
-            .first()
+    def get_observable_by_id(
+        self,
+        observable_id: str,
+        tenant_id: str | None = None,
+        is_admin: bool = False,
+    ) -> ObservableModel | None:
+        """Retrieves observable by ID with strict tenant boundary enforcement."""
+        query = self.db.query(ObservableModel).filter(
+            ObservableModel.id == observable_id
         )
+        if not is_admin and tenant_id:
+            query = query.filter(
+                or_(
+                    ObservableModel.tenant_id == tenant_id,
+                    ObservableModel.is_shared.is_(True),
+                    ObservableModel.tenant_id.is_(None),
+                )
+            )
+        return query.first()
+
+    def get_observable_by_fingerprint(
+        self,
+        fingerprint: str,
+        tenant_id: str | None = None,
+        is_admin: bool = False,
+    ) -> ObservableModel | None:
+        query = self.db.query(ObservableModel).filter(
+            ObservableModel.fingerprint == fingerprint
+        )
+        if not is_admin and tenant_id:
+            query = query.filter(
+                or_(
+                    ObservableModel.tenant_id == tenant_id,
+                    ObservableModel.is_shared.is_(True),
+                    ObservableModel.tenant_id.is_(None),
+                )
+            )
+        return query.first()
 
     def get_observable_by_value(
-        self, obs_type: str, normalized_val: str
+        self,
+        obs_type: str,
+        normalized_val: str,
+        tenant_id: str | None = None,
+        is_admin: bool = False,
     ) -> ObservableModel | None:
-        return (
-            self.db.query(ObservableModel)
-            .filter(
-                ObservableModel.type == obs_type,
-                ObservableModel.value == normalized_val,
-            )
-            .first()
+        query = self.db.query(ObservableModel).filter(
+            ObservableModel.type == obs_type,
+            ObservableModel.value == normalized_val,
         )
+        if not is_admin and tenant_id:
+            query = query.filter(
+                or_(
+                    ObservableModel.tenant_id == tenant_id,
+                    ObservableModel.is_shared.is_(True),
+                    ObservableModel.tenant_id.is_(None),
+                )
+            )
+        return query.first()
 
     def get_observables_paginated(
         self,
+        tenant_id: str | None = None,
+        is_admin: bool = False,
         page: int = 1,
         limit: int = 50,
         obs_type: str | None = None,
     ) -> tuple[list[ObservableModel], int]:
+        """Returns paginated observables filtered by tenant boundary."""
         query = self.db.query(ObservableModel)
+        if not is_admin and tenant_id:
+            query = query.filter(
+                or_(
+                    ObservableModel.tenant_id == tenant_id,
+                    ObservableModel.is_shared.is_(True),
+                    ObservableModel.tenant_id.is_(None),
+                )
+            )
         if obs_type:
             query = query.filter(ObservableModel.type == obs_type)
 
@@ -103,6 +187,23 @@ class ThreatIntelRepository:
             .all()
         )
         return items, total
+
+    def get_observable_count(
+        self,
+        tenant_id: str | None = None,
+        is_admin: bool = False,
+    ) -> int:
+        """Returns observable count visible to the specified tenant."""
+        query = self.db.query(ObservableModel)
+        if not is_admin and tenant_id:
+            query = query.filter(
+                or_(
+                    ObservableModel.tenant_id == tenant_id,
+                    ObservableModel.is_shared.is_(True),
+                    ObservableModel.tenant_id.is_(None),
+                )
+            )
+        return query.count()
 
     # -------------------------------------------------------------------------
     # Sources
@@ -238,7 +339,12 @@ class ThreatIntelRepository:
     # -------------------------------------------------------------------------
 
     def link_event_observable(
-        self, event_id: str, observable_id: str, field_name: str, tenant_id: str
+        self,
+        event_id: str,
+        observable_id: str,
+        field_name: str,
+        tenant_id: str,
+        commit: bool = True,
     ) -> EventObservableModel:
         # Check if already linked
         existing = (
@@ -262,8 +368,9 @@ class ThreatIntelRepository:
             created_at=datetime.now(UTC),
         )
         self.db.add(link)
-        self.db.commit()
-        self.db.refresh(link)
+        if commit:
+            self.db.commit()
+            self.db.refresh(link)
         return link
 
     # -------------------------------------------------------------------------
@@ -280,6 +387,7 @@ class ThreatIntelRepository:
         event_id: str | None = None,
         alert_id: str | None = None,
         incident_id: str | None = None,
+        commit: bool = True,
     ) -> ThreatIntelMatchModel:
         match = ThreatIntelMatchModel(
             id=str(uuid.uuid4()),
@@ -295,8 +403,9 @@ class ThreatIntelRepository:
             matched_at=datetime.now(UTC),
         )
         self.db.add(match)
-        self.db.commit()
-        self.db.refresh(match)
+        if commit:
+            self.db.commit()
+            self.db.refresh(match)
         return match
 
     def get_matches(

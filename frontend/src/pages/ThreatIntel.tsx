@@ -18,6 +18,17 @@ interface ThreatStats {
   unreviewed_matches: number;
   total_sources: number;
   healthy_sources: number;
+  telemetry?: {
+    events_processed: number;
+    observables_extracted: number;
+    local_matches: number;
+    background_lookups_queued: number;
+    background_lookups_completed: number;
+    cache_hits: number;
+    cache_misses: number;
+    cache_hit_ratio: number;
+    errors_total: number;
+  };
 }
 
 interface ThreatMatch {
@@ -57,12 +68,32 @@ export default function ThreatIntel() {
   const [indicatorInput, setIndicatorInput] = useState('');
   const [forceExternal, setForceExternal] = useState(false);
   const [investigationResult, setInvestigationResult] = useState<any | null>(null);
+  const [unmaskedValues, setUnmaskedValues] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
   // Review modal state
   const [reviewMatchId, setReviewMatchId] = useState<string | null>(null);
   const [reviewStatus, setReviewStatus] = useState('confirmed_threat');
   const [reviewNotes, setReviewNotes] = useState('');
+
+  // Unmask Mutation
+  const unmaskMutation = useMutation({
+    mutationFn: (observableId: string) => threatIntelService.unmaskObservable(observableId),
+    onSuccess: (data) => {
+      setUnmaskedValues((prev) => ({ ...prev, [data.observable_id]: data.unmasked_value }));
+      refetchAudits();
+      setToast({
+        msg: `Decrypted PII observable: ${data.unmasked_value} (Audit event logged)`,
+        type: 'success',
+      });
+    },
+    onError: (err: any) => {
+      setToast({
+        msg: err.response?.data?.detail || 'Failed to unmask observable (requires SOC Manager or Admin)',
+        type: 'error',
+      });
+    },
+  });
 
   // Queries
   const { data: stats } = useQuery<ThreatStats>({
@@ -376,8 +407,19 @@ export default function ThreatIntel() {
                     <div>
                       <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-2xl font-bold font-mono text-[var(--text-primary)]">
-                          {investigationResult.observable.masked_value}
+                          {unmaskedValues[investigationResult.observable.id] || investigationResult.observable.masked_value}
                         </span>
+                        {investigationResult.observable.is_pii && (
+                          <button
+                            onClick={() => unmaskMutation.mutate(investigationResult.observable.id)}
+                            disabled={unmaskMutation.isPending || !!unmaskedValues[investigationResult.observable.id]}
+                            className="px-2.5 py-1 text-xs rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+                            title="Authorized SOC Unmasking (Audited)"
+                          >
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>{unmaskedValues[investigationResult.observable.id] ? 'Decrypted (Audited)' : 'Unmask PII (Audited)'}</span>
+                          </button>
+                        )}
                         <span
                           className={`px-3 py-1 rounded-md text-xs font-bold border ${
                             investigationResult.reputation.classification === 'MALICIOUS'

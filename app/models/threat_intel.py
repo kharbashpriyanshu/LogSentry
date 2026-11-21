@@ -35,8 +35,11 @@ class ObservableModel(Base):
     __tablename__ = "threat_observables"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = Column(String(64), nullable=True, index=True)
+    is_shared = Column(Boolean, nullable=False, default=False, index=True)
     type = Column(String(32), nullable=False, index=True)
     value = Column(String(2048), nullable=False, index=True)
+    encrypted_value = Column(Text, nullable=True)
     raw_masked = Column(String(2048), nullable=False)
     fingerprint = Column(String(64), unique=True, nullable=False, index=True)
     validation_status = Column(String(32), nullable=False, default="valid")

@@ -132,7 +132,14 @@ class IntelligenceResolver:
             if cached is not None:
                 cached.is_cached = True
                 cached.cache_source = "memory"
+                from app.tiore.metrics import tiore_metrics
+
+                tiore_metrics.record_cache_hit()
                 return cached
+            else:
+                from app.tiore.metrics import tiore_metrics
+
+                tiore_metrics.record_cache_miss()
 
         # 2. Strict Privacy Gate Evaluation
         privacy_result = self._evaluate_privacy_gate(extracted)

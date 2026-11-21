@@ -1,0 +1,230 @@
+"""
+LogSentry — TIORE Privacy, PII Encryption & Tenant Isolation Tests
+==================================================================
+Tests covering:
+  1. Authenticated encryption at rest (AES-256-GCM) for email/phone observables.
+  2. Multi-tenant boundary enforcement (no cross-tenant observable or stats leakage).
+  3. Strict RBAC controls and audit trails for PII unmasking.
+  4. Structured operational error metrics and telemetry tracking.
+"""
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.core.crypto import decrypt_pii
+from app.core.jwt import create_access_token
+from app.core.rbac import UserRole
+from app.database.base import Base
+from app.database.session import get_db
+from app.main import app as fastapi_app
+from app.models.threat_intel import (
+    EventObservableModel,
+    ObservableModel,
+    ThreatIntelAuditModel,
+    ThreatIntelMatchModel,
+    ThreatIntelRecordModel,
+    ThreatIntelSourceModel,
+)
+from app.repositories.threat_intel_repository import ThreatIntelRepository
+from app.tiore.engine import tiore_engine
+from app.tiore.extractor import ObservableExtractor
+from app.tiore.metrics import tiore_metrics
+
+
+@pytest.fixture
+def privacy_db():
+    test_engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(bind=test_engine)
+    session_factory = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+    db = session_factory()
+    try:
+        yield db
+    finally:
+        db.close()
+        Base.metadata.drop_all(bind=test_engine)
+
+
+@pytest.fixture
+def privacy_client(privacy_db):
+    def override_get_db():
+        try:
+            yield privacy_db
+        finally:
+            pass
+
+    fastapi_app.dependency_overrides[get_db] = override_get_db
+    with TestClient(fastapi_app) as client:
+        yield client
+    fastapi_app.dependency_overrides.clear()
+
+
+def test_pii_encryption_at_rest_and_masking(privacy_db):
+    """
+    Verifies that email and phone observables are encrypted at rest with AES-256-GCM,
+    and that the primary value column stores only the masked representation.
+    """
+    extractor = ObservableExtractor()
+    repo = ThreatIntelRepository(privacy_db)
+
+    # Ingest email observable
+    email_obs = extractor.validate_and_normalize_email("security_lead@enterprise.com")
+    assert email_obs is not None
+
+    model = repo.get_or_create_observable(email_obs, tenant_id="tenant-alpha")
+
+    # 1. Primary value column MUST be masked (never plaintext email)
+    assert "@" in model.value
+    assert "security_lead" not in model.value
+    assert model.value == email_obs.masked_value
+
+    # 2. Encrypted value column MUST be set and ciphertext cannot be raw plaintext
+    assert model.encrypted_value is not None
+    assert "security_lead@enterprise.com" not in model.encrypted_value
+
+    # 3. Decryption function restores exact plaintext
+    decrypted = decrypt_pii(model.encrypted_value)
+    assert decrypted == "security_lead@enterprise.com"
+
+    # Ingest phone observable
+    phone_obs = extractor.validate_and_normalize_phone("+1 (555) 234-5678")
+    assert phone_obs is not None
+
+    phone_model = repo.get_or_create_observable(phone_obs, tenant_id="tenant-alpha")
+    assert phone_model.value == phone_obs.masked_value
+    assert phone_model.encrypted_value is not None
+    assert "+15552345678" not in phone_model.encrypted_value
+    assert decrypt_pii(phone_model.encrypted_value) == "+15552345678"
+
+
+def test_cross_tenant_observable_isolation(privacy_client, privacy_db):
+    """
+    Verifies that Tenant A CANNOT see Tenant B's observables or statistics.
+    """
+    extractor = ObservableExtractor()
+    repo = ThreatIntelRepository(privacy_db)
+
+    # Ingest indicator for Tenant A
+    obs_a = extractor.validate_and_normalize_domain("internal-api.tenant-a.corp")
+    repo.get_or_create_observable(obs_a, tenant_id="tenant-a")
+
+    # Ingest indicator for Tenant B
+    obs_b = extractor.validate_and_normalize_domain("payroll-server.tenant-b.corp")
+    repo.get_or_create_observable(obs_b, tenant_id="tenant-b")
+
+    # Ingest a global shared indicator
+    obs_shared = extractor.validate_and_normalize_ip("194.26.29.112")
+    repo.get_or_create_observable(obs_shared, tenant_id=None, is_shared=True)
+
+    token_a = create_access_token("user-a", UserRole.TIER_1_ANALYST, "tenant-a")
+    headers_a = {"Authorization": f"Bearer {token_a}"}
+
+    token_b = create_access_token("user-b", UserRole.TIER_1_ANALYST, "tenant-b")
+    headers_b = {"Authorization": f"Bearer {token_b}"}
+
+    # Query observables as Tenant A
+    resp_a = privacy_client.get("/api/v1/threat-intel/observables", headers=headers_a)
+    assert resp_a.status_code == 200
+    items_a = resp_a.json()["items"]
+    values_a = [item["value"] for item in items_a]
+
+    assert "internal-api.tenant-a.corp" in values_a
+    assert "194.26.29.112" in values_a
+    # Tenant B's domain MUST NOT be present in Tenant A's inventory!
+    assert "payroll-server.tenant-b.corp" not in values_a
+
+    # Query observables as Tenant B
+    resp_b = privacy_client.get("/api/v1/threat-intel/observables", headers=headers_b)
+    assert resp_b.status_code == 200
+    items_b = resp_b.json()["items"]
+    values_b = [item["value"] for item in items_b]
+
+    assert "payroll-server.tenant-b.corp" in values_b
+    assert "194.26.29.112" in values_b
+    assert "internal-api.tenant-a.corp" not in values_b
+
+    # Verify /stats endpoint reflects tenant isolation
+    stats_a = privacy_client.get("/api/v1/threat-intel/stats", headers=headers_a).json()
+    stats_b = privacy_client.get("/api/v1/threat-intel/stats", headers=headers_b).json()
+
+    # Tenant A sees 2 observables (their own + shared), Tenant B sees 2 (their own + shared)
+    assert stats_a["total_observables"] == 2
+    assert stats_b["total_observables"] == 2
+
+
+def test_authorized_pii_unmasking_and_rbac(privacy_client, privacy_db):
+    """
+    Verifies that PII observables can only be unmasked by SOC Managers or Admins,
+    and that unmasking records an audit trail.
+    """
+    extractor = ObservableExtractor()
+    repo = ThreatIntelRepository(privacy_db)
+
+    obs = extractor.validate_and_normalize_email("vip_exec@target.com")
+    model = repo.get_or_create_observable(obs, tenant_id="tenant-alpha")
+
+    tier1_token = create_access_token(
+        "t1-user", UserRole.TIER_1_ANALYST, "tenant-alpha"
+    )
+    tier1_headers = {"Authorization": f"Bearer {tier1_token}"}
+
+    manager_token = create_access_token(
+        "manager-user", UserRole.SOC_MANAGER, "tenant-alpha"
+    )
+    manager_headers = {"Authorization": f"Bearer {manager_token}"}
+
+    # 1. Tier 1 Analyst tries to unmask -> 403 Forbidden
+    resp_t1 = privacy_client.post(
+        f"/api/v1/threat-intel/observables/{model.id}/unmask",
+        headers=tier1_headers,
+    )
+    assert resp_t1.status_code == 403
+
+    # 2. SOC Manager unmasks -> 200 OK
+    resp_mgr = privacy_client.post(
+        f"/api/v1/threat-intel/observables/{model.id}/unmask",
+        headers=manager_headers,
+    )
+    assert resp_mgr.status_code == 200
+    data = resp_mgr.json()
+    assert data["unmasked_value"] == "vip_exec@target.com"
+    assert data["masked_value"] == obs.masked_value
+
+    # 3. Verify audit log entry
+    audits = repo.get_audits(tenant_id="tenant-alpha")
+    unmask_audits = [a for a in audits if a.lookup_method == "pii_unmask_authorized"]
+    assert len(unmask_audits) == 1
+    assert unmask_audits[0].actor_username == "manager-user"
+
+
+def test_tiore_telemetry_and_error_tracking():
+    """
+    Verifies operational telemetry tracking and non-silent error handling.
+    """
+    tiore_metrics.record_event_processed(3)
+    tiore_metrics.record_match()
+    tiore_metrics.record_cache_hit()
+    tiore_metrics.record_cache_miss()
+    tiore_metrics.record_background_queued(2)
+    tiore_metrics.record_background_completed(1)
+    tiore_metrics.record_error(
+        "test_simulated_error", "Mock exception details", {"ip": "1.2.3.4"}
+    )
+
+    summary = tiore_metrics.get_summary()
+    assert summary["events_processed"] >= 1
+    assert summary["observables_extracted"] >= 3
+    assert summary["local_matches"] >= 1
+    assert summary["background_lookups_queued"] >= 2
+    assert summary["background_lookups_completed"] >= 1
+    assert summary["errors_total"] >= 1
+    assert "test_simulated_error" in summary["errors_by_type"]
+    assert any(
+        e["error_type"] == "test_simulated_error" for e in summary["recent_errors"]
+    )

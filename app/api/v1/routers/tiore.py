@@ -171,22 +171,31 @@ def get_observables(
     repo: ThreatIntelRepository = Depends(get_threat_intel_repository),
 ):
     """
-    Returns inventory of tracked canonical observables.
+    Returns inventory of tracked canonical observables, strictly isolated by tenant.
+    PII identifiers (email, phone) are ALWAYS returned masked.
     """
+    is_admin = user.role == UserRole.ADMIN
     items, total = repo.get_observables_paginated(
-        page=page, limit=limit, obs_type=obs_type
+        tenant_id=user.tenant_id,
+        is_admin=is_admin,
+        page=page,
+        limit=limit,
+        obs_type=obs_type,
     )
     return {
         "items": [
             {
                 "id": o.id,
                 "type": o.type,
-                "value": o.value,
+                "value": (o.raw_masked if o.type in ("email", "phone") else o.value),
                 "raw_masked": o.raw_masked,
                 "fingerprint": o.fingerprint,
                 "validation_status": o.validation_status,
                 "privacy_classification": o.privacy_classification,
                 "is_eligible_for_external_lookup": o.is_eligible_for_external_lookup,
+                "is_pii": o.type in ("email", "phone"),
+                "is_shared": bool(o.is_shared),
+                "tenant_id": o.tenant_id,
                 "first_seen": o.first_seen.isoformat() if o.first_seen else None,
                 "last_seen": o.last_seen.isoformat() if o.last_seen else None,
             }
@@ -196,6 +205,41 @@ def get_observables(
         "page": page,
         "limit": limit,
     }
+
+
+@router.post("/observables/{observable_id}/unmask")
+def unmask_observable(
+    observable_id: str,
+    user: UserContext = Depends(
+        require_role(
+            UserRole.SOC_MANAGER,
+            UserRole.ADMIN,
+        )
+    ),
+    db: Session = Depends(get_db),
+):
+    """
+    Authorized unmasking endpoint for PII observables (emails, phone numbers).
+    Requires SOC Manager or Admin privileges and records a mandatory audit event.
+    """
+    is_admin = user.role == UserRole.ADMIN
+    result = tiore_engine.unmask_pii_observable(
+        observable_id=observable_id,
+        tenant_id=user.tenant_id,
+        actor_id=user.user_id,
+        actor_username=user.username,
+        actor_role=user.role.value,
+        db=db,
+        is_admin=is_admin,
+    )
+    if result.get("status") == "error":
+        raise HTTPException(
+            status_code=(
+                404 if "not found" in result.get("message", "").lower() else 400
+            ),
+            detail=result.get("message"),
+        )
+    return result
 
 
 @router.get("/sources")
@@ -259,9 +303,10 @@ def get_stats(
     repo: ThreatIntelRepository = Depends(get_threat_intel_repository),
 ):
     """
-    High-level dashboard KPIs for Threat Intelligence Center.
+    High-level dashboard KPIs for Threat Intelligence Center with tenant isolation.
     """
-    from app.models.threat_intel import ObservableModel, ThreatIntelMatchModel
+    from app.models.threat_intel import ThreatIntelMatchModel
+    from app.tiore.metrics import tiore_metrics
 
     is_admin = user.role == UserRole.ADMIN
     match_query = db.query(ThreatIntelMatchModel)
@@ -284,9 +329,13 @@ def get_stats(
         ThreatIntelMatchModel.review_status == "unreviewed"
     ).count()
 
-    total_observables = db.query(ObservableModel).count()
+    total_observables = repo.get_observable_count(
+        tenant_id=user.tenant_id, is_admin=is_admin
+    )
     sources = repo.get_sources(enabled_only=False)
     healthy_sources = sum(1 for s in sources if s.health_status == "healthy")
+
+    telemetry = tiore_metrics.get_summary()
 
     return {
         "total_observables": total_observables,
@@ -297,4 +346,5 @@ def get_stats(
         "unreviewed_matches": unreviewed_matches,
         "total_sources": len(sources),
         "healthy_sources": healthy_sources,
+        "telemetry": telemetry,
     }

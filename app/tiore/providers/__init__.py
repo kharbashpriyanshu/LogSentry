@@ -7,7 +7,7 @@ Modular provider adapters for commercial, community, and open-source threat inte
 from app.tiore.providers.abuseipdb import AbuseIPDBAdapter
 from app.tiore.providers.alienvault import AlienVaultOTXAdapter
 from app.tiore.providers.base import BaseObservableAdapter, ProviderLookupResult
-from app.tiore.providers.hibp import HIBPPrefixAdapter
+from app.tiore.providers.hibp import HIBPBreachAdapter, HIBPPrefixAdapter
 from app.tiore.providers.manager import ProviderManager
 from app.tiore.providers.threatfox import ThreatFoxAdapter
 from app.tiore.providers.urlhaus import URLhausAdapter
@@ -21,6 +21,7 @@ __all__ = [
     "URLhausAdapter",
     "ThreatFoxAdapter",
     "VirusTotalAdapter",
+    "HIBPBreachAdapter",
     "HIBPPrefixAdapter",
     "ProviderManager",
 ]

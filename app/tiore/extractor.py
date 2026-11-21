@@ -27,12 +27,16 @@ logger = logging.getLogger(__name__)
 SENSITIVE_URL_PARAMS = {
     "token",
     "access_token",
+    "id_token",
+    "refresh_token",
     "auth",
     "authorization",
+    "bearer",
     "key",
     "api_key",
     "apikey",
     "secret",
+    "client_secret",
     "password",
     "pass",
     "pwd",
@@ -41,8 +45,19 @@ SENSITIVE_URL_PARAMS = {
     "sess",
     "sig",
     "signature",
-    "client_secret",
-    "refresh_token",
+    "code",
+    "state",
+    "jwt",
+    "cookie",
+    "credential",
+    "user",
+    "username",
+    "email",
+    "phone",
+    "account",
+    "pin",
+    "private",
+    "ssn",
 }
 
 # Internal TLDs and suffix reservations
@@ -304,12 +319,17 @@ class ObservableExtractor:
                 privacy = PrivacyClassification.INTERNAL_DOMAIN
                 is_internal = True
 
-        # Sanitize query parameters (strip sensitive tokens)
+        # Sanitize query parameters (strip sensitive tokens with strict disclosure policy)
         sanitized_query = ""
         if parsed.query:
             filtered_params = []
             for k, v in parse_qsl(parsed.query, keep_blank_values=True):
-                if k.lower() in SENSITIVE_URL_PARAMS:
+                k_lower = k.lower()
+                is_sensitive = k_lower in SENSITIVE_URL_PARAMS or any(
+                    s in k_lower
+                    for s in ("token", "secret", "pass", "auth", "key", "cred")
+                )
+                if is_sensitive:
                     filtered_params.append((k, "REDACTED"))
                 else:
                     filtered_params.append((k, v))

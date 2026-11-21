@@ -66,4 +66,8 @@ export const threatIntelService = {
     const res = await api.get('/threat-intel/stats');
     return res.data;
   },
+  unmaskObservable: async (observableId: string) => {
+    const res = await api.post(`/threat-intel/observables/${observableId}/unmask`);
+    return res.data;
+  },
 };

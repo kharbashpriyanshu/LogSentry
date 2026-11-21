@@ -1,7 +1,10 @@
+import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.api.dependencies import (
     get_alert_repository,
@@ -115,8 +118,20 @@ def analyze_event(
             db=db,
             alert_id=first_alert_id,
         )
-    except Exception:
-        pass
+    except Exception as exc:
+        from app.tiore.metrics import tiore_metrics
+
+        tiore_metrics.record_error(
+            "ingestion_tiore_error",
+            str(exc),
+            {"event_id": str(getattr(event, "event_id", None) or event.timestamp)},
+        )
+        logger.warning(
+            "TIORE processing failed on event %s: %s",
+            getattr(event, "event_id", None),
+            exc,
+            exc_info=True,
+        )
 
     return DetectionResponse(alerts=[a.model_dump() for a in alerts])
 
@@ -160,8 +175,20 @@ def detect_single_event(
             alert_id=getattr(alerts[0], "alert_id", None)
             or getattr(alerts[0], "id", None),
         )
-    except Exception:
-        pass
+    except Exception as exc:
+        from app.tiore.metrics import tiore_metrics
+
+        tiore_metrics.record_error(
+            "single_detect_tiore_error",
+            str(exc),
+            {"event_id": str(getattr(event, "event_id", None) or event.timestamp)},
+        )
+        logger.warning(
+            "TIORE processing failed on single detect event %s: %s",
+            getattr(event, "event_id", None),
+            exc,
+            exc_info=True,
+        )
 
     return alerts[0]
 
@@ -292,8 +319,20 @@ def analyze_batch(
                     else None
                 ),
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            from app.tiore.metrics import tiore_metrics
+
+            tiore_metrics.record_error(
+                "batch_tiore_error",
+                str(exc),
+                {"event_id": str(getattr(event, "event_id", None) or effective_id)},
+            )
+            logger.warning(
+                "TIORE processing failed in batch on event %s: %s",
+                getattr(event, "event_id", None),
+                exc,
+                exc_info=True,
+            )
 
     return BatchDetectionResponse(
         status="acknowledged" if rejected_count == 0 else "partial_success",
