@@ -1,0 +1,41 @@
+# =============================================================================
+# LogSentry SIEM — Windows Server & Active Directory (Winlogbeat Configuration)
+# =============================================================================
+# Deployed across corporate Windows Servers and Active Directory Domain Controllers.
+# Collects high-fidelity security events and forwards them over HTTPS to LogSentry.
+# =============================================================================
+
+winlogbeat.event_logs:
+  # 1. Security Event Log: Authentication, Privilege Escalation, Account Creation
+  - name: Security
+    event_id:
+      - 4624  # Successful Logon
+      - 4625  # Failed Logon (Brute force detection)
+      - 4672  # Special privileges assigned to new logon (Admin logon)
+      - 4688  # Process creation with full command line
+      - 4720  # An account was created
+      - 4726  # An account was deleted
+      - 4738  # An account was modified
+      - 4740  # Account locked out
+      - 1102  # Audit log was cleared (Anti-forensics indicator)
+
+  # 2. PowerShell Script Block Logging (Malware, Cradles, Obfuscation)
+  - name: Microsoft-Windows-PowerShell/Operational
+    event_id:
+      - 4104  # Script block text execution
+
+  # 3. System Log: Service installations and crashes
+  - name: System
+    event_id:
+      - 7045  # A service was installed on the system (Persistence indicator)
+
+# Output directly to LogSentry SIEM Ingestion API
+output.elasticsearch:
+  enabled: false
+
+output.http:
+  enabled: true
+  url: "https://LOGSENTRY_SIEM_IP_OR_DOMAIN:8000/api/v1/detection/analyze"
+  headers:
+    Content-Type: "application/json"
+    Authorization: "Bearer LOGSENTRY_TENANT_API_KEY"

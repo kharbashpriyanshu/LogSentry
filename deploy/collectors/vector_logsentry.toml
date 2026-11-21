@@ -1,0 +1,39 @@
+# =============================================================================
+# LogSentry SIEM — Vector by Datadog Universal High-Throughput Shipper
+# =============================================================================
+# High-speed log aggregator written in Rust, consuming < 20MB RAM.
+# Ideal for high-traffic web server clusters (Nginx/Apache), API gateways, and microservices.
+# =============================================================================
+
+[sources.linux_auth]
+type = "file"
+include = ["/var/log/auth.log", "/var/log/secure"]
+read_from = "end"
+
+[sources.nginx_access]
+type = "file"
+include = ["/var/log/nginx/*access.log", "/var/log/apache2/*access.log"]
+read_from = "end"
+
+[transforms.format_logsentry]
+type = "remap"
+inputs = ["linux_auth", "nginx_access"]
+source = '''
+.event = {
+  "raw_log": string!(.message),
+  "source_ip": string!(.client_ip || "127.0.0.1"),
+  "hostname": get_hostname!() ?? "corporate-node",
+  "parser_name": if match(string!(.file), r"nginx|apache") { "nginx" } else { "linux_auth" },
+  "timestamp": to_string(now())
+}
+'''
+
+[sinks.logsentry_api]
+type = "http"
+inputs = ["format_logsentry"]
+uri = "https://LOGSENTRY_SIEM_IP_OR_DOMAIN:8000/api/v1/detection/analyze"
+method = "post"
+encoding.codec = "json"
+request.headers = { "Authorization" = "Bearer LOGSENTRY_TENANT_API_KEY" }
+buffer.type = "disk"
+buffer.max_size = 536870912 # 512 MB disk buffer for offline resilience
