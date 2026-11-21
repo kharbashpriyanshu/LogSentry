@@ -105,10 +105,11 @@ class Settings(BaseSettings):
     AI_MAX_TOKENS: int = 1500
 
     # ---------------------------------------------------------------------------
-    # Enrichment
+    # Threat Intelligence & Observable Reputation (TIORE)
     # ---------------------------------------------------------------------------
     ABUSEIPDB_API_KEY: str | None = None
     OTX_API_KEY: str | None = None
+    VIRUSTOTAL_API_KEY: str | None = None
     ENRICHMENT_CACHE_TTL: int = 3600
     ENABLE_ABUSEIPDB: bool = True
     ENABLE_OTX: bool = True
