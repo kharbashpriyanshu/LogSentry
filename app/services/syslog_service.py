@@ -139,19 +139,29 @@ class SyslogService:
                 content_msg[ip_match.start() :].strip() if ip_match else content_msg
             )
 
-            # Guess parser or fallback to registered parsers
-            try:
-                parser = ParserFactory.guess_parser(clean_log)
-            except Exception:
-                parser = ParserFactory.get_parser("apache")
+            # Intelligent parser selection based on framing or content guessing
+            parser = None
+            app_name = str(parsed_frame.get("app_name") or "").lower()
 
-            event = parser.parse_line(clean_log)
+            if any(k in app_name for k in ("ssh", "sudo", "su", "auth", "login")):
+                try:
+                    parser = ParserFactory.get_parser("linux_auth")
+                except Exception:
+                    pass
+
+            if not parser:
+                try:
+                    parser = ParserFactory.guess_parser(clean_log)
+                except Exception:
+                    parser = None
+
+            event = parser.parse_line(clean_log) if parser else None
             if not event:
                 event = LogEvent(
                     timestamp=datetime.now(UTC),
                     source_ip=client_ip,
                     raw_log=raw_msg,
-                    parser_name=parser.parser_name,
+                    parser_name=parser.parser_name if parser else "syslog",
                     hostname=parsed_frame.get("hostname"),
                 )
 

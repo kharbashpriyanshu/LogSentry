@@ -237,6 +237,7 @@ class DirectoryEnumerationRule(BaseRule):
             mitre_technique="T1083",
             mitre_tactic="Discovery",
             recommendation="Monitor source IP for reconnaissance behavior. Restrict access to administrative paths and implement rate limiting.",
+            tenant_id=getattr(event, "tenant_id", "default") or "default",
             evidence=evidence,
             raw_log_reference=combined_raw_logs,
         )
