@@ -122,15 +122,15 @@ def test_extract_url_with_sensitive_param_stripping(extractor):
 
 
 def test_internal_url_ineligible_for_external_lookup(extractor):
-    internal_urls = [
-        "http://192.168.1.50/admin/panel",
-        "https://auth.internal/oauth2/token",
-        "http://127.0.0.1:8000/api/v1/metrics",
+    internal_cases = [
+        ("http://192.168.1.50/admin/panel", PrivacyClassification.INTERNAL_RFC1918),
+        ("https://auth.internal/oauth2/token", PrivacyClassification.INTERNAL_DOMAIN),
+        ("http://127.0.0.1:8000/api/v1/metrics", PrivacyClassification.LOOPBACK),
     ]
-    for url in internal_urls:
+    for url, expected_privacy in internal_cases:
         obs = extractor.validate_and_normalize_url(url)
         assert obs is not None
-        assert obs.privacy_classification == PrivacyClassification.INTERNAL_DOMAIN
+        assert obs.privacy_classification == expected_privacy
         assert obs.is_eligible_for_external_lookup is False
 
 

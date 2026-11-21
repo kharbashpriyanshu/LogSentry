@@ -249,13 +249,22 @@ class ObservableExtractor:
 
         # Check if hostname is an internal IP or internal domain
         is_internal = False
+        privacy = PrivacyClassification.PUBLIC_ROUTABLE
         try:
             ip_obj = ipaddress.ip_address(hostname)
-            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
+            if ip_obj.is_link_local or str(ip_obj) == "169.254.169.254":
+                privacy = PrivacyClassification.LINK_LOCAL_METADATA
+                is_internal = True
+            elif ip_obj.is_loopback:
+                privacy = PrivacyClassification.LOOPBACK
+                is_internal = True
+            elif ip_obj.is_private:
+                privacy = PrivacyClassification.INTERNAL_RFC1918
                 is_internal = True
         except ValueError:
             tld = hostname.split(".")[-1]
             if tld in INTERNAL_TLDS or hostname in ("localhost", "internal"):
+                privacy = PrivacyClassification.INTERNAL_DOMAIN
                 is_internal = True
 
         # Sanitize query parameters (strip sensitive tokens)
@@ -282,8 +291,6 @@ class ObservableExtractor:
             sanitized_query,
             "",  # Strip fragment
         ))
-
-        privacy = PrivacyClassification.INTERNAL_DOMAIN if is_internal else PrivacyClassification.PUBLIC_ROUTABLE
 
         return ExtractedObservable(
             observable_type=ObservableType.URL,
