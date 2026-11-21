@@ -19,38 +19,27 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    try:
-        op.add_column(
-            "alerts",
-            sa.Column(
-                "tenant_id",
-                sa.String(length=64),
-                server_default="default",
-                nullable=True,
-            ),
-        )
-    except Exception:
-        pass
+    # Add tenant isolation to alerts table
+    op.add_column(
+        "alerts",
+        sa.Column(
+            "tenant_id",
+            sa.String(length=64),
+            server_default="default",
+            nullable=True,
+        ),
+    )
 
-    for col, col_type in [
-        ("user", sa.String(length=128)),
-        ("event_id", sa.String(length=64)),
-        ("action", sa.String(length=128)),
-        ("tenant_id", sa.String(length=64)),
-    ]:
-        try:
-            op.add_column("log_events", sa.Column(col, col_type, nullable=True))
-        except Exception:
-            pass
+    # Add telemetry enrichment fields to log_events table
+    op.add_column("log_events", sa.Column("user", sa.String(length=128), nullable=True))
+    op.add_column("log_events", sa.Column("event_id", sa.String(length=64), nullable=True))
+    op.add_column("log_events", sa.Column("action", sa.String(length=128), nullable=True))
+    op.add_column("log_events", sa.Column("tenant_id", sa.String(length=64), server_default="default", nullable=True))
 
 
 def downgrade() -> None:
-    try:
-        op.drop_column("alerts", "tenant_id")
-    except Exception:
-        pass
-    for col in ["user", "event_id", "action", "tenant_id"]:
-        try:
-            op.drop_column("log_events", col)
-        except Exception:
-            pass
+    op.drop_column("alerts", "tenant_id")
+    op.drop_column("log_events", "tenant_id")
+    op.drop_column("log_events", "action")
+    op.drop_column("log_events", "event_id")
+    op.drop_column("log_events", "user")

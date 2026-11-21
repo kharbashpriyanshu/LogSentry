@@ -76,14 +76,15 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/liveness || exit 1
 
 # Production-grade entrypoint:
-#   --workers 4        → 4 sync Uvicorn workers (tune via WEB_CONCURRENCY env var)
+#   --workers 1        → single-worker process to guarantee state consistency for real-time
+#                        in-memory attack correlation and deduplication caches.
 #   --proxy-headers    → trust X-Forwarded-For from reverse proxy
 #   --forwarded-allow-ips=* → allow proxy header from any upstream IP (scope if needed)
 #   --access-log       → structured access log to stdout
 CMD ["uvicorn", "app.main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
-     "--workers", "4", \
+     "--workers", "1", \
      "--proxy-headers", \
      "--forwarded-allow-ips=*", \
      "--access-log"]
