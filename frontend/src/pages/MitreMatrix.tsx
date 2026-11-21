@@ -98,15 +98,16 @@ export default function MitreMatrix() {
     refetchInterval: 10000,
   });
 
-  // Count alerts per technique ID
+  // Count alerts per technique ID safely
   const techniqueHits: Record<string, number> = {};
-  alerts.forEach((a: any) => {
-    const tech = a.mitre_technique;
-    if (tech) {
+  const alertList = Array.isArray(alerts) ? alerts : [];
+  alertList.forEach((a: any) => {
+    const tech = a?.mitre_technique;
+    if (tech && typeof tech === 'string') {
       techniqueHits[tech] = (techniqueHits[tech] || 0) + 1;
       // also match base tech (e.g. T1059.001 -> T1059)
       const base = tech.split('.')[0];
-      if (base !== tech) {
+      if (base && base !== tech) {
         techniqueHits[base] = (techniqueHits[base] || 0) + 1;
       }
     }

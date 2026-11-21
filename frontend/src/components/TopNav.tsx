@@ -83,7 +83,15 @@ export default function TopNav() {
   const { data: incidents } = useQuery({ queryKey: ['incidents'], queryFn: incidentService.getIncidents });
 
   const unread = notifications.filter(n => !n.read).length;
-  const searchResults = useMemo(() => buildSearchResults(searchValue, alerts || [], incidents || []), [searchValue, alerts, incidents]);
+  const searchResults = useMemo(
+    () =>
+      buildSearchResults(
+        searchValue,
+        Array.isArray(alerts) ? alerts : [],
+        Array.isArray(incidents) ? incidents : []
+      ),
+    [searchValue, alerts, incidents]
+  );
 
   // Keyboard shortcut Ctrl+K / Cmd+K to focus search
   useEffect(() => {
