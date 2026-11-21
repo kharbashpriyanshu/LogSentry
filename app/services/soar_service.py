@@ -1,11 +1,15 @@
+import ipaddress
 import logging
 import time
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
+from sqlalchemy.orm import Session
 
 from app.config.settings import settings
+from app.database.session import SessionLocal
+from app.models.soar_action import SOARActionModel
 from app.schemas.detection_alert import DetectionAlert
 from app.schemas.severity import Severity
 
@@ -66,6 +70,29 @@ class SOARService:
     _action_history: list[dict[str, Any]] = []
 
     @classmethod
+    def validate_target_safety(cls, ip: str, force: bool = False) -> None:
+        """Protects internal loopback and RFC 1918 private subnets from accidental containment blocks."""
+        if not ip:
+            raise ValueError("IP address is required for containment.")
+
+        try:
+            addr = ipaddress.ip_address(ip)
+            is_internal = (
+                addr.is_loopback
+                or addr.is_link_local
+                or addr in ipaddress.ip_network("10.0.0.0/8")
+                or addr in ipaddress.ip_network("172.16.0.0/12")
+                or addr in ipaddress.ip_network("192.168.0.0/16")
+            )
+            if is_internal and not force:
+                raise ValueError(
+                    f"Protected private/internal IP '{ip}' cannot be quarantined without an explicit force override."
+                )
+        except ValueError as e:
+            if "Protected private/internal" in str(e):
+                raise
+
+    @classmethod
     def quarantine_ip(
         cls,
         ip: str,
@@ -74,10 +101,12 @@ class SOARService:
         severity: str = "HIGH",
         analyst: str = "SYSTEM_AUTOMATION",
         containment_type: str = "IN_MEMORY",
+        tenant_id: str = "default",
+        force: bool = False,
+        db: Session | None = None,
     ) -> dict[str, Any]:
-        """Place an attacking IP into automated quarantine / firewall block."""
-        if not ip:
-            raise ValueError("IP address is required for quarantine.")
+        """Place an attacking IP into automated quarantine / firewall block with persistent DB audit."""
+        cls.validate_target_safety(ip, force=force)
 
         record = QuarantinedHost(
             ip=ip,
@@ -88,6 +117,44 @@ class SOARService:
             containment_type=containment_type,
         )
         cls._quarantine_store[ip] = record
+
+        # Generate rollback command
+        rollback_cmd = (
+            f"iptables -D INPUT -s {ip} -j DROP"
+            if containment_type == "IPTABLES"
+            else f"release_ip({ip})"
+        )
+
+        # Persist to database for multi-node durability
+        close_db = False
+        if db is None:
+            try:
+                db = SessionLocal()
+                close_db = True
+            except Exception:
+                db = None
+
+        if db is not None:
+            try:
+                soar_record = SOARActionModel(
+                    tenant_id=tenant_id,
+                    action_type="QUARANTINE_IP",
+                    target=ip,
+                    status="ACTIVE",
+                    reason=reason,
+                    requested_by=analyst,
+                    approved_by=analyst if analyst != "SYSTEM_AUTOMATION" else None,
+                    duration_seconds=duration_seconds,
+                    rollback_command=rollback_cmd,
+                    expires_at=datetime.now(UTC) + timedelta(seconds=duration_seconds),
+                )
+                db.add(soar_record)
+                db.commit()
+            except Exception as e:
+                logger.warning(f"Failed to persist SOAR action to database: {e}")
+            finally:
+                if close_db:
+                    db.close()
 
         action = {
             "timestamp": datetime.now(UTC).isoformat(),
@@ -105,26 +172,67 @@ class SOARService:
         return record.to_dict()
 
     @classmethod
+    def rollback_action(
+        cls, target_ip: str, analyst: str = "SOC_ANALYST", db: Session | None = None
+    ) -> bool:
+        """Rolls back an active containment action and updates database status."""
+        return cls.release_ip(
+            target_ip, analyst=analyst, reason="Manual containment rollback", db=db
+        )
+
+    @classmethod
     def release_ip(
         cls,
         ip: str,
         analyst: str = "SOC_ANALYST",
         reason: str = "Containment completed",
+        db: Session | None = None,
     ) -> bool:
-        """Release an IP from quarantine."""
+        """Release an IP from quarantine and record rollback in persistent audit table."""
+        released = False
         if ip in cls._quarantine_store:
             cls._quarantine_store[ip].status = "RELEASED"
-            action = {
-                "timestamp": datetime.now(UTC).isoformat(),
-                "action": "RELEASE_IP",
-                "ip": ip,
-                "analyst": analyst,
-                "reason": reason,
-            }
-            cls._action_history.append(action)
-            logger.info(f"SOAR Active Response: Released IP {ip} by {analyst}.")
-            return True
-        return False
+            released = True
+
+        # Update in database if present
+        close_db = False
+        if db is None:
+            try:
+                db = SessionLocal()
+                close_db = True
+            except Exception:
+                db = None
+
+        if db is not None:
+            try:
+                active_records = (
+                    db.query(SOARActionModel)
+                    .filter(
+                        SOARActionModel.target == ip, SOARActionModel.status == "ACTIVE"
+                    )
+                    .all()
+                )
+                for rec in active_records:
+                    rec.status = "RELEASED"
+                db.commit()
+                if active_records:
+                    released = True
+            except Exception as e:
+                logger.warning(f"Failed to update SOAR release in DB: {e}")
+            finally:
+                if close_db:
+                    db.close()
+
+        action = {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "action": "RELEASE_IP",
+            "ip": ip,
+            "analyst": analyst,
+            "reason": reason,
+        }
+        cls._action_history.append(action)
+        logger.info(f"SOAR Active Response: Released IP {ip} by {analyst}.")
+        return released
 
     @classmethod
     def is_ip_quarantined(cls, ip: str) -> bool:

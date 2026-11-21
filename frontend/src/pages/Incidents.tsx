@@ -20,6 +20,11 @@ function IncidentDetails({ incident, onClose, setToast }: { incident: Incident; 
     queryFn: () => incidentService.getIncidentTimeline(incident.id),
   });
 
+  const { data: graphData } = useQuery({
+    queryKey: ['incident-graph', incident.id],
+    queryFn: () => incidentService.getIncidentGraph(incident.id),
+  });
+
   const updateMutation = useMutation({
     mutationFn: (updates: any) => incidentService.updateIncident(incident.id, updates),
     onSuccess: (updated) => {
@@ -196,6 +201,57 @@ function IncidentDetails({ incident, onClose, setToast }: { incident: Incident; 
               </div>
             </div>
           </div>
+
+          {/* Attack Graph & Evidence Chain */}
+          {graphData && graphData.nodes && graphData.nodes.length > 0 && (
+            <div className="p-5 bg-[var(--bg-card)] rounded-xl border border-[var(--border-default)] shadow-xs">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+                    Attack Graph & Evidence Chain
+                  </h3>
+                </div>
+                <span className="text-[11px] font-mono text-[var(--text-muted)]">
+                  {graphData.node_count} Entities · {graphData.edge_count} Attack Vectors
+                </span>
+              </div>
+
+              {/* Entity Nodes Badges */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {graphData.nodes.map((node: any) => {
+                  const color =
+                    node.type === 'threat_actor'
+                      ? 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30'
+                      : node.type === 'alert'
+                      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                      : node.type === 'mitre_technique'
+                      ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30'
+                      : 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30';
+                  return (
+                    <span
+                      key={node.id}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold border ${color}`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      {node.label}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Directed Relation Chains */}
+              <div className="space-y-1.5 pt-3 border-t border-[var(--border-subtle)] font-mono text-[11px]">
+                {graphData.edges.map((edge: any, idx: number) => (
+                  <div key={idx} className="flex items-center gap-2 text-[var(--text-secondary)]">
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{edge.from}</span>
+                    <span className="text-[10px] text-[var(--text-muted)]">──[{edge.relation}]──▶</span>
+                    <span className="font-bold text-purple-600 dark:text-purple-400">{edge.to}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           <div>
             <h3 className="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-blue-400" /> Incident Timeline</h3>

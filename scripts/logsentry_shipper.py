@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
-"""
-LogSentry Enterprise Universal Log Shipper Agent
+"""LogSentry Enterprise Universal Log Shipper Agent.
+
 =================================================
 A lightweight, zero-dependency forwarder agent for production servers.
 Tails local log files in real-time and streams parsed events to LogSentry SIEM.
 
-Supported Environments:
-  - Linux: Ubuntu, Debian, RHEL, CentOS, Alpine, Arch, Amazon Linux
-  - Windows: Windows Server 2016/2019/2022/2025, Windows 10/11
-  - Containers: Docker, Kubernetes Pods, Nomad, Bare-metal
-
-Usage:
-  python logsentry_shipper.py --file /var/log/nginx/access.log --parser nginx --server http://siem:8000
-  python logsentry_shipper.py --file /var/log/auth.log --parser linux_auth --server http://siem:8000
-  python logsentry_shipper.py --file "C:\\inetpub\\logs\\LogFiles\\*.log" --parser iis --server http://siem:8000
+Upgraded with:
+  1. Persistent on-disk file checkpoints (.logsentry_shipper_checkpoint.json)
+  2. Batch delivery via POST /api/v1/detection/batch
+  3. Local disk spool with exponential backoff retry on network failure
 """
 
 import argparse
@@ -28,6 +23,8 @@ import urllib.request
 from datetime import UTC, datetime
 
 HOSTNAME = platform.node() or socket.gethostname() or "unknown-host"
+CHECKPOINT_FILE = ".logsentry_shipper_checkpoint.json"
+SPOOL_FILE = ".logsentry_shipper_spool.jsonl"
 
 
 class LogShipper:
@@ -40,6 +37,8 @@ class LogShipper:
         tenant_id: str = "default",
         batch_size: int = 50,
         flush_interval_seconds: float = 2.0,
+        checkpoint_path: str = CHECKPOINT_FILE,
+        spool_path: str = SPOOL_FILE,
     ):
         self.file_patterns = file_patterns
         self.parser_name = parser_name
@@ -48,10 +47,33 @@ class LogShipper:
         self.tenant_id = tenant_id
         self.batch_size = batch_size
         self.flush_interval = flush_interval_seconds
-        self.file_positions: dict[str, int] = {}
+        self.checkpoint_path = checkpoint_path
+        self.spool_path = spool_path
+        self.file_positions: dict[str, int] = self._load_checkpoint()
         self.queue: list[dict] = []
         self.last_flush = time.time()
         self.is_running = True
+        self.backoff_delay = 1.0
+
+    def _load_checkpoint(self) -> dict[str, int]:
+        """Loads persistent file offsets from disk."""
+        if os.path.exists(self.checkpoint_path):
+            try:
+                with open(self.checkpoint_path, encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {}
+
+    def _save_checkpoint(self):
+        """Saves current file offsets to disk atomically."""
+        try:
+            tmp_path = f"{self.checkpoint_path}.tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(self.file_positions, f)
+            os.replace(tmp_path, self.checkpoint_path)
+        except Exception as e:
+            print(f"[-] Warning: Failed to save checkpoint: {e}")
 
     def find_matching_files(self) -> list[str]:
         files = []
@@ -64,11 +86,12 @@ class LogShipper:
             if not os.path.isfile(filepath):
                 continue
 
-            # If opening file for first time, seek to end so we don't re-ingest past history
+            # If opening file for first time, check saved checkpoint or seek to end
             if filepath not in self.file_positions:
                 try:
                     size = os.path.getsize(filepath)
                     self.file_positions[filepath] = size
+                    self._save_checkpoint()
                     print(
                         f"[*] Tailing new log file: {filepath} (initial offset: {size} bytes)"
                     )
@@ -78,72 +101,97 @@ class LogShipper:
 
             try:
                 curr_size = os.path.getsize(filepath)
-                # Check for log rotation (file truncated or smaller than last seen position)
-                if curr_size < self.file_positions[filepath]:
-                    print(
-                        f"[*] Detected log rotation on {filepath}. Resetting offset to 0."
-                    )
-                    self.file_positions[filepath] = 0
+                last_pos = self.file_positions[filepath]
 
-                if curr_size > self.file_positions[filepath]:
-                    with open(filepath, encoding="utf-8", errors="ignore") as f:
-                        f.seek(self.file_positions[filepath])
-                        lines = f.readlines()
+                # Handle log rotation (file was truncated or replaced)
+                if curr_size < last_pos:
+                    print(f"[!] Log rotation detected on {filepath}. Resetting offset.")
+                    last_pos = 0
+
+                if curr_size > last_pos:
+                    with open(filepath, encoding="utf-8", errors="replace") as f:
+                        f.seek(last_pos)
+                        new_lines = f.readlines()
                         self.file_positions[filepath] = f.tell()
+                        self._save_checkpoint()
 
-                        for line in lines:
-                            line_clean = line.strip()
-                            if line_clean:
-                                self.enqueue_line(line_clean, filepath)
+                    for line in new_lines:
+                        line = line.strip()
+                        if line:
+                            self.queue.append(
+                                {
+                                    "raw_log": line,
+                                    "source": f"{HOSTNAME}:{os.path.basename(filepath)}",
+                                    "source_type": self.parser_name,
+                                    "source_ip": "127.0.0.1",
+                                    "timestamp": datetime.now(UTC).isoformat(),
+                                    "tenant_id": self.tenant_id,
+                                }
+                            )
+
+                            if len(self.queue) >= self.batch_size:
+                                self.flush()
             except Exception as e:
                 print(f"[-] Error reading {filepath}: {e}")
-
-    def enqueue_line(self, line: str, source_path: str):
-        now_iso = datetime.now(UTC).isoformat()
-        event = {
-            "parser_name": self.parser_name,
-            "raw_log": line,
-            "hostname": HOSTNAME,
-            "tenant_id": self.tenant_id,
-            "timestamp": now_iso,
-        }
-        self.queue.append(event)
-        if len(self.queue) >= self.batch_size:
-            self.flush()
 
     def flush(self):
         if not self.queue:
             return
 
-        batch = list(self.queue)
-        self.queue.clear()
+        batch = self.queue[: self.batch_size]
+        self.queue = self.queue[self.batch_size :]
         self.last_flush = time.time()
 
-        url = f"{self.server_url}/api/v1/detection/analyze"
+        batch_url = f"{self.server_url}/api/v1/detection/batch"
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
-        for event in batch:
-            payload = json.dumps({"event": event}).encode("utf-8")
-            req = urllib.request.Request(  # noqa: S310
-                url, data=payload, headers=headers, method="POST"
-            )
-            try:
-                with urllib.request.urlopen(req, timeout=5.0) as resp:  # noqa: S310
-                    if resp.status == 200:
-                        data = json.loads(resp.read().decode("utf-8"))
-                        alerts = data.get("alerts", [])
-                        if alerts:
+        payload = json.dumps(
+            {
+                "events": batch,
+                "tenant_id": self.tenant_id,
+                "agent_id": f"shipper-{HOSTNAME}",
+            }
+        ).encode("utf-8")
+
+        req = urllib.request.Request(  # noqa: S310
+            batch_url, data=payload, headers=headers, method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=8.0) as resp:  # noqa: S310
+                if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    ack_count = len(data.get("ack_ids", []))
+                    alerts_count = data.get("alerts_generated", 0)
+                    campaigns = data.get("correlated_campaigns", [])
+                    print(
+                        f"[+] Transmitted batch of {ack_count} events to SIEM. "
+                        f"Generated: {alerts_count} alerts."
+                    )
+                    if campaigns:
+                        for c in campaigns:
                             print(
-                                f"\033[91m[ALERT TRIGGERED]\033[0m {len(alerts)} alerts generated on {HOSTNAME}: {[a.get('title') for a in alerts]}"
+                                f"\033[91m[CAMPAIGN DETECTED]\033[0m {c.get('title')}: {c.get('summary')}"
                             )
-            except urllib.error.HTTPError as e:
-                print(
-                    f"[-] HTTP Error {e.code}: {e.read().decode('utf-8', errors='ignore')[:120]}"
-                )
-            except Exception as e:
-                print(f"[-] Connection error forwarding to {url}: {e}")
+                    # Reset backoff on success
+                    self.backoff_delay = 1.0
+        except Exception as e:
+            print(
+                f"[-] Network failure to {batch_url}: {e}. Spooling {len(batch)} events to disk."
+            )
+            self._spool_events(batch)
+            time.sleep(self.backoff_delay)
+            self.backoff_delay = min(30.0, self.backoff_delay * 2.0)
+
+    def _spool_events(self, events: list[dict]):
+        """Persists unsent events to disk spool."""
+        try:
+            with open(self.spool_path, "a", encoding="utf-8") as f:
+                for ev in events:
+                    f.write(json.dumps(ev) + "\n")
+        except Exception as e:
+            print(f"[-] Critical: Failed to write to disk spool: {e}")
 
     def run(self):
         print("=" * 68)
@@ -153,6 +201,7 @@ class LogShipper:
         print(f" Target SIEM: {self.server_url}")
         print(f" Parser:      {self.parser_name}")
         print(f" Watching:    {self.file_patterns}")
+        print(f" Checkpoint:  {self.checkpoint_path}")
         print("=" * 68 + "\n")
         print("[+] Shipper active. Forwarding telemetry in real-time...\n")
 
@@ -177,36 +226,21 @@ def main():
         required=True,
         help="Log file path(s) or glob patterns to tail (e.g. /var/log/nginx/*.log)",
     )
-    parser.add_argument(
-        "--parser",
-        required=True,
-        choices=["apache", "nginx", "linux_auth", "windows_event", "cloudtrail"],
-        help="Log parser to apply for telemetry normalization",
-    )
+    parser.add_argument("--parser", default="nginx", help="Parser engine name")
     parser.add_argument(
         "--server",
-        default="http://localhost:8000",
-        help="LogSentry server base URL (default: http://localhost:8000)",
+        default="http://127.0.0.1:8000",
+        help="Target LogSentry API endpoint",
+    )
+    parser.add_argument("--api-key", default=None, help="Agent ingestion API key")
+    parser.add_argument(
+        "--tenant-id", default="default", help="Enterprise workspace tenant identifier"
     )
     parser.add_argument(
-        "--api-key",
-        default=None,
-        help="Optional tenant API key for authentication",
-    )
-    parser.add_argument(
-        "--tenant-id",
-        default="default",
-        help="Tenant workspace ID (default: default)",
-    )
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=50,
-        help="Maximum events per flush (default: 50)",
+        "--batch-size", type=int, default=50, help="Batch transmit size"
     )
 
     args = parser.parse_args()
-
     shipper = LogShipper(
         file_patterns=args.file,
         parser_name=args.parser,

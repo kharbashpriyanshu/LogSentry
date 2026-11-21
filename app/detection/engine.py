@@ -53,21 +53,31 @@ class DetectionEngine:
         alerts = []
         endpoint = event.endpoint or ""
 
-        # Pre-filtering: check if endpoint contains potential injection triggers or keywords
-        # If clean static resource (e.g. /index.html, /main.css), skip expensive regex evaluation
+        # Field-aware pre-filtering across endpoint, raw_log, and command_line
+        searchable_context = f"{endpoint} {event.raw_log or ''} {getattr(event, 'command_line', '') or ''}"
         has_triggers = (
-            any(c in _TRIGGER_CHARS for c in endpoint)
-            or ".." in endpoint
-            or "UNION" in endpoint.upper()
-            or "SELECT" in endpoint.upper()
-            or "DROP" in endpoint.upper()
-            or "SCRIPT" in endpoint.upper()
+            any(c in _TRIGGER_CHARS for c in searchable_context)
+            or ".." in searchable_context
+            or any(
+                kw in searchable_context.upper()
+                for kw in (
+                    "UNION",
+                    "SELECT",
+                    "DROP",
+                    "SCRIPT",
+                    "EXEC",
+                    "POWERSHELL",
+                    "JNDI",
+                    "CAT",
+                    "PASSWD",
+                )
+            )
         )
 
         # 1. Evaluate regex & Sigma rules
         for rule in self.regex_rules:
             try:
-                # Fast pre-filtering: skip heavy native regex rules if no trigger characters
+                # Fast pre-filtering: skip heavy native regex rules only if no trigger characters anywhere in event context
                 if isinstance(rule, RegexDetectionRule) and not has_triggers:
                     continue
                 if rule.match(event):

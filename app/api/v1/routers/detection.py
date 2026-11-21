@@ -8,13 +8,20 @@ from app.api.dependencies import (
     get_log_event_repository,
     get_parsing_service,
 )
+from app.detection.correlation import correlation_engine
 from app.detection.registry import RuleRegistry
 from app.detection.yaml_rule import YamlDetectionRule, YamlRuleLoader
 from app.repositories.alert_repository import AlertRepository
 from app.repositories.log_event_repository import LogEventRepository
-from app.schemas.api import DetectionRequest, DetectionResponse
+from app.schemas.api import (
+    BatchDetectionRequest,
+    BatchDetectionResponse,
+    DetectionRequest,
+    DetectionResponse,
+)
 from app.schemas.detection_alert import DetectionAlert
 from app.schemas.log_event import LogEvent
+from app.services.dedup_service import event_deduplicator
 from app.services.detection_service import DetectionService
 from app.services.parsing_service import ParsingService
 
@@ -122,3 +129,76 @@ async def analyze_file(
             all_alerts.append(alert)
 
     return DetectionResponse(alerts=[a.model_dump() for a in all_alerts])
+
+
+@router.post("/batch", response_model=BatchDetectionResponse)
+def analyze_batch(
+    request: BatchDetectionRequest,
+    detection_service: DetectionService = Depends(get_detection_service),
+    alert_repo: AlertRepository = Depends(get_alert_repository),
+    event_repo: LogEventRepository = Depends(get_log_event_repository),
+):
+    """
+    High-throughput batch ingestion endpoint with idempotent deduplication and real-time attack correlation.
+    Returns acknowledgements (ack_ids) so telemetry shippers can safely clear persistent local spools.
+    """
+    ack_ids: list[str] = []
+    processed_count = 0
+    duplicate_count = 0
+    alerts_generated = 0
+    active_campaigns = []
+
+    for raw_item in request.events:
+        fingerprint = event_deduplicator.compute_event_fingerprint(raw_item)
+        if event_deduplicator.is_duplicate(fingerprint):
+            duplicate_count += 1
+            ack_ids.append(raw_item.get("event_id") or fingerprint)
+            continue
+
+        # Normalize parser name
+        if not raw_item.get("parser_name"):
+            raw_item["parser_name"] = raw_item.get("source_type") or "generic"
+
+        try:
+            event = LogEvent(**raw_item)
+            if request.tenant_id and not getattr(event, "tenant_id", None):
+                event.tenant_id = request.tenant_id
+        except Exception:
+            # Skip unparseable items but acknowledge receipt
+            ack_ids.append(raw_item.get("event_id") or fingerprint)
+            continue
+
+        event_repo.create_event(event)
+        ack_ids.append(getattr(event, "event_id", None) or fingerprint)
+        processed_count += 1
+
+        alerts = detection_service.analyze_event(event)
+        for alert in alerts:
+            alert_repo.create_alert(alert)
+            alerts_generated += 1
+
+            # Real-time event correlation
+            campaign = correlation_engine.correlate_alert(alert)
+            if campaign and campaign not in active_campaigns:
+                active_campaigns.append(campaign)
+
+    return BatchDetectionResponse(
+        status="acknowledged",
+        received_count=len(request.events),
+        processed_count=processed_count,
+        duplicate_count=duplicate_count,
+        alerts_generated=alerts_generated,
+        ack_ids=ack_ids,
+        correlated_campaigns=[
+            {
+                "campaign_id": c.campaign_id,
+                "title": c.title,
+                "severity": c.severity,
+                "confidence": c.confidence,
+                "summary": c.summary,
+                "tactics": c.tactics,
+                "alert_count": len(c.alert_ids),
+            }
+            for c in active_campaigns
+        ],
+    )

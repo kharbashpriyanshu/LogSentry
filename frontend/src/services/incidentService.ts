@@ -24,5 +24,9 @@ export const incidentService = {
   },
   addComment: async (id: string, payload: { content: string, author: string }): Promise<void> => {
     await api.post(`/incidents/${id}/comments`, payload);
+  },
+  getIncidentGraph: async (id: string): Promise<any> => {
+    const response = await api.get(`/incidents/${id}/graph`);
+    return response.data;
   }
 };

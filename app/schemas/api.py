@@ -42,6 +42,26 @@ class DetectionResponse(BaseModel):
     alerts: list[dict[str, Any]]
 
 
+class BatchDetectionRequest(BaseModel):
+    events: list[dict[str, Any]] = Field(
+        ..., description="Batch array of telemetry log events"
+    )
+    tenant_id: str = Field("default", description="Tenant workspace identifier")
+    agent_id: str | None = Field(
+        None, description="Registered agent or shipper identifier"
+    )
+
+
+class BatchDetectionResponse(BaseModel):
+    status: str = "acknowledged"
+    received_count: int
+    processed_count: int
+    duplicate_count: int
+    alerts_generated: int
+    ack_ids: list[str]
+    correlated_campaigns: list[dict[str, Any]] = Field(default_factory=list)
+
+
 # Generic Error Model
 class ErrorResponse(BaseModel):
     error: str

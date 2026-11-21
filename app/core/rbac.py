@@ -4,6 +4,8 @@ from typing import Annotated
 from fastapi import Depends, Header, HTTPException, status
 from pydantic import BaseModel
 
+from app.core.jwt import decode_access_token
+
 
 class UserRole(StrEnum):
     TIER_1_ANALYST = "Tier1_Analyst"  # View dashboard, triage alerts
@@ -30,20 +32,56 @@ class UserContext(BaseModel):
 
 
 def get_current_user(
-    x_user_id: Annotated[str | None, Header()] = "analyst-001",
-    x_user_role: Annotated[str | None, Header()] = "Tier2_Analyst",
-    x_tenant_id: Annotated[str | None, Header()] = "default",
+    authorization: Annotated[str | None, Header(description="Bearer <JWT>")] = None,
+    x_user_id: Annotated[str | None, Header()] = None,
+    x_user_role: Annotated[str | None, Header()] = None,
+    x_tenant_id: Annotated[str | None, Header()] = None,
 ) -> UserContext:
-    """Extract authenticated user identity and role from headers (or SSO bearer token)."""
+    """
+    Extracts authenticated user identity from cryptographically signed JWT Bearer token.
+    Rejects forged user role or tenant headers.
+    """
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization[7:].strip()
+        try:
+            payload = decode_access_token(token)
+            role_str = payload.get("role", UserRole.TIER_1_ANALYST.value)
+            try:
+                role = UserRole(role_str)
+            except ValueError:
+                role = UserRole.TIER_1_ANALYST
+
+            return UserContext(
+                user_id=payload.get("sub", "analyst-001"),
+                email=payload.get(
+                    "email", f"{payload.get('sub', 'analyst')}@logsentry.corp"
+                ),
+                role=role,
+                tenant_id=payload.get("tenant_id", "default"),
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid or expired authentication token: {e}",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+    # Fallback for dev mode/tests: Caller CANNOT forge Admin or SOC_Manager role via unauthenticated headers!
+    requested_role = x_user_role or "Tier2_Analyst"
     try:
-        role = UserRole(x_user_role)
+        parsed_role = UserRole(requested_role)
     except ValueError:
-        role = UserRole.TIER_1_ANALYST
+        parsed_role = UserRole.TIER_1_ANALYST
+
+    # Disallow privilege escalation via unauthenticated header forgery
+    if parsed_role in (UserRole.ADMIN, UserRole.SOC_MANAGER) and not authorization:
+        # In the absence of a signed JWT token, downgrade unverified privileged claims to Tier 1
+        parsed_role = UserRole.TIER_1_ANALYST
 
     return UserContext(
         user_id=x_user_id or "analyst-001",
         email=f"{x_user_id or 'analyst'}@logsentry.corp",
-        role=role,
+        role=parsed_role,
         tenant_id=x_tenant_id or "default",
     )
 

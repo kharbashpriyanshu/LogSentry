@@ -117,3 +117,100 @@ def add_incident_comment(
         metadata_json={"user": payload.author},
     )
     return {"status": "success"}
+
+
+@router.get("/{incident_id}/graph")
+def get_incident_attack_graph(
+    incident_id: str,
+    repo: IncidentRepository = Depends(get_incident_repository),
+):
+    """
+    Returns an entity-relationship attack graph connecting attacker IPs, target hosts,
+    associated alerts, MITRE techniques, and containment actions for this incident.
+    """
+    incident = repo.get_incident(incident_id)
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    nodes = [
+        {
+            "id": f"inc-{incident.id}",
+            "label": f"Incident: {incident.title}",
+            "type": "incident",
+            "severity": incident.priority,
+        }
+    ]
+    edges = []
+
+    # Parse and link alerts
+    alerts = getattr(incident, "alerts", [])
+    seen_ips = set()
+    seen_mitre = set()
+
+    for idx, alert in enumerate(alerts):
+        alert_node_id = f"alt-{alert.id}"
+        nodes.append(
+            {
+                "id": alert_node_id,
+                "label": alert.title,
+                "type": "alert",
+                "severity": alert.severity,
+                "rule": alert.rule_name,
+            }
+        )
+        edges.append(
+            {
+                "from": alert_node_id,
+                "to": f"inc-{incident.id}",
+                "relation": "escalated_into",
+            }
+        )
+
+        # Source IP Node
+        src_ip = getattr(alert, "source_ip", None)
+        if src_ip and src_ip not in seen_ips:
+            seen_ips.add(src_ip)
+            ip_node_id = f"ip-{src_ip}"
+            nodes.append(
+                {
+                    "id": ip_node_id,
+                    "label": f"Attacker IP: {src_ip}",
+                    "type": "threat_actor",
+                }
+            )
+            edges.append(
+                {
+                    "from": ip_node_id,
+                    "to": alert_node_id,
+                    "relation": "origin_of",
+                }
+            )
+
+        # MITRE Technique Node
+        mitre = getattr(alert, "mitre_technique", None)
+        if mitre and mitre not in seen_mitre:
+            seen_mitre.add(mitre)
+            mitre_node_id = f"mitre-{mitre}"
+            nodes.append(
+                {
+                    "id": mitre_node_id,
+                    "label": f"ATT&CK {mitre}",
+                    "type": "mitre_technique",
+                }
+            )
+            edges.append(
+                {
+                    "from": alert_node_id,
+                    "to": mitre_node_id,
+                    "relation": "exhibits_behavior",
+                }
+            )
+
+    return {
+        "incident_id": incident.id,
+        "title": incident.title,
+        "node_count": len(nodes),
+        "edge_count": len(edges),
+        "nodes": nodes,
+        "edges": edges,
+    }

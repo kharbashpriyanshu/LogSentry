@@ -50,7 +50,9 @@ def run_duckdb_analytics(
     from fastapi import HTTPException
 
     try:
-        return DuckDBForensicsEngine.execute_query(db=db, sql_query=request.sql_query)
+        return DuckDBForensicsEngine.execute_query(
+            db=db, sql_query=request.sql_query, tenant_id=request.tenant_id
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
