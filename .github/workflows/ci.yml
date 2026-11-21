@@ -97,6 +97,7 @@ jobs:
           ENVIRONMENT: development
           AI_PROVIDER: openai
           LOG_FILE_PATH: logs/test.log
+          DATABASE_URI: sqlite:///:memory:
         run: |
           python -m pytest \
             --cov=app \
@@ -154,6 +155,7 @@ jobs:
             -e ENVIRONMENT=development \
             -e AI_PROVIDER=openai \
             -e LOG_FILE_PATH=/tmp/test.log \
+            -e DATABASE_URI=sqlite:////tmp/logsentry.db \
             -d --name logsentry_ci \
             -p 8000:8000 \
             logsentry:ci-${{ github.sha }}
