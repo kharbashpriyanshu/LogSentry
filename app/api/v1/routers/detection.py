@@ -1,6 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy.orm import Session
 
 from app.api.dependencies import (
     get_alert_repository,
@@ -15,6 +16,7 @@ from app.core.rbac import (
     get_current_user,
     require_role,
 )
+from app.database.session import get_db
 from app.detection.correlation import correlation_engine
 from app.detection.registry import RuleRegistry
 from app.detection.yaml_rule import YamlDetectionRule, YamlRuleLoader
@@ -31,6 +33,7 @@ from app.schemas.log_event import LogEvent
 from app.services.dedup_service import event_deduplicator
 from app.services.detection_service import DetectionService
 from app.services.parsing_service import ParsingService
+from app.tiore.engine import tiore_engine
 
 router = APIRouter()
 
@@ -80,6 +83,7 @@ def analyze_event(
     detection_service: DetectionService = Depends(get_detection_service),
     alert_repo: AlertRepository = Depends(get_alert_repository),
     event_repo: LogEventRepository = Depends(get_log_event_repository),
+    db: Session = Depends(get_db),
 ):
     try:
         event = LogEvent(**request.event)
@@ -92,10 +96,26 @@ def analyze_event(
 
     event_repo.create_event(event)
     alerts = detection_service.analyze_event(event)
+    first_alert_id = None
     for alert in alerts:
         if not getattr(alert, "tenant_id", None):
             alert.tenant_id = event.tenant_id
         alert_repo.create_alert(alert)
+        if not first_alert_id:
+            first_alert_id = getattr(alert, "alert_id", None) or getattr(alert, "id", None)
+
+    # TIORE: Synchronous observable extraction & local threat matching
+    try:
+        tiore_engine.process_event_observables(
+            event_id=str(getattr(event, "event_id", None) or event.timestamp),
+            event_data=event.model_dump(),
+            tenant_id=event.tenant_id,
+            db=db,
+            alert_id=first_alert_id,
+        )
+    except Exception:
+        pass
+
     return DetectionResponse(alerts=[a.model_dump() for a in alerts])
 
 
@@ -106,6 +126,7 @@ def detect_single_event(
     detection_service: DetectionService = Depends(get_detection_service),
     alert_repo: AlertRepository = Depends(get_alert_repository),
     event_repo: LogEventRepository = Depends(get_log_event_repository),
+    db: Session = Depends(get_db),
 ):
     try:
         event = LogEvent(**request.event)
@@ -126,6 +147,19 @@ def detect_single_event(
         if not getattr(alert, "tenant_id", None):
             alert.tenant_id = event.tenant_id
         alert_repo.create_alert(alert)
+
+    # TIORE: Synchronous observable extraction & local threat matching
+    try:
+        tiore_engine.process_event_observables(
+            event_id=str(getattr(event, "event_id", None) or event.timestamp),
+            event_data=event.model_dump(),
+            tenant_id=event.tenant_id,
+            db=db,
+            alert_id=getattr(alerts[0], "alert_id", None) or getattr(alerts[0], "id", None),
+        )
+    except Exception:
+        pass
+
     return alerts[0]
 
 
@@ -166,6 +200,7 @@ def analyze_batch(
     detection_service: DetectionService = Depends(get_detection_service),
     alert_repo: AlertRepository = Depends(get_alert_repository),
     event_repo: LogEventRepository = Depends(get_log_event_repository),
+    db: Session = Depends(get_db),
 ):
     """
     High-throughput batch ingestion endpoint with idempotent deduplication and real-time attack correlation.
@@ -239,6 +274,18 @@ def analyze_batch(
             campaign = correlation_engine.correlate_alert(alert)
             if campaign and campaign not in active_campaigns:
                 active_campaigns.append(campaign)
+
+        # TIORE: Synchronous observable extraction & local threat matching
+        try:
+            tiore_engine.process_event_observables(
+                event_id=str(getattr(event, "event_id", None) or effective_id),
+                event_data=event.model_dump(),
+                tenant_id=event.tenant_id,
+                db=db,
+                alert_id=getattr(alerts[0], "alert_id", None) or getattr(alerts[0], "id", None) if alerts else None,
+            )
+        except Exception:
+            pass
 
     return BatchDetectionResponse(
         status="acknowledged" if rejected_count == 0 else "partial_success",

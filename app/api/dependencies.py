@@ -133,7 +133,12 @@ def get_ai_repository(db: Session = Depends(get_db)) -> AIRepository:
 
 
 from app.repositories.enrichment_repository import EnrichmentRepository
+from app.repositories.threat_intel_repository import ThreatIntelRepository
 
 
 def get_enrichment_repository(db: Session = Depends(get_db)) -> EnrichmentRepository:
     return EnrichmentRepository(db)
+
+
+def get_threat_intel_repository(db: Session = Depends(get_db)) -> ThreatIntelRepository:
+    return ThreatIntelRepository(db)

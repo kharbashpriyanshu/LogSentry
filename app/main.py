@@ -36,6 +36,7 @@ from app.api.v1.routers.parser import router as parser_router
 from app.api.v1.routers.reports import router as reports_router
 from app.api.v1.routers.soar import router as soar_router
 from app.api.v1.routers.syslog import router as syslog_router
+from app.api.v1.routers.tiore import router as tiore_router
 from app.config.settings import settings
 from app.core.logging import setup_logging
 from app.exceptions.handlers import add_exception_handlers
@@ -56,12 +57,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     setup_logging()
     queue_service.start_worker()
 
-    # Bootstrap default enterprise tenants and administrator
+    # Bootstrap default enterprise tenants, administrator, and curated threat intelligence
     try:
         from app.database.session import SessionLocal
         from app.services.identity_service import IdentityService
+        from app.tiore.resolver import seed_curated_threat_intel
         with SessionLocal() as db:
             IdentityService.bootstrap_default_tenants_and_admin(db)
+            seed_curated_threat_intel(db)
     except Exception as exc:
         logger.warning(f"Initial identity bootstrap notice: {exc}")
 
@@ -152,6 +155,11 @@ def create_app() -> FastAPI:
     app.include_router(ai_router, prefix=f"{prefix}/ai", tags=["AI SOC Analyst"])
     app.include_router(
         enrichment_router, prefix=f"{prefix}/enrichment", tags=["Threat Intelligence"]
+    )
+    app.include_router(
+        tiore_router,
+        prefix=f"{prefix}/threat-intel",
+        tags=["Threat Intelligence & Observables (TIORE)"],
     )
     app.include_router(reports_router, prefix=f"{prefix}/reports", tags=["Reporting"])
     app.include_router(
