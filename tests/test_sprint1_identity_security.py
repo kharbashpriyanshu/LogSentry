@@ -88,6 +88,8 @@ def test_production_secret_key_validation():
         ENVIRONMENT="production",
         DATABASE_URI="postgresql://db.corp:5432/siem",
         SECRET_KEY="a" * 32,
+        PII_ENCRYPTION_KEY="b" * 32,
+        PII_HMAC_KEY="c" * 32,
         INITIAL_ADMIN_PASSWORD="Strong#AdminPassword2026!",
     )
     assert prod_settings.AUTH_STRICT_MODE is True

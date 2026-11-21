@@ -13,7 +13,6 @@ import re
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from app.config.settings import settings
 from app.tiore.models import (
     ExtractedObservable,
     ObservableType,
@@ -103,11 +102,15 @@ class ObservableExtractor:
     Ensures safe parsing, input size bounds, deduplication, and zero-leakage privacy filters.
     """
 
-    def __init__(self, hmac_key: str | None = None) -> None:
-        raw_key = hmac_key or getattr(
-            settings, "SECRET_KEY", "logsentry-tiore-keyed-hmac-salt"
-        )
-        self._hmac_key = raw_key.encode("utf-8")
+    def __init__(self, hmac_key: str | bytes | None = None) -> None:
+        if hmac_key:
+            self._hmac_key = (
+                hmac_key if isinstance(hmac_key, bytes) else hmac_key.encode("utf-8")
+            )
+        else:
+            from app.core.crypto import get_pii_hmac_key
+
+            self._hmac_key = get_pii_hmac_key()
 
     def _generate_fingerprint(
         self, obs_type: ObservableType, normalized_value: str

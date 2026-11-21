@@ -86,7 +86,7 @@ class TIOREEngine:
         tiore_metrics.record_event_processed(len(extracted))
         repo = ThreatIntelRepository(db)
         resolved_list: list[ResolvedIntelligence] = []
-        eligible_for_external: list[Any] = []
+        eligible_for_external: list[tuple[Any, str]] = []
 
         for obs in extracted:
             try:
@@ -139,7 +139,16 @@ class TIOREEngine:
                         cached_val is None
                         or cached_val.classification == ThreatClassification.UNKNOWN
                     ):
-                        eligible_for_external.append(obs)
+                        job = repo.enqueue_enrichment_job(
+                            observable_id=obs_model.id,
+                            observable_value=obs.normalized_value,
+                            observable_type=obs.observable_type.value,
+                            tenant_id=tenant_id,
+                            event_id=event_id,
+                            alert_id=alert_id,
+                            commit=False,
+                        )
+                        eligible_for_external.append((obs, job.id))
 
             except Exception as exc:
                 tiore_metrics.record_error(
@@ -173,10 +182,11 @@ class TIOREEngine:
             )
 
         # Dispatch background external lookups asynchronously (non-blocking)
-        for public_obs in eligible_for_external:
+        for public_obs, job_id in eligible_for_external:
             self.schedule_background_enrichment(
                 observable=public_obs,
                 tenant_id=tenant_id,
+                job_id=job_id,
                 event_id=event_id,
                 alert_id=alert_id,
             )
@@ -191,6 +201,7 @@ class TIOREEngine:
         self,
         observable: Any,
         tenant_id: str,
+        job_id: str | None = None,
         event_id: str | None = None,
         alert_id: str | None = None,
     ) -> None:
@@ -207,6 +218,7 @@ class TIOREEngine:
                 self._background_enrichment_worker,
                 observable,
                 tenant_id,
+                job_id,
                 event_id,
                 alert_id,
             )
@@ -222,6 +234,7 @@ class TIOREEngine:
         self,
         observable: Any,
         tenant_id: str,
+        job_id: str | None = None,
         event_id: str | None = None,
         alert_id: str | None = None,
     ) -> None:
@@ -230,6 +243,9 @@ class TIOREEngine:
         refreshes local cache, and creates match records if newly classified as malicious.
         """
         db = SessionLocal()
+        repo = ThreatIntelRepository(db)
+        if job_id:
+            repo.mark_enrichment_job_processing(job_id)
         try:
             results = self.provider_manager.query_providers(observable)
             if results:
@@ -245,7 +261,6 @@ class TIOREEngine:
                     ThreatClassification.MALICIOUS,
                     ThreatClassification.SUSPICIOUS,
                 ):
-                    repo = ThreatIntelRepository(db)
                     obs_model = repo.get_or_create_observable(
                         observable, tenant_id=tenant_id
                     )
@@ -260,8 +275,15 @@ class TIOREEngine:
                     )
                     tiore_metrics.record_match()
 
+            if job_id:
+                repo.mark_enrichment_job_completed(job_id)
             tiore_metrics.record_background_completed()
         except Exception as exc:
+            if job_id:
+                try:
+                    repo.mark_enrichment_job_failed(job_id, str(exc))
+                except Exception:
+                    pass
             tiore_metrics.record_error(
                 "background_execution_error",
                 str(exc),
@@ -275,6 +297,38 @@ class TIOREEngine:
             )
         finally:
             db.close()
+
+    def reconcile_pending_enrichment_jobs(self, limit: int = 50) -> int:
+        """
+        Reconciles any uncompleted or crashed enrichment jobs from the database
+        on startup, scheduling them for execution.
+        """
+        db = SessionLocal()
+        count = 0
+        try:
+            repo = ThreatIntelRepository(db)
+            jobs = repo.get_pending_enrichment_jobs(limit=limit)
+            for job in jobs:
+                extracted_list = self.extractor.extract_from_text(job.observable_value)
+                if extracted_list:
+                    obs = extracted_list[0]
+                    self.schedule_background_enrichment(
+                        observable=obs,
+                        tenant_id=job.tenant_id,
+                        job_id=job.id,
+                        event_id=job.event_id,
+                        alert_id=job.alert_id,
+                    )
+                    count += 1
+                else:
+                    repo.mark_enrichment_job_failed(
+                        job.id, "Unable to parse observable value"
+                    )
+        except Exception as exc:
+            logger.error("Failed to reconcile pending enrichment jobs: %s", exc)
+        finally:
+            db.close()
+        return count
 
     # -------------------------------------------------------------------------
     # Manual Analyst Investigation API

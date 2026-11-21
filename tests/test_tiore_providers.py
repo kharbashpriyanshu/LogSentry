@@ -290,7 +290,7 @@ def test_hibp_breached_account_api():
         called_url = mock_get.call_args[0][0]
         called_headers = mock_get.call_args[1]["headers"]
         assert (
-            "https://haveibeenpwned.com/api/v3/breachedaccount/breached_user@example.com"
+            "https://haveibeenpwned.com/api/v3/breachedaccount/breached_user%40example.com"
             in called_url
         )
         assert called_headers["hibp-api-key"] == "test-hibp-api-key-12345"
@@ -303,15 +303,15 @@ def test_hibp_breached_account_api():
     assert res.evidence["breach_count"] == 2
     assert "data_breach" in res.threat_types
 
-    # 3. Benign (404 Not Found) state
+    # 3. No breach found (404 Not Found) state returns UNKNOWN (not misleading BENIGN)
     mock_404 = MagicMock()
     mock_404.status_code = 404
     with patch("httpx.Client.get") as mock_get:
         mock_get.return_value = mock_404
-        benign_res = configured_adapter.lookup(obs)
-        assert benign_res.status == "success"
-        assert benign_res.classification == ThreatClassification.BENIGN
-        assert benign_res.evidence["breached"] is False
+        nobreach_res = configured_adapter.lookup(obs)
+        assert nobreach_res.status == "success"
+        assert nobreach_res.classification == ThreatClassification.UNKNOWN
+        assert nobreach_res.evidence["breached"] is False
 
 
 def test_provider_manager_and_persistence(test_db_session):

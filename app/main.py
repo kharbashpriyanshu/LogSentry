@@ -66,6 +66,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         with SessionLocal() as db:
             IdentityService.bootstrap_default_tenants_and_admin(db)
             seed_curated_threat_intel(db)
+
+        from app.tiore.engine import tiore_engine
+
+        reconciled = tiore_engine.reconcile_pending_enrichment_jobs()
+        if reconciled > 0:
+            logger.info(
+                "Reconciled %d pending threat enrichment jobs on startup", reconciled
+            )
     except Exception as exc:
         logger.warning(f"Initial identity bootstrap notice: {exc}")
 

@@ -16,6 +16,7 @@ from app.core.crypto import encrypt_pii
 from app.models.threat_intel import (
     EventObservableModel,
     ObservableModel,
+    ThreatEnrichmentJobModel,
     ThreatIntelAuditModel,
     ThreatIntelMatchModel,
     ThreatIntelRecordModel,
@@ -39,26 +40,36 @@ class ThreatIntelRepository:
         is_shared: bool = False,
         commit: bool = True,
     ) -> ObservableModel:
-        """Finds existing observable by fingerprint or creates a new canonical entry with PII encryption."""
-        obs = (
-            self.db.query(ObservableModel)
-            .filter(ObservableModel.fingerprint == extracted.fingerprint)
-            .first()
-        )
-
+        """
+        Finds existing observable by fingerprint or creates a new canonical entry.
+        Strictly isolates tenant-owned observations from shared public threat intelligence:
+        Tenant A and Tenant B observing the same indicator obtain separate tenant-scoped records.
+        """
         now = datetime.now(UTC)
         is_pii = extracted.observable_type in (
             ObservableType.EMAIL,
             ObservableType.PHONE,
         )
+        effective_tenant = tenant_id or "default"
+        shared_flag = False if is_pii else is_shared
+
+        query = self.db.query(ObservableModel).filter(
+            ObservableModel.fingerprint == extracted.fingerprint
+        )
+        if shared_flag:
+            query = query.filter(ObservableModel.is_shared.is_(True))
+        else:
+            query = query.filter(
+                ObservableModel.tenant_id == effective_tenant,
+                ObservableModel.is_shared.is_(False),
+            )
+        obs = query.first()
 
         if obs:
             obs.last_seen = now
             if not obs.encrypted_value and is_pii:
                 obs.encrypted_value = encrypt_pii(extracted.normalized_value)
                 obs.value = extracted.masked_value
-            if tenant_id and not obs.tenant_id:
-                obs.tenant_id = tenant_id
             if commit:
                 self.db.commit()
                 self.db.refresh(obs)
@@ -69,16 +80,15 @@ class ThreatIntelRepository:
             stored_value = extracted.masked_value
             enc_value = encrypt_pii(extracted.normalized_value)
             shared_flag = False
-            effective_tenant = tenant_id or "default"
+            assigned_tenant = effective_tenant
         else:
             stored_value = extracted.normalized_value
             enc_value = None
-            shared_flag = is_shared
-            effective_tenant = None if is_shared else (tenant_id or "default")
+            assigned_tenant = None if shared_flag else effective_tenant
 
         obs = ObservableModel(
             id=str(uuid.uuid4()),
-            tenant_id=effective_tenant,
+            tenant_id=assigned_tenant,
             is_shared=shared_flag,
             type=extracted.observable_type.value,
             value=stored_value,
@@ -334,6 +344,36 @@ class ThreatIntelRepository:
             .all()
         )
 
+    def get_records_for_fingerprint(
+        self,
+        fingerprint: str,
+        tenant_id: str | None = None,
+        is_admin: bool = False,
+    ) -> list[ThreatIntelRecordModel]:
+        """
+        Retrieves all threat intelligence records for observables matching a fingerprint
+        that are accessible to the given tenant (tenant-owned or globally shared).
+        """
+        obs_query = self.db.query(ObservableModel.id).filter(
+            ObservableModel.fingerprint == fingerprint
+        )
+        if not is_admin and tenant_id:
+            obs_query = obs_query.filter(
+                or_(
+                    ObservableModel.tenant_id == tenant_id,
+                    ObservableModel.is_shared.is_(True),
+                    ObservableModel.tenant_id.is_(None),
+                )
+            )
+        obs_ids = [row[0] for row in obs_query.all()]
+        if not obs_ids:
+            return []
+        return (
+            self.db.query(ThreatIntelRecordModel)
+            .filter(ThreatIntelRecordModel.observable_id.in_(obs_ids))
+            .all()
+        )
+
     # -------------------------------------------------------------------------
     # Event-Observable Associations
     # -------------------------------------------------------------------------
@@ -499,3 +539,109 @@ class ThreatIntelRepository:
         if not is_admin:
             query = query.filter(ThreatIntelAuditModel.tenant_id == tenant_id)
         return query.order_by(desc(ThreatIntelAuditModel.timestamp)).limit(limit).all()
+
+    # -------------------------------------------------------------------------
+    # Durable Asynchronous Threat Enrichment Jobs (Issue E)
+    # -------------------------------------------------------------------------
+
+    def enqueue_enrichment_job(
+        self,
+        observable_id: str,
+        observable_value: str,
+        observable_type: str,
+        tenant_id: str,
+        event_id: str | None = None,
+        alert_id: str | None = None,
+        commit: bool = True,
+    ) -> ThreatEnrichmentJobModel:
+        """
+        Enqueues an external enrichment job with deduplication against active jobs.
+        """
+        existing = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(
+                ThreatEnrichmentJobModel.observable_id == observable_id,
+                ThreatEnrichmentJobModel.tenant_id == tenant_id,
+                ThreatEnrichmentJobModel.status.in_(["pending", "processing"]),
+            )
+            .first()
+        )
+        if existing:
+            return existing
+
+        now = datetime.now(UTC)
+        job = ThreatEnrichmentJobModel(
+            id=str(uuid.uuid4()),
+            observable_id=observable_id,
+            observable_value=observable_value,
+            observable_type=observable_type,
+            tenant_id=tenant_id,
+            status="pending",
+            attempts=0,
+            max_attempts=3,
+            event_id=event_id,
+            alert_id=alert_id,
+            created_at=now,
+            updated_at=now,
+        )
+        self.db.add(job)
+        if commit:
+            self.db.commit()
+            self.db.refresh(job)
+        return job
+
+    def get_pending_enrichment_jobs(
+        self, limit: int = 20
+    ) -> list[ThreatEnrichmentJobModel]:
+        """Fetches pending enrichment jobs for execution."""
+        return (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(ThreatEnrichmentJobModel.status == "pending")
+            .order_by(ThreatEnrichmentJobModel.created_at.asc())
+            .limit(limit)
+            .all()
+        )
+
+    def mark_enrichment_job_processing(self, job_id: str) -> bool:
+        job = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(ThreatEnrichmentJobModel.id == job_id)
+            .first()
+        )
+        if not job or job.status != "pending":
+            return False
+        job.status = "processing"
+        job.attempts += 1
+        job.updated_at = datetime.now(UTC)
+        self.db.commit()
+        return True
+
+    def mark_enrichment_job_completed(self, job_id: str) -> bool:
+        job = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(ThreatEnrichmentJobModel.id == job_id)
+            .first()
+        )
+        if not job:
+            return False
+        job.status = "completed"
+        job.updated_at = datetime.now(UTC)
+        self.db.commit()
+        return True
+
+    def mark_enrichment_job_failed(self, job_id: str, error_message: str) -> bool:
+        job = (
+            self.db.query(ThreatEnrichmentJobModel)
+            .filter(ThreatEnrichmentJobModel.id == job_id)
+            .first()
+        )
+        if not job:
+            return False
+        job.last_error = error_message[:1000]
+        job.updated_at = datetime.now(UTC)
+        if job.attempts < job.max_attempts:
+            job.status = "pending"  # Retry
+        else:
+            job.status = "failed"
+        self.db.commit()
+        return True

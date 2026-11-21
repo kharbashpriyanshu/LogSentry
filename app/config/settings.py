@@ -112,6 +112,7 @@ class Settings(BaseSettings):
     VIRUSTOTAL_API_KEY: str | None = None
     HIBP_API_KEY: str | None = None
     PII_ENCRYPTION_KEY: str | None = None
+    PII_HMAC_KEY: str | None = None
     ENRICHMENT_CACHE_TTL: int = 3600
     ENABLE_ABUSEIPDB: bool = True
     ENABLE_OTX: bool = True
@@ -214,6 +215,23 @@ class Settings(BaseSettings):
                 )
 
             if self.ENVIRONMENT == "production":
+                if (
+                    not self.PII_ENCRYPTION_KEY
+                    or len(self.PII_ENCRYPTION_KEY) < 32
+                    or "CHANGE_ME" in self.PII_ENCRYPTION_KEY
+                ):
+                    raise ValueError(
+                        "PII_ENCRYPTION_KEY must be a dedicated high-entropy secret (>= 32 characters) in production. "
+                        "Do not rely on fallback keys for sensitive data."
+                    )
+                if (
+                    not self.PII_HMAC_KEY
+                    or len(self.PII_HMAC_KEY) < 32
+                    or "CHANGE_ME" in self.PII_HMAC_KEY
+                ):
+                    raise ValueError(
+                        "PII_HMAC_KEY must be a dedicated high-entropy secret (>= 32 characters) in production."
+                    )
                 if not self.DATABASE_URI:
                     raise ValueError(
                         "DATABASE_URI must be set when ENVIRONMENT=production. "

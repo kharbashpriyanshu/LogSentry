@@ -5,10 +5,46 @@ Tracks enrichment latency, cache hit ratios, extraction rates, background extern
 lookups, and structured error logs to eliminate silent failures across the SIEM.
 """
 
+import re
 from collections import deque
 from datetime import UTC, datetime
 from threading import Lock
 from typing import Any
+
+EMAIL_REGEX = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
+PHONE_REGEX = re.compile(
+    r"\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"
+)
+TOKEN_REGEX = re.compile(
+    r"(?:Bearer\s+[A-Za-z0-9._\-]+|ey[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]+)"
+)
+
+
+def sanitize_text(text: str) -> str:
+    """Redacts raw PII and auth tokens from telemetry log text."""
+    if not isinstance(text, str):
+        return str(text)
+    sanitized = EMAIL_REGEX.sub("[REDACTED_EMAIL]", text)
+    sanitized = PHONE_REGEX.sub("[REDACTED_PHONE]", sanitized)
+    sanitized = TOKEN_REGEX.sub("[REDACTED_TOKEN]", sanitized)
+    return sanitized
+
+
+def sanitize_context(ctx: dict[str, Any]) -> dict[str, Any]:
+    """Sanitizes context dictionary against sensitive parameter leakage."""
+    clean: dict[str, Any] = {}
+    for k, v in ctx.items():
+        k_lower = str(k).lower()
+        if any(
+            s in k_lower
+            for s in ("email", "phone", "pass", "token", "secret", "auth", "key")
+        ):
+            clean[k] = "[REDACTED]"
+        elif isinstance(v, str):
+            clean[k] = sanitize_text(v)
+        else:
+            clean[k] = v
+    return clean
 
 
 class TIOREMetricsTracker:
@@ -60,14 +96,16 @@ class TIOREMetricsTracker:
         message: str,
         context: dict[str, Any] | None = None,
     ) -> None:
+        sanitized_msg = sanitize_text(message)
+        sanitized_ctx = sanitize_context(context or {})
         with self._lock:
             self.errors_count += 1
             self.errors_by_type[error_type] = self.errors_by_type.get(error_type, 0) + 1
             entry = {
                 "timestamp": datetime.now(UTC).isoformat(),
                 "error_type": error_type,
-                "message": message,
-                "context": context or {},
+                "message": sanitized_msg,
+                "context": sanitized_ctx,
             }
             self.recent_errors.append(entry)
 

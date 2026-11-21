@@ -15,6 +15,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -33,6 +34,9 @@ class ObservableModel(Base):
     """
 
     __tablename__ = "threat_observables"
+    __table_args__ = (
+        Index("ix_threat_observables_tenant_fingerprint", "tenant_id", "fingerprint"),
+    )
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id = Column(String(64), nullable=True, index=True)
@@ -41,7 +45,7 @@ class ObservableModel(Base):
     value = Column(String(2048), nullable=False, index=True)
     encrypted_value = Column(Text, nullable=True)
     raw_masked = Column(String(2048), nullable=False)
-    fingerprint = Column(String(64), unique=True, nullable=False, index=True)
+    fingerprint = Column(String(64), nullable=False, index=True)
     validation_status = Column(String(32), nullable=False, default="valid")
     privacy_classification = Column(
         String(32), nullable=False, default="public_routable"
@@ -234,5 +238,40 @@ class ThreatIntelAuditModel(Base):
     external_disclosed = Column(Boolean, nullable=False, default=False)
     disclosed_to = Column(JSON, nullable=True)
     timestamp = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+
+
+class ThreatEnrichmentJobModel(Base):
+    """
+    Durable persistent job queue for asynchronous threat intelligence enrichment.
+    Guarantees zero job loss during application restarts, handles worker retry policies,
+    and provides complete auditability of external intelligence lookups.
+    """
+
+    __tablename__ = "threat_enrichment_jobs"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    observable_id = Column(
+        String(36),
+        ForeignKey("threat_observables.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    observable_value = Column(String(2048), nullable=False)
+    observable_type = Column(String(32), nullable=False, index=True)
+    tenant_id = Column(String(64), nullable=False, default="default", index=True)
+    status = Column(
+        String(32), nullable=False, default="pending", index=True
+    )  # pending, processing, completed, failed
+    attempts = Column(Integer, nullable=False, default=0)
+    max_attempts = Column(Integer, nullable=False, default=3)
+    last_error = Column(Text, nullable=True)
+    event_id = Column(String, nullable=True, index=True)
+    alert_id = Column(String, nullable=True, index=True)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
     )

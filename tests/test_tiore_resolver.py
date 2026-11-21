@@ -163,7 +163,7 @@ def test_resolver_stale_record_evaluation(tiore_db_session):
         "custom_feed", "Custom Stale Feed", "community", 3
     )
     extracted = extractor.extract_from_text("IOC domain legacy-malware-feed.com")[0]
-    obs = repo.get_or_create_observable(extracted)
+    obs = repo.get_or_create_observable(extracted, tenant_id="tenant-alpha")
 
     # Insert an expired threat record (expired yesterday)
     yesterday = datetime.now(UTC) - timedelta(days=1)

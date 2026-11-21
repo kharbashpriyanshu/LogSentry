@@ -15,6 +15,7 @@ Privacy & Safety Guarantee:
   - Requires explicit analyst or tenant authorization before querying external PII.
 """
 
+import urllib.parse
 from typing import Any
 
 import httpx
@@ -66,7 +67,8 @@ class HIBPBreachAdapter(BaseObservableAdapter):
             )
 
         email = observable.normalized_value.lower().strip()
-        url = f"https://haveibeenpwned.com/api/v3/breachedaccount/{email}?truncateResponse=false"
+        encoded_email = urllib.parse.quote(email, safe="")
+        url = f"https://haveibeenpwned.com/api/v3/breachedaccount/{encoded_email}?truncateResponse=false"
         headers = {
             "hibp-api-key": key,
             "user-agent": "LogSentry-SOC-SIEM-v1.0",
@@ -117,10 +119,14 @@ class HIBPBreachAdapter(BaseObservableAdapter):
                 elif resp.status_code == 404:
                     return ProviderLookupResult(
                         source_id=self.source_id,
-                        classification=ThreatClassification.BENIGN,
-                        confidence=0.90,
+                        classification=ThreatClassification.UNKNOWN,
+                        confidence=0.0,
                         threat_types=[],
-                        evidence={"breached": False, "breach_count": 0},
+                        evidence={
+                            "breached": False,
+                            "breach_count": 0,
+                            "status": "no_known_public_breach",
+                        },
                         status="success",
                     )
 

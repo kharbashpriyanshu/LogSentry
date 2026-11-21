@@ -147,9 +147,11 @@ class IntelligenceResolver:
             self.cache.set(cache_key, privacy_result)
             return privacy_result
 
-        # 3. Database Lookup via ThreatIntelRepository
+        # 3. Database Lookup via ThreatIntelRepository (Tenant Scoped)
         repo = ThreatIntelRepository(db)
-        obs_record = repo.get_observable_by_fingerprint(extracted.fingerprint)
+        obs_record = repo.get_observable_by_fingerprint(
+            extracted.fingerprint, tenant_id=tenant_id
+        )
 
         if not obs_record:
             # Not in local threat database -> UNKNOWN
@@ -172,7 +174,9 @@ class IntelligenceResolver:
             return resolved
 
         # Observables exists in DB; fetch its threat intelligence records
-        records = repo.get_records_for_observable(obs_record.id)
+        records = repo.get_records_for_fingerprint(
+            extracted.fingerprint, tenant_id=tenant_id
+        )
         if not records:
             resolved = ResolvedIntelligence(
                 observable_type=extracted.observable_type,
@@ -524,7 +528,7 @@ def seed_curated_threat_intel(db: Session) -> None:
         if not extracted:
             continue
         obs_extracted = extracted[0]
-        obs_record = repo.get_or_create_observable(obs_extracted)
+        obs_record = repo.get_or_create_observable(obs_extracted, is_shared=True)
         repo.save_record(
             observable_id=obs_record.id,
             source_id=item["source_id"],

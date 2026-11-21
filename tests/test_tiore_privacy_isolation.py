@@ -14,7 +14,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.crypto import decrypt_pii
+from app.core.crypto import decrypt_pii, rotate_pii_encryption
 from app.core.jwt import create_access_token
 from app.core.rbac import UserRole
 from app.database.base import Base
@@ -23,6 +23,7 @@ from app.main import app as fastapi_app
 from app.models.threat_intel import (
     EventObservableModel,
     ObservableModel,
+    ThreatEnrichmentJobModel,
     ThreatIntelAuditModel,
     ThreatIntelMatchModel,
     ThreatIntelRecordModel,
@@ -228,3 +229,113 @@ def test_tiore_telemetry_and_error_tracking():
     assert any(
         e["error_type"] == "test_simulated_error" for e in summary["recent_errors"]
     )
+
+
+def test_tenant_deduplication_isolation_for_same_indicator(privacy_db):
+    """
+    Verifies that when Tenant A and Tenant B encounter the same indicator,
+    get_or_create_observable generates separate, tenant-isolated records
+    rather than returning Tenant A's record to Tenant B.
+    """
+    extractor = ObservableExtractor()
+    repo = ThreatIntelRepository(privacy_db)
+
+    obs1 = extractor.validate_and_normalize_ip("203.0.113.55")
+    obs2 = extractor.validate_and_normalize_ip("203.0.113.55")
+
+    rec_a = repo.get_or_create_observable(obs1, tenant_id="tenant-a")
+    rec_b = repo.get_or_create_observable(obs2, tenant_id="tenant-b")
+
+    assert rec_a.id != rec_b.id
+    assert rec_a.tenant_id == "tenant-a"
+    assert rec_b.tenant_id == "tenant-b"
+    assert rec_a.fingerprint == rec_b.fingerprint
+
+
+def test_key_rotation_and_versioned_tokens():
+    """
+    Verifies AES-256-GCM versioned tokens ('v1:...') and rotation re-encryption.
+    """
+    from app.core.crypto import decrypt_pii, encrypt_pii
+
+    plaintext = "confidential-ciso@target.org"
+    token = encrypt_pii(plaintext)
+    assert token.startswith("v1:")
+    assert decrypt_pii(token) == plaintext
+
+    rotated = rotate_pii_encryption(token)
+    assert rotated.startswith("v1:")
+    assert decrypt_pii(rotated) == plaintext
+
+
+def test_telemetry_sanitization_removes_pii_and_tokens():
+    """
+    Verifies that tiore_metrics redacts emails, phone numbers, and bearer tokens.
+    """
+    tiore_metrics.record_error(
+        "auth_leak_test",
+        "Failed request with Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.abc and user@victim.com",
+        {"phone": "+1 555-123-4567", "secret": "Bearer mysecrettoken123456"},
+    )
+    summary = tiore_metrics.get_summary()
+    recent = [
+        e for e in summary["recent_errors"] if e["error_type"] == "auth_leak_test"
+    ]
+    assert len(recent) > 0
+    err = recent[-1]
+    assert "user@victim.com" not in err["message"]
+    assert "[REDACTED_EMAIL]" in err["message"]
+    assert "[REDACTED_TOKEN]" in err["message"]
+    assert "eyJhbGci" not in err["message"]
+    assert "+1 555-123-4567" not in str(err["context"])
+    assert "[REDACTED]" in str(err["context"])
+
+
+def test_durable_enrichment_queue_lifecycle(privacy_db):
+    """
+    Verifies ThreatEnrichmentJobModel lifecycle: enqueue -> process -> complete/fail,
+    and reconciliation.
+    """
+    repo = ThreatIntelRepository(privacy_db)
+    extractor = ObservableExtractor()
+
+    obs = extractor.validate_and_normalize_ip("198.51.100.99")
+    model = repo.get_or_create_observable(obs, tenant_id="tenant-test")
+
+    # 1. Enqueue job
+    job = repo.enqueue_enrichment_job(
+        observable_id=model.id,
+        observable_value=obs.normalized_value,
+        observable_type=obs.observable_type.value,
+        tenant_id="tenant-test",
+    )
+    assert job.status == "pending"
+    assert job.attempts == 0
+
+    # Deduplication test: re-enqueuing returns existing active job
+    job_dup = repo.enqueue_enrichment_job(
+        observable_id=model.id,
+        observable_value=obs.normalized_value,
+        observable_type=obs.observable_type.value,
+        tenant_id="tenant-test",
+    )
+    assert job_dup.id == job.id
+
+    # 2. Mark processing
+    ok = repo.mark_enrichment_job_processing(job.id)
+    assert ok is True
+    privacy_db.refresh(job)
+    assert job.status == "processing"
+    assert job.attempts == 1
+
+    # 3. Mark failed (retry back to pending if attempts < max_attempts)
+    repo.mark_enrichment_job_failed(job.id, "Temporary network timeout")
+    privacy_db.refresh(job)
+    assert job.status == "pending"  # Retries allowed
+    assert "Temporary network timeout" in job.last_error
+
+    # 4. Mark processing then completed
+    repo.mark_enrichment_job_processing(job.id)
+    repo.mark_enrichment_job_completed(job.id)
+    privacy_db.refresh(job)
+    assert job.status == "completed"
