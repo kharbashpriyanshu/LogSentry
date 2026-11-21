@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, AlertTriangle, ShieldAlert, BrainCircuit,
-  Activity, Settings, FileText, Shield, ChevronRight, Sparkles,
+  Activity, Settings, FileText, Shield, ChevronRight, Sparkles, Server,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '../services/dashboardService';
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { to: '/threat-intel', label: 'Threat Intel',   icon: ShieldAlert,     badgeKey: null            },
   { to: '/ai-analysis',  label: 'AI Analyst',     icon: BrainCircuit,    badgeKey: null, isAi: true },
   { to: '/reports',      label: 'Reports',         icon: FileText,        badgeKey: null            },
+  { to: '/connect-server', label: 'Connect Server', icon: Server,        badgeKey: null            },
   { to: '/health',       label: 'System Health',  icon: Activity,        badgeKey: null            },
   { to: '/settings',     label: 'Settings',        icon: Settings,        badgeKey: null            },
 ];

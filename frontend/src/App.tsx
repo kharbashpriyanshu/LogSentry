@@ -12,6 +12,7 @@ const ThreatIntel = lazy(() => import('./pages/ThreatIntel'));
 const AIAnalysis  = lazy(() => import('./pages/AIAnalysis'));
 const Reports     = lazy(() => import('./pages/Reports'));
 const SystemHealth = lazy(() => import('./pages/SystemHealth'));
+const ConnectServer = lazy(() => import('./pages/ConnectServer'));
 const Settings    = lazy(() => import('./pages/Settings'));
 const NotFound    = lazy(() => import('./pages/NotFound'));
 
@@ -37,6 +38,7 @@ function App() {
             <Route path="threat-intel" element={<Suspense fallback={<PageLoader />}><ThreatIntel /></Suspense>} />
             <Route path="ai-analysis" element={<Suspense fallback={<PageLoader />}><AIAnalysis /></Suspense>} />
             <Route path="reports" element={<Suspense fallback={<PageLoader />}><Reports /></Suspense>} />
+            <Route path="connect-server" element={<Suspense fallback={<PageLoader />}><ConnectServer /></Suspense>} />
             <Route path="health" element={<Suspense fallback={<PageLoader />}><SystemHealth /></Suspense>} />
             <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />

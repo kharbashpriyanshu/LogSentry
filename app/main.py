@@ -31,6 +31,7 @@ from app.api.v1.routers.enrichment import router as enrichment_router
 from app.api.v1.routers.health import router as health_router
 from app.api.v1.routers.hunting import router as hunting_router
 from app.api.v1.routers.incidents import router as incidents_router
+from app.api.v1.routers.integrations import router as integrations_router
 from app.api.v1.routers.parser import router as parser_router
 from app.api.v1.routers.reports import router as reports_router
 from app.api.v1.routers.soar import router as soar_router
@@ -152,6 +153,11 @@ def create_app() -> FastAPI:
     app.include_router(hunting_router, prefix=prefix, tags=["Threat Hunting"])
     app.include_router(compliance_router, prefix=prefix, tags=["Compliance & Audits"])
     app.include_router(auth_router, prefix=prefix, tags=["Identity & RBAC"])
+    app.include_router(
+        integrations_router,
+        prefix=f"{prefix}/integrations",
+        tags=["Server Connectors & Integrations"],
+    )
 
     # ------------------------------------------------------------------
     # Observability endpoints (mounted directly on app, not versioned)
