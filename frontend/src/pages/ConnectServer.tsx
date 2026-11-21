@@ -8,6 +8,61 @@ import {
 import { integrationService, type ConnectedServer } from '../services/integrationService';
 import { StatCard } from '../components/ui';
 
+function TerminalBox({
+  title,
+  code,
+  copyKey,
+  copiedKey,
+  onCopy,
+}: {
+  title: string;
+  code: string;
+  copyKey: string;
+  copiedKey: string | null;
+  onCopy: (text: string, key: string) => void;
+}) {
+  return (
+    <div
+      className="rounded-xl overflow-hidden border border-slate-700/80 shadow-md my-3"
+      style={{ backgroundColor: '#0A0E17' }}
+    >
+      <div
+        className="flex items-center justify-between px-4 py-2 border-b border-slate-800"
+        style={{ backgroundColor: '#0F1626' }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
+          </div>
+          <span className="text-[11px] font-mono font-bold ml-2" style={{ color: '#94A3B8' }}>
+            {title}
+          </span>
+        </div>
+        <button
+          onClick={() => onCopy(code, copyKey)}
+          className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
+          style={{ color: '#F1F5F9' }}
+        >
+          {copiedKey === copyKey ? (
+            <Check className="w-3.5 h-3.5 text-emerald-400" />
+          ) : (
+            <Copy className="w-3.5 h-3.5 text-slate-300" />
+          )}
+          {copiedKey === copyKey ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <pre
+        className="p-4 text-xs font-mono overflow-x-auto leading-relaxed select-all"
+        style={{ color: '#38BDF8', backgroundColor: '#0A0E17', margin: 0 }}
+      >
+        {code}
+      </pre>
+    </div>
+  );
+}
+
 export default function ConnectServer() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'linux' | 'windows' | 'network' | 'cloud' | 'k8s'>('linux');
@@ -166,9 +221,9 @@ export default function ConnectServer() {
                 <p className="text-xs text-[var(--text-muted)] mb-3">
                   Supported on Ubuntu, Debian, RHEL, CentOS, Fedora, SUSE. Drops into your existing system logging service.
                 </p>
-                <div className="relative">
-                  <pre className="p-4 rounded-xl bg-slate-950 text-slate-100 text-xs font-mono overflow-x-auto border border-slate-800">
-{`# 1. Create LogSentry remote forwarder rule:
+                <TerminalBox
+                  title="bash — /etc/rsyslog.d/99-logsentry.conf"
+                  code={`# 1. Create LogSentry remote forwarder rule:
 cat << 'EOF' | sudo tee /etc/rsyslog.d/99-logsentry.conf
 auth,authpriv.* action(type="omfwd" target="${window.location.hostname}" port="1514" protocol="tcp" template="RSYSLOG_SyslogProtocol23Format")
 local6.* action(type="omfwd" target="${window.location.hostname}" port="1514" protocol="tcp" template="RSYSLOG_SyslogProtocol23Format")
@@ -176,15 +231,10 @@ EOF
 
 # 2. Restart rsyslog to begin streaming
 sudo systemctl restart rsyslog`}
-                  </pre>
-                  <button
-                    onClick={() => handleCopy(`cat << 'EOF' | sudo tee /etc/rsyslog.d/99-logsentry.conf\nauth,authpriv.* action(type="omfwd" target="${window.location.hostname}" port="1514" protocol="tcp" template="RSYSLOG_SyslogProtocol23Format")\nlocal6.* action(type="omfwd" target="${window.location.hostname}" port="1514" protocol="tcp" template="RSYSLOG_SyslogProtocol23Format")\nEOF\nsudo systemctl restart rsyslog`, 'linux-rsyslog')}
-                    className="absolute top-3 right-3 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    {copiedKey === 'linux-rsyslog' ? <Check className="w-3.5 h-3.5 text-emerald-800 dark:text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedKey === 'linux-rsyslog' ? 'Copied' : 'Copy Command'}
-                  </button>
-                </div>
+                  copyKey="linux-rsyslog"
+                  copiedKey={copiedKey}
+                  onCopy={handleCopy}
+                />
               </div>
 
               <div className="pt-4 border-t border-[var(--border-subtle)]">
@@ -195,23 +245,18 @@ sudo systemctl restart rsyslog`}
                 <p className="text-xs text-[var(--text-muted)] mb-3">
                   Tails any file (`/var/log/nginx/access.log`, `/var/log/auth.log`) and streams JSON over HTTPS directly to the SIEM:
                 </p>
-                <div className="relative">
-                  <pre className="p-4 rounded-xl bg-slate-950 text-slate-100 text-xs font-mono overflow-x-auto border border-slate-800">
-{`# Run shipper in background as a daemon
+                <TerminalBox
+                  title="bash — python shipper daemon"
+                  code={`# Run shipper in background as a daemon
 python3 scripts/logsentry_shipper.py \\
   --file /var/log/nginx/access.log \\
   --parser nginx \\
   --server http://${window.location.hostname}:8000 \\
   --tenant-id corp-prod`}
-                  </pre>
-                  <button
-                    onClick={() => handleCopy(`python3 scripts/logsentry_shipper.py --file /var/log/nginx/access.log --parser nginx --server http://${window.location.hostname}:8000 --tenant-id corp-prod`, 'linux-shipper')}
-                    className="absolute top-3 right-3 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    {copiedKey === 'linux-shipper' ? <Check className="w-3.5 h-3.5 text-emerald-800 dark:text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedKey === 'linux-shipper' ? 'Copied' : 'Copy Command'}
-                  </button>
-                </div>
+                  copyKey="linux-shipper"
+                  copiedKey={copiedKey}
+                  onCopy={handleCopy}
+                />
               </div>
             </div>
           )}
@@ -227,19 +272,14 @@ python3 scripts/logsentry_shipper.py \\
                 <p className="text-xs text-[var(--text-muted)] mb-3">
                   Run this on any Windows Server or workstation to stream Event ID 4104 (PowerShell) and 4624/4625 (Logons):
                 </p>
-                <div className="relative">
-                  <pre className="p-4 rounded-xl bg-slate-950 text-slate-100 text-xs font-mono overflow-x-auto border border-slate-800">
-{`# Start live host listener on your Windows server:
+                <TerminalBox
+                  title="PowerShell (Admin) — Host Streaming Agent"
+                  code={`# Start live host listener on your Windows server:
 .\\venv\\Scripts\\python.exe scripts/laptop_agent.py --live-powershell`}
-                  </pre>
-                  <button
-                    onClick={() => handleCopy(`.\\venv\\Scripts\\python.exe scripts/laptop_agent.py --live-powershell`, 'win-agent')}
-                    className="absolute top-3 right-3 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    {copiedKey === 'win-agent' ? <Check className="w-3.5 h-3.5 text-emerald-800 dark:text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedKey === 'win-agent' ? 'Copied' : 'Copy'}
-                  </button>
-                </div>
+                  copyKey="win-agent"
+                  copiedKey={copiedKey}
+                  onCopy={handleCopy}
+                />
               </div>
 
               <div className="pt-4 border-t border-[var(--border-subtle)]">
@@ -250,24 +290,18 @@ python3 scripts/logsentry_shipper.py \\
                 <p className="text-xs text-[var(--text-muted)] mb-3">
                   Deploy `deploy/collectors/winlogbeat_logsentry.yml` via Group Policy to ship security event IDs (4624, 4625, 4688, 4720):
                 </p>
-                <div className="relative">
-                  <pre className="p-4 rounded-xl bg-slate-950 text-slate-100 text-xs font-mono overflow-x-auto border border-slate-800">
-{`# In C:\\Program Files\\Winlogbeat\\winlogbeat.yml:
-output.http:
+                <TerminalBox
+                  title="yaml — C:\\Program Files\\Winlogbeat\\winlogbeat.yml"
+                  code={`output.http:
   enabled: true
   url: "http://${window.location.hostname}:8000/api/v1/detection/analyze"
   headers:
     Content-Type: "application/json"
     Authorization: "Bearer CORP_AD_INGEST_KEY"`}
-                  </pre>
-                  <button
-                    onClick={() => handleCopy(`output.http:\n  enabled: true\n  url: "http://${window.location.hostname}:8000/api/v1/detection/analyze"\n  headers:\n    Content-Type: "application/json"\n    Authorization: "Bearer CORP_AD_INGEST_KEY"`, 'win-beat')}
-                    className="absolute top-3 right-3 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    {copiedKey === 'win-beat' ? <Check className="w-3.5 h-3.5 text-emerald-800 dark:text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedKey === 'win-beat' ? 'Copied' : 'Copy Config'}
-                  </button>
-                </div>
+                  copyKey="win-beat"
+                  copiedKey={copiedKey}
+                  onCopy={handleCopy}
+                />
               </div>
             </div>
           )}
@@ -296,14 +330,18 @@ output.http:
 
                 <div className="p-4 rounded-xl bg-[var(--bg-card-subtle)] border border-[var(--border-subtle)]">
                   <h4 className="text-xs font-bold text-[var(--text-primary)] mb-1">Fortinet (FortiGate)</h4>
-                  <pre className="p-2.5 rounded bg-slate-950 text-slate-200 text-[11px] font-mono mt-1">
-{`config log syslogd setting
+                  <TerminalBox
+                    title="FortiGate CLI"
+                    code={`config log syslogd setting
     set status enable
     set server "${window.location.hostname}"
     set port 1514
     set mode udp
 end`}
-                  </pre>
+                    copyKey="fortigate"
+                    copiedKey={copiedKey}
+                    onCopy={handleCopy}
+                  />
                 </div>
               </div>
             </div>
@@ -326,9 +364,13 @@ end`}
                 <p className="text-xs text-[var(--text-secondary)]">
                   2. Create an AWS Lambda function triggered on S3 <code>ObjectCreated</code> to POST JSON batches to:
                 </p>
-                <code className="block p-3 rounded-lg bg-slate-950 text-slate-100 text-xs font-mono">
-                  POST http://{window.location.hostname}:8000/api/v1/detection/analyze
-                </code>
+                <TerminalBox
+                  title="HTTP Ingestion Target"
+                  code={`POST http://${window.location.hostname}:8000/api/v1/detection/analyze`}
+                  copyKey="aws-url"
+                  copiedKey={copiedKey}
+                  onCopy={handleCopy}
+                />
               </div>
             </div>
           )}
@@ -343,9 +385,9 @@ end`}
               <p className="text-xs text-[var(--text-muted)]">
                 Deploy FluentBit across all worker nodes to stream pod logs automatically.
               </p>
-              <div className="relative">
-                <pre className="p-4 rounded-xl bg-slate-950 text-slate-100 text-xs font-mono overflow-x-auto border border-slate-800">
-{`[OUTPUT]
+              <TerminalBox
+                title="yaml — FluentBit DaemonSet ConfigMap"
+                code={`[OUTPUT]
     Name          http
     Match         kube.*
     Host          ${window.location.hostname}
@@ -353,15 +395,10 @@ end`}
     URI           /api/v1/detection/analyze
     Header        Authorization Bearer K8S_CLUSTER_INGEST_KEY
     Format        json`}
-                </pre>
-                <button
-                  onClick={() => handleCopy(`[OUTPUT]\n    Name          http\n    Match         kube.*\n    Host          ${window.location.hostname}\n    Port          8000\n    URI           /api/v1/detection/analyze\n    Format        json`, 'k8s-fluentbit')}
-                  className="absolute top-3 right-3 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  {copiedKey === 'k8s-fluentbit' ? <Check className="w-3.5 h-3.5 text-emerald-800 dark:text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedKey === 'k8s-fluentbit' ? 'Copied' : 'Copy'}
-                </button>
-              </div>
+                copyKey="k8s-fluentbit"
+                copiedKey={copiedKey}
+                onCopy={handleCopy}
+              />
             </div>
           )}
         </div>

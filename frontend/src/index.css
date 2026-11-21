@@ -173,17 +173,47 @@ html:not([data-theme="dark"]) .border-slate-600 {
   border-color: var(--border-strong) !important;
 }
 
-html:not([data-theme="dark"]) .text-slate-50,
-html:not([data-theme="dark"]) .text-slate-100 {
+html:not([data-theme="dark"]) .text-slate-50:not(pre *):not(code *):not(.terminal *),
+html:not([data-theme="dark"]) .text-slate-100:not(pre *):not(code *):not(.terminal *) {
   color: var(--text-primary) !important;
 }
 
-html:not([data-theme="dark"]) .text-slate-200 {
+html:not([data-theme="dark"]) .text-slate-200:not(pre *):not(code *):not(.terminal *) {
   color: #292524 !important;
 }
 
-html:not([data-theme="dark"]) .text-slate-300 {
+html:not([data-theme="dark"]) .text-slate-300:not(pre *):not(code *):not(.terminal *) {
   color: var(--text-secondary) !important;
+}
+
+/* ── Always High-Contrast Visible Terminal & Code Blocks ──── */
+pre,
+.terminal-block,
+.code-container {
+  background-color: #0A0E17 !important;
+  color: #E2E8F0 !important;
+  border-color: #1E293B !important;
+}
+
+pre *,
+.terminal-block *,
+.code-container * {
+  color: #E2E8F0 !important;
+}
+
+pre .code-keyword,
+.terminal-block .code-keyword {
+  color: #38BDF8 !important;
+}
+
+pre .code-comment,
+.terminal-block .code-comment {
+  color: #94A3B8 !important;
+}
+
+pre .code-string,
+.terminal-block .code-string {
+  color: #4ADE80 !important;
 }
 
 html:not([data-theme="dark"]) .text-slate-400 {
