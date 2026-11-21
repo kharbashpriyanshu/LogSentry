@@ -2,8 +2,11 @@ import logging
 
 from app.parsers.apache import ApacheParser
 from app.parsers.base import BaseParser
+from app.parsers.cloudtrail import AWSCloudTrailParser
 from app.parsers.exceptions import ParserValidationError, UnsupportedParserError
+from app.parsers.linux_auth import LinuxAuthParser
 from app.parsers.nginx import NginxParser
+from app.parsers.windows_event import WindowsEventParser
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +51,9 @@ class ParserFactory:
         return list(cls._registry.values())
 
 
-# Initialize standard parsers immediately
+# Initialize standard and enterprise parsers immediately
 ParserFactory.register_parser(ApacheParser)
 ParserFactory.register_parser(NginxParser)
+ParserFactory.register_parser(LinuxAuthParser)
+ParserFactory.register_parser(WindowsEventParser)
+ParserFactory.register_parser(AWSCloudTrailParser)

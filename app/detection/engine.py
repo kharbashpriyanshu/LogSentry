@@ -2,7 +2,6 @@ import logging
 
 # Import rules to trigger registration
 import app.detection.rules  # noqa: F401
-
 from app.config.settings import settings
 from app.detection.base import RegexDetectionRule
 from app.detection.registry import RuleRegistry

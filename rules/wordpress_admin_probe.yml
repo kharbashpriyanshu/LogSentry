@@ -1,0 +1,17 @@
+title: WordPress Admin Probe
+id: 5a83a0a8-b64d-4bc9-8e41-0941829e1234
+status: production
+description: Detects threat actors scanning or probing for vulnerable WordPress administrative panels.
+author: LogSentry Community
+date: 2026-11-21
+logsource:
+  category: webserver
+detection:
+  selection:
+    endpoint|contains: '/wp-admin'
+    status_code: 404
+  condition: selection
+level: medium
+tags:
+  - attack.t1595
+  - attack.reconnaissance

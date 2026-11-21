@@ -23,12 +23,13 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 from app.api.v1.routers.ai import router as ai_router
 from app.api.v1.routers.alerts import router as alerts_router
+from app.api.v1.routers.auth import router as auth_router
+from app.api.v1.routers.compliance import router as compliance_router
 from app.api.v1.routers.dashboard import router as dashboard_router
 from app.api.v1.routers.detection import router as detection_router
 from app.api.v1.routers.enrichment import router as enrichment_router
-
-# Routers
 from app.api.v1.routers.health import router as health_router
+from app.api.v1.routers.hunting import router as hunting_router
 from app.api.v1.routers.incidents import router as incidents_router
 from app.api.v1.routers.parser import router as parser_router
 from app.api.v1.routers.reports import router as reports_router
@@ -38,6 +39,7 @@ from app.config.settings import settings
 from app.core.logging import setup_logging
 from app.exceptions.handlers import add_exception_handlers
 from app.middleware.core import CoreMiddleware, RequestSizeLimitMiddleware, get_metrics
+from app.services.queue_service import queue_service
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application startup and shutdown hooks."""
     setup_logging()
+    queue_service.start_worker()
     logger.info(
         "LogSentry starting",
         extra={
@@ -59,6 +62,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         },
     )
     yield
+    queue_service.stop_worker()
     logger.info("LogSentry shutting down gracefully")
 
 
@@ -145,6 +149,9 @@ def create_app() -> FastAPI:
     app.include_router(
         syslog_router, prefix=f"{prefix}/syslog", tags=["Syslog Ingestion"]
     )
+    app.include_router(hunting_router, prefix=prefix, tags=["Threat Hunting"])
+    app.include_router(compliance_router, prefix=prefix, tags=["Compliance & Audits"])
+    app.include_router(auth_router, prefix=prefix, tags=["Identity & RBAC"])
 
     # ------------------------------------------------------------------
     # Observability endpoints (mounted directly on app, not versioned)

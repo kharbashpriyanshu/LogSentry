@@ -11,9 +11,15 @@ class AlertRepository:
         self.db = db
 
     def get_alerts(
-        self, page: int = 1, limit: int = 50, severity: str | None = None
+        self,
+        page: int = 1,
+        limit: int = 50,
+        severity: str | None = None,
+        tenant_id: str | None = None,
     ) -> list[DetectionAlert]:
         query = self.db.query(AlertModel)
+        if tenant_id and tenant_id != "default":
+            query = query.filter(AlertModel.tenant_id == tenant_id)
         if severity:
             query = query.filter(AlertModel.severity == severity)
 
@@ -49,6 +55,7 @@ class AlertRepository:
             endpoint=alert.endpoint,
             hostname=alert.endpoint,  # using endpoint for hostname fallback if needed
             rule_version=alert.rule_version,
+            tenant_id=getattr(alert, "tenant_id", "default") or "default",
             created_at=alert.timestamp,
         )
         self.db.add(model)
@@ -116,6 +123,7 @@ class AlertRepository:
             assignee=model.assigned_analyst,
             assignment_notes=model.assignment_notes,
             resolved_at=model.resolved_at,
+            tenant_id=getattr(model, "tenant_id", "default") or "default",
             resolution_type=model.resolution_type,
             resolution_note=model.resolution_note,
             false_positive_reason=model.false_positive_reason,

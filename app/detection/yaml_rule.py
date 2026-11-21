@@ -14,6 +14,33 @@ from app.schemas.severity import Severity
 
 logger = logging.getLogger(__name__)
 
+SIGMA_FIELD_ALIASES: dict[str, str] = {
+    "cs-method": "method",
+    "method": "method",
+    "cs-uri-stem": "endpoint",
+    "c-uri": "endpoint",
+    "url": "endpoint",
+    "endpoint": "endpoint",
+    "c-ip": "source_ip",
+    "sourceip": "source_ip",
+    "source_ip": "source_ip",
+    "src_ip": "source_ip",
+    "sc-status": "status_code",
+    "status": "status_code",
+    "status_code": "status_code",
+    "commandline": "command_line",
+    "command_line": "command_line",
+    "image": "process_name",
+    "processname": "process_name",
+    "process_name": "process_name",
+    "user": "user",
+    "targetusername": "user",
+    "eventid": "event_id",
+    "event_id": "event_id",
+    "hostname": "hostname",
+    "raw_log": "raw_log",
+}
+
 
 class YamlDetectionRule(BaseRule):
     """
@@ -34,7 +61,7 @@ class YamlDetectionRule(BaseRule):
             "description", "Dynamic YAML / Sigma Detection Rule"
         )
 
-        # Map severity
+        # Map Sigma / YAML severity levels
         sev_str = str(data.get("severity") or data.get("level", "medium")).upper()
         if sev_str == "CRITICAL":
             self._severity = Severity.CRITICAL
@@ -45,9 +72,28 @@ class YamlDetectionRule(BaseRule):
         else:
             self._severity = Severity.MEDIUM
 
-        self._attack_type = data.get("attack_type", data.get("category", "Web Attack"))
+        # Parse tags for MITRE tactics and techniques
         self._mitre_technique = data.get("mitre_technique", "T1190")
         self._mitre_tactic = data.get("mitre_tactic", "Initial Access")
+        tags = data.get("tags", [])
+        if isinstance(tags, list):
+            for tag in tags:
+                tag_lower = str(tag).lower()
+                if tag_lower.startswith("attack.t") and len(tag_lower) > 7:
+                    self._mitre_technique = tag_lower.replace("attack.", "").upper()
+                elif tag_lower.startswith("attack."):
+                    self._mitre_tactic = (
+                        tag_lower.replace("attack.", "").replace("_", " ").title()
+                    )
+
+        self._attack_type = data.get(
+            "attack_type",
+            (
+                data.get("logsource", {}).get("category", "Web Attack")
+                if isinstance(data.get("logsource"), dict)
+                else "Web Attack"
+            ),
+        )
         self._recommendation = data.get(
             "recommendation", "Review request logs and block offending source IP."
         )
@@ -59,17 +105,20 @@ class YamlDetectionRule(BaseRule):
         self._init_detection()
 
     def _init_detection(self):
-        selection = self._detection.get("selection", {})
-        for field, condition in selection.items():
-            if "|" in field:
-                attr, modifier = field.split("|", 1)
-                if modifier in ("re", "regex"):
-                    try:
-                        self._compiled_regexes[field] = re.compile(
-                            str(condition), re.IGNORECASE
-                        )
-                    except Exception as e:
-                        logger.error(f"Failed to compile regex for field {field}: {e}")
+        for block_name in ("selection", "filter"):
+            block = self._detection.get(block_name, {})
+            if not isinstance(block, dict):
+                continue
+            for field, condition in block.items():
+                if "|" in field:
+                    _, modifier = field.split("|", 1)
+                    if modifier in ("re", "regex"):
+                        try:
+                            self._compiled_regexes[f"{block_name}:{field}"] = (
+                                re.compile(str(condition), re.IGNORECASE)
+                            )
+                        except Exception as e:
+                            logger.error(f"Failed to compile regex for {field}: {e}")
 
     @property
     def rule_name(self) -> str:
@@ -111,23 +160,29 @@ class YamlDetectionRule(BaseRule):
     def title(self) -> str:
         return self._title
 
-    def match(self, event: LogEvent) -> bool:
-        selection = self._detection.get("selection", {})
-        if not selection:
-            return False
-
-        for field, criteria in selection.items():
+    def _evaluate_criteria_block(
+        self, block: dict[str, Any], block_name: str, event: LogEvent
+    ) -> bool:
+        """Evaluate a dictionary of field criteria against a LogEvent."""
+        for field, criteria in block.items():
             if "|" in field:
-                attr_name, modifier = field.split("|", 1)
+                raw_attr, modifier = field.split("|", 1)
             else:
-                attr_name, modifier = field, "exact"
+                raw_attr, modifier = field, "exact"
 
+            attr_name = SIGMA_FIELD_ALIASES.get(raw_attr.lower(), raw_attr)
             event_val = getattr(event, attr_name, None)
+
+            # If field is None on event, check raw_log as fallback if searching text
             if event_val is None:
-                return False
+                if modifier in ("contains", "startswith", "endswith", "re", "regex"):
+                    event_val = event.raw_log
+                else:
+                    return False
+
+            val_str = str(event_val).lower()
 
             if modifier == "contains":
-                val_str = str(event_val).lower()
                 if isinstance(criteria, list):
                     if not any(str(c).lower() in val_str for c in criteria):
                         return False
@@ -136,26 +191,55 @@ class YamlDetectionRule(BaseRule):
                         return False
 
             elif modifier in ("re", "regex"):
-                pattern = self._compiled_regexes.get(field)
+                pattern = self._compiled_regexes.get(f"{block_name}:{field}")
                 if not pattern or not pattern.search(str(event_val)):
                     return False
 
             elif modifier == "exact":
                 if isinstance(criteria, list):
-                    if event_val not in criteria:
+                    if str(event_val) not in [str(c) for c in criteria]:
                         return False
                 else:
-                    if event_val != criteria:
+                    if str(event_val) != str(criteria):
                         return False
 
             elif modifier == "startswith":
-                val_str = str(event_val).lower()
                 if isinstance(criteria, list):
                     if not any(val_str.startswith(str(c).lower()) for c in criteria):
                         return False
                 else:
                     if not val_str.startswith(str(criteria).lower()):
                         return False
+
+            elif modifier == "endswith":
+                if isinstance(criteria, list):
+                    if not any(val_str.endswith(str(c).lower()) for c in criteria):
+                        return False
+                else:
+                    if not val_str.endswith(str(criteria).lower()):
+                        return False
+
+        return True
+
+    def match(self, event: LogEvent) -> bool:
+        selection = self._detection.get("selection", {})
+        if not selection or not isinstance(selection, dict):
+            return False
+
+        # Evaluate selection
+        selection_match = self._evaluate_criteria_block(selection, "selection", event)
+        if not selection_match:
+            return False
+
+        # Evaluate filter (if defined)
+        filter_block = self._detection.get("filter", {})
+        if filter_block and isinstance(filter_block, dict):
+            filter_match = self._evaluate_criteria_block(filter_block, "filter", event)
+            condition = str(
+                self._detection.get("condition", "selection and not filter")
+            ).lower()
+            if "not filter" in condition and filter_match:
+                return False
 
         return True
 
@@ -174,49 +258,56 @@ class YamlDetectionRule(BaseRule):
             mitre_technique=self.mitre_technique,
             mitre_tactic=self.mitre_tactic,
             recommendation=self.recommendation,
+            tenant_id=event.tenant_id or "default",
             evidence={
                 "endpoint": event.endpoint,
                 "method": event.method,
                 "status_code": event.status_code,
-                "user_agent": event.user_agent,
-                "rule_format": "sigma/yaml",
+                "user": event.user,
+                "command_line": event.command_line,
+                "rule_file": self._file_path,
             },
             raw_log_reference=event.raw_log,
         )
 
 
 class YamlRuleLoader:
-    """Discovers, parses, and registers dynamic YAML/Sigma rules."""
+    """Discovers, parses, and loads Sigma & YAML detection rules."""
 
-    @staticmethod
-    def load_from_file(file_path: str) -> YamlDetectionRule | None:
+    @classmethod
+    def load_from_dict(
+        cls, data: dict[str, Any], file_path: str | None = None
+    ) -> YamlDetectionRule:
+        rule = YamlDetectionRule(data, file_path=file_path)
+        RuleRegistry.register_rule_instance(rule)
+        return rule
+
+    @classmethod
+    def load_file(cls, file_path: str) -> YamlDetectionRule | None:
         try:
             with open(file_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
             if not isinstance(data, dict):
                 return None
-            rule = YamlDetectionRule(data, file_path=file_path)
-            RuleRegistry.register_rule_instance(rule)
-            return rule
+            return cls.load_from_dict(data, file_path=file_path)
         except Exception as e:
-            logger.error(f"Error loading rule from {file_path}: {e}")
+            logger.error(f"Failed to load YAML rule from {file_path}: {e}")
             return None
 
-    @staticmethod
-    def load_directory(directory: str = "rules") -> list[YamlDetectionRule]:
-        loaded_rules = []
-        if not os.path.exists(directory):
-            return loaded_rules
+    @classmethod
+    def load_directory(cls, dir_path: str) -> list[YamlDetectionRule]:
+        rules = []
+        if not os.path.exists(dir_path):
+            return rules
 
-        for root, _, files in os.walk(directory):
+        for root, _, files in os.walk(dir_path):
             for file in files:
-                if file.endswith(".yml") or file.endswith(".yaml"):
+                if file.endswith((".yml", ".yaml")):
                     full_path = os.path.join(root, file)
-                    rule = YamlRuleLoader.load_from_file(full_path)
+                    rule = cls.load_file(full_path)
                     if rule:
-                        loaded_rules.append(rule)
-
+                        rules.append(rule)
         logger.info(
-            f"Loaded {len(loaded_rules)} dynamic YAML/Sigma rules from '{directory}'."
+            f"Loaded {len(rules)} YAML / Sigma detection rules from '{dir_path}'."
         )
-        return loaded_rules
+        return rules

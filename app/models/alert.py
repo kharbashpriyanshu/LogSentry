@@ -42,6 +42,7 @@ class AlertModel(Base):
     resolution_type = Column(String, nullable=True)
     resolution_note = Column(String, nullable=True)
     false_positive_reason = Column(String, nullable=True)
+    tenant_id = Column(String, nullable=True, default="default", index=True)
     created_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
     )

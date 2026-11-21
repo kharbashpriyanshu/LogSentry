@@ -1,0 +1,18 @@
+title: Linux SSH Failed Login Attempt
+id: 3c17e651-7e88-4c0a-9d21-f09c73a87123
+status: production
+description: Detects failed SSH authentication attempts on Linux host infrastructure.
+author: LogSentry Community
+date: 2026-11-21
+logsource:
+  category: authentication
+  product: linux
+detection:
+  selection:
+    action: 'SSH_FAILED_LOGIN'
+    status_code: 401
+  condition: selection
+level: medium
+tags:
+  - attack.t1110
+  - attack.credential_access

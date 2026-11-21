@@ -16,3 +16,10 @@ class LogEvent(BaseModel):
     hostname: str | None = None
     raw_log: str
     parser_name: str
+    # Enterprise & Multi-Source Telemetry Fields
+    user: str | None = None
+    event_id: str | None = None
+    action: str | None = None
+    process_name: str | None = None
+    command_line: str | None = None
+    tenant_id: str | None = "default"

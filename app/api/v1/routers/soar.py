@@ -18,6 +18,7 @@ class QuarantineRequest(BaseModel):
     duration_seconds: int = Field(3600, description="Duration of block in seconds")
     severity: str = Field("HIGH", description="Associated threat severity")
     analyst: str = Field("analyst@logsentry.local", description="Analyst identity")
+    containment_type: str = Field("IN_MEMORY", description="Containment backend")
 
 
 class ReleaseRequest(BaseModel):
@@ -35,10 +36,21 @@ class WebhookTestRequest(BaseModel):
     )
 
 
+class CloudflareBlockRequest(BaseModel):
+    ip: str
+    zone_id: str | None = None
+    api_token: str | None = None
+
+
+class IPTablesBlockRequest(BaseModel):
+    ip: str
+    dry_run: bool = True
+
+
 @router.get("/quarantine", response_model=list[dict[str, Any]])
 def list_quarantined_hosts():
     """List all currently active quarantined / blocked host IPs."""
-    return SOARService.get_active_quarantines()
+    return SOARService.get_quarantined_ips()
 
 
 @router.post("/quarantine", response_model=dict[str, Any])
@@ -51,6 +63,7 @@ def quarantine_host(req: QuarantineRequest):
             duration_seconds=req.duration_seconds,
             severity=req.severity,
             analyst=req.analyst,
+            containment_type=req.containment_type,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -60,8 +73,7 @@ def quarantine_host(req: QuarantineRequest):
 def release_host(ip: str, req: ReleaseRequest | None = None):
     """Release an IP address from active quarantine."""
     analyst = req.analyst if req else "admin"
-    reason = req.reason if req else "Manual SOC Release"
-    success = SOARService.release_ip(ip=ip, analyst=analyst, reason=reason)
+    success = SOARService.release_ip(ip=ip, analyst=analyst)
     if not success:
         raise HTTPException(
             status_code=404, detail=f"IP '{ip}' is not actively quarantined."
@@ -79,9 +91,23 @@ def get_containment_history(limit: int = Query(50, ge=1, le=500)):
     return SOARService.get_action_history(limit=limit)
 
 
+@router.post("/firewall/cloudflare")
+async def block_ip_cloudflare(req: CloudflareBlockRequest):
+    """Trigger Cloudflare WAF IP Access Rule block."""
+    return await SOARService.execute_cloudflare_waf_block(
+        ip=req.ip, zone_id=req.zone_id, api_token=req.api_token
+    )
+
+
+@router.post("/firewall/iptables")
+def block_ip_iptables(req: IPTablesBlockRequest):
+    """Trigger Linux iptables containment rule generation/execution."""
+    return SOARService.execute_linux_iptables_block(ip=req.ip, dry_run=req.dry_run)
+
+
 @router.post("/webhook/test")
 async def test_webhook(req: WebhookTestRequest):
-    """Test webhook delivery by dispatching a sample SIEM incident card."""
+    """Test webhook delivery by dispatching a sample rich interactive SIEM incident card."""
     sample_alert = DetectionAlert(
         rule_name="soar_test",
         rule_version="1.0.0",

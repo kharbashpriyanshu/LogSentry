@@ -38,3 +38,4 @@ class DetectionAlert(BaseModel):
     resolution_note: str | None = None
     false_positive_reason: str | None = None
     hostname: str | None = None
+    tenant_id: str | None = "default"

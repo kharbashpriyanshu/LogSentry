@@ -21,6 +21,10 @@ class LogEventModel(Base):
     http_method = Column(String, nullable=True)
     path = Column(String, nullable=True)
     status_code = Column(String, nullable=True)
+    user = Column(String, nullable=True)
+    event_id = Column(String, nullable=True)
+    action = Column(String, nullable=True)
+    tenant_id = Column(String, nullable=True, default="default", index=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     alerts = relationship("AlertModel", back_populates="log_event")
