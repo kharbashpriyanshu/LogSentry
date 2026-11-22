@@ -6,11 +6,11 @@ Create Date: 2026-11-22 02:30:00.000000
 
 """
 
-import sqlalchemy as sa
-from sqlalchemy.sql import column, select, table
-
 from alembic import op
-from app.core.crypto import decrypt_pii, encrypt_pii
+import sqlalchemy as sa
+from sqlalchemy.sql import table, column, select
+
+from app.core.crypto import encrypt_pii, decrypt_pii
 
 # revision identifiers, used by Alembic.
 revision = "f7a8341b5902"

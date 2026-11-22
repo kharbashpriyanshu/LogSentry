@@ -621,11 +621,9 @@ class ThreatIntelRepository:
             | (ThreatEnrichmentJobModel.next_retry_at <= now)
         )
         # 2. Stale/crashed processing jobs whose lease expired
-        stale_cond = (
-            (ThreatEnrichmentJobModel.status == "processing")
-            & (ThreatEnrichmentJobModel.locked_until.is_not(None))
-            & (ThreatEnrichmentJobModel.locked_until < now)
-        )
+        stale_cond = (ThreatEnrichmentJobModel.status == "processing") & (
+            ThreatEnrichmentJobModel.locked_until.is_not(None)
+        ) & (ThreatEnrichmentJobModel.locked_until < now)
 
         jobs = (
             self.db.query(ThreatEnrichmentJobModel)

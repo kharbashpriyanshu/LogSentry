@@ -9,7 +9,6 @@ Tests covering:
 """
 
 from datetime import UTC, datetime, timedelta
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -348,9 +347,7 @@ def test_stale_job_crash_recovery_and_atomic_claim(privacy_db):
 
     # New worker claims jobs
     active_worker_id = "live-worker-pid-1111"
-    claimed = repo.claim_pending_jobs(
-        active_worker_id, limit=5, lease_duration_seconds=60
-    )
+    claimed = repo.claim_pending_jobs(active_worker_id, limit=5, lease_duration_seconds=60)
 
     assert len(claimed) == 1
     reclaimed_job = claimed[0]
@@ -393,9 +390,7 @@ def test_telemetry_sanitization_url_credentials_and_api_keys():
 
     tiore_metrics.record_error("realistic_leak_test", realistic_log, nested_context)
     summary = tiore_metrics.get_summary()
-    err = [
-        e for e in summary["recent_errors"] if e["error_type"] == "realistic_leak_test"
-    ][-1]
+    err = [e for e in summary["recent_errors"] if e["error_type"] == "realistic_leak_test"][-1]
 
     # Text redactions
     assert "P@ssw0rd2026!" not in err["message"]
@@ -406,9 +401,7 @@ def test_telemetry_sanitization_url_credentials_and_api_keys():
     assert "[REDACTED_CREDENTIAL]" in err["message"]
     assert "security_lead@target.com" not in err["message"]
     assert "[REDACTED_EMAIL]" in err["message"]
-    assert (
-        "Bearer [REDACTED_TOKEN]" not in err["message"]
-    )  # Bearer ey... is replaced by [REDACTED_TOKEN]
+    assert "Bearer [REDACTED_TOKEN]" not in err["message"]  # Bearer ey... is replaced by [REDACTED_TOKEN]
     assert "[REDACTED_TOKEN]" in err["message"]
 
     # Context redactions
@@ -424,7 +417,6 @@ def test_migration_fail_closed_logic():
     Verifies that any corrupted, un-decryptable PII record during migration
     causes the migration logic to raise a RuntimeError and fail closed.
     """
-
     # Simulate the fail-closed assertion from alembic migration
     def execute_migration_step(records):
         migrated = 0
@@ -437,9 +429,7 @@ def test_migration_fail_closed_logic():
                         raise ValueError("Mismatch")
                     migrated += 1
                 except Exception as exc:
-                    raise RuntimeError(
-                        f"PII migration failed closed on {r_id}: {exc}"
-                    ) from exc
+                    raise RuntimeError(f"PII migration failed closed on {r_id}: {exc}") from exc
         return migrated
 
     # Valid records succeed
@@ -451,6 +441,7 @@ def test_migration_fail_closed_logic():
         corrupt_records = [("2", "email", None, None)]
         # Passing None causes an exception which must raise RuntimeError
         execute_migration_step(corrupt_records)
+
 
 
 def test_durable_enrichment_queue_lifecycle(privacy_db):

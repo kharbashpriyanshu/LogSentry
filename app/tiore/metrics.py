@@ -18,7 +18,9 @@ PHONE_REGEX = re.compile(
 TOKEN_REGEX = re.compile(
     r"(?:Bearer\s+[A-Za-z0-9._\-]+|ey[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]+)"
 )
-URL_AUTH_REGEX = re.compile(r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^:\s/@]+):([^@\s/]+)@")
+URL_AUTH_REGEX = re.compile(
+    r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^:\s/@]+):([^@\s/]+)@"
+)
 CREDENTIAL_REGEX = re.compile(
     r"(?i)\b(?:api[_\-\s]?key|access[_\-\s]?token|secret[_\-\s]?key|auth[_\-\s]?token|client[_\-\s]?secret|private[_\-\s]?key)\b[\s:=]+(['\"]?)[A-Za-z0-9_\-]{8,}\b"
 )

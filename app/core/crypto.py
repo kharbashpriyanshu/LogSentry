@@ -190,7 +190,9 @@ def reencrypt_all_pii(db: "Session", target_version: str = "v2") -> int:
         # Assert round-trip decryption verification
         verified_decryption = decrypt_pii(new_token)
         if verified_decryption != original_plaintext:
-            raise ValueError(f"Re-encryption round-trip failed on observable {obs.id}")
+            raise ValueError(
+                f"Re-encryption round-trip failed on observable {obs.id}"
+            )
         obs.encrypted_value = new_token
         reencrypted_count += 1
 
@@ -244,10 +246,7 @@ def migrate_pii_hmac_fingerprints(
 
         if existing:
             # Re-point event links to existing observable
-            from app.models.threat_intel import (
-                EventObservableModel,
-                ThreatIntelMatchModel,
-            )
+            from app.models.threat_intel import EventObservableModel, ThreatIntelMatchModel
 
             db.query(EventObservableModel).filter(
                 EventObservableModel.observable_id == obs.id

@@ -251,9 +251,7 @@ class ThreatEnrichmentJobModel(Base):
 
     __tablename__ = "threat_enrichment_jobs"
     __table_args__ = (
-        Index(
-            "ix_threat_enrichment_jobs_claim", "status", "next_retry_at", "locked_until"
-        ),
+        Index("ix_threat_enrichment_jobs_claim", "status", "next_retry_at", "locked_until"),
     )
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

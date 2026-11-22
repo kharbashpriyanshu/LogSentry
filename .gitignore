@@ -53,3 +53,5 @@ sample_data/large_benchmark_*
 .idea/
 *.swp
 *.swo
+
+scratch/
