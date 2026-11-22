@@ -37,12 +37,14 @@ export default function Sidebar() {
   return (
     <aside className="w-64 flex flex-col border-r border-[var(--border-default)] bg-[var(--bg-sidebar)] transition-colors duration-200 select-none">
       {/* Brand Header */}
-      <div className="h-22 flex items-center justify-center px-1.5 border-b border-[var(--border-subtle)] shrink-0 overflow-hidden">
-        <img
-          src="/branding/logo_full.png"
-          alt="LogSentry SOC — Security Operations Platform"
-          className="w-full max-w-[250px] h-auto max-h-[80px] object-contain drop-shadow-sm transform scale-120 hover:scale-125 transition-transform duration-200"
-        />
+      <div className="h-20 flex items-center justify-center px-3 border-b border-[var(--border-subtle)] shrink-0">
+        <NavLink to="/dashboard" className="flex items-center justify-center w-full">
+          <img
+            src="/branding/logo_full.png"
+            alt="LogSentry SOC — Security Operations Platform"
+            className="w-full max-w-[228px] h-auto max-h-[60px] object-contain drop-shadow-sm transition-opacity hover:opacity-90"
+          />
+        </NavLink>
       </div>
 
       {/* Nav section label */}
